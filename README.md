@@ -1,11 +1,12 @@
-This is the java source code for a card game.
+This is the java source code for a Hearts-like card game called Pig-Chase.
+
 The main test program is available as
 
-com.ialogic.games.cards.CardPlayTest
+	com.ialogic.games.cards.CardPlayTest
 
-Input 4 plyer names and it will simulate a team game up to 100 rounds or when the score goes over +/- 1000.
+Input 4 player names and the test program will simulate a team game up to 100 rounds or when the either team's score goes over +/- 1000.
 
-Online serer and Browser based client is under development
+Online server and browser based client are under development. You are welcome to contribute to it.
 
 Have fun!
 
