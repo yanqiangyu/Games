@@ -13,7 +13,7 @@ public abstract class CardGame {
 	public void setUi(CardUI ui) {
 		this.ui = ui;
 	}
-	void play() {
+	public void play() {
 		ui.open(this);
 		while (!isGameOver()) {
 			CardEvent input = ui.getEvent (this);

@@ -36,6 +36,13 @@ public class CardDeck {
 	}
 	public void deal(List<CardPlayer> players) {
 		int top = 0;
+		for (CardPlayer p : players) {
+			p.getHand().clear();
+			p.getFaceup().clear();
+			p.getPoints().clear();
+			p.getTricks().clear();
+			p.setCardPlayed(null);
+		}
 		while (top < cards.size()) {
 			for (int i = 0; i < players.size (); ++i) {
 				Card c = cards.get(top);
@@ -43,5 +50,6 @@ public class CardDeck {
 				++top;
 			}
 		}
+		
 	}
 }

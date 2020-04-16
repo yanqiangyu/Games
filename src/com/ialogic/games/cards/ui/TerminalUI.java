@@ -39,7 +39,7 @@ public class TerminalUI implements CardUI {
 						}
 						if (inputEvent instanceof CardEventPlayerRegister) {
 							inputEvent.setMessage("Add Player:");
-							CardPlayer p = new CardPlayer ();
+							CardPlayer p = new CardPlayerDummy ();
 							p.setName(in);
 							inputEvent.setPlayer(p);
 							addEvent (inputEvent);
