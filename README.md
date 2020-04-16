@@ -1,5 +1,5 @@
-This is the java source code for a card game
-The main test program is available
+This is the java source code for a card game.
+The main test program is available as
 
 com.ialogic.games.cards.CardPlayTest
 
