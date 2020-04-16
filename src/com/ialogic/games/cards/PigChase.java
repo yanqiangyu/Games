@@ -167,7 +167,7 @@ public class PigChase extends CardGame {
 					for (CardPlayer p : team.getPlayers()) {
 						total += p.getScore();
 					}
-					String score = String.format("%12s Team Score %d", team.getName(), total);
+					String score = String.format("%24s Team Score %d", team.getName(), total);
 					ui.showText(score);
 					if (total >= 1000 || total <= -1000) {
 						setGameOver(true);
@@ -178,13 +178,17 @@ public class PigChase extends CardGame {
 				starter = findLastPig();
 			}
 			ui.showText("=======================Game Over!==========================");
-			for (CardPlayerTeam team : teams) {
-				if (team.getTeamScore() < 1000 && team.getTeamScore() > -1000) {
-					ui.showText(String.format("          Winning team: %-20s SCORE:%d", team.getName(), team.getTeamScore()));
-				}
-				else {
-					ui.showText(String.format("           Losing team: %-20s SCORE:%d", team.getName(), team.getTeamScore()));
-				}
+			if (teams[0].getTeamScore() > teams[1].getTeamScore()) {
+				ui.showText(String.format("%24s %-20s SCORE:%d", "Winning Team", teams[0].getName(), teams[0].getTeamScore()));
+				ui.showText(String.format("%24s %-20s SCORE:%d", "Losing Team", teams[1].getName(), teams[1].getTeamScore()));
+			}
+			else if (teams[1].getTeamScore() > teams[0].getTeamScore()) {
+				ui.showText(String.format("%24s %-20s SCORE:%d", "Winning Team", teams[1].getName(), teams[1].getTeamScore()));
+				ui.showText(String.format("%24s %-20s SCORE:%d", "Losing Team", teams[0].getName(), teams[0].getTeamScore()));
+			}
+			else {
+				ui.showText(String.format("%24s %-20s SCORE:%d", "Tied Team", teams[0].getName(), teams[0].getTeamScore()));
+				ui.showText(String.format("%24s %-20s SCORE:%d", "Tied Team", teams[1].getName(), teams[1].getTeamScore()));
 			}
 			ui.showText("===========================================================");
 		} catch (InterruptedException e) {
@@ -324,7 +328,7 @@ public class PigChase extends CardGame {
 		String hasGoat = "";
 		String hasMultiplier = "";
 		String shootTheMoon = "";
-		for (Card c : p.getTricks()) {
+		for (Card c : p.getPoints()) {
 			if (c.isPig()) {
 				hasPig = "<P>";
 				points += pig * scalePig;

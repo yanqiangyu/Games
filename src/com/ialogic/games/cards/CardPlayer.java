@@ -84,7 +84,7 @@ public class CardPlayer {
 		else if (request instanceof CardEventFaceUp) {
 			CardEventFaceUpResponse e = new CardEventFaceUpResponse (this);
 			for (Card c : getHand ()) {
-				if (c.isSpecial() && countSuit (c.getSuit()) > 3) {
+				if (c.isSpecial() && countSuit (c.getSuit()) > 4) {
 					getFaceup().add(c);
 				}
 			}
