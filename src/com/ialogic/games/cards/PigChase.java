@@ -14,6 +14,7 @@ import com.ialogic.games.cards.event.CardEventFaceUp;
 import com.ialogic.games.cards.event.CardEventFaceUpResponse;
 import com.ialogic.games.cards.event.CardEventGameOver;
 import com.ialogic.games.cards.event.CardEventGameStart;
+import com.ialogic.games.cards.event.CardEventPlayerAction;
 import com.ialogic.games.cards.event.CardEventPlayerRegister;
 import com.ialogic.games.cards.event.CardEventShuffleEffect;
 import com.ialogic.games.cards.event.CardEventTurnToPlay;
@@ -79,6 +80,11 @@ public class PigChase extends CardGame {
 				}
 			}
 		}
+		else if (e instanceof CardEventPlayerAction) {
+			synchronized (e.getPlayer()) {
+				e.getPlayer().notifyAll();
+			}
+		}
 		else if (e instanceof CardEventGameOver) {
 			runThread.interrupt();
 			setGameOver (true);
@@ -101,7 +107,7 @@ public class PigChase extends CardGame {
 			teams[1].getPlayers().add (getPlayers().get(3));
 			
 			int starter = -1;
-			for (int hand = 1; hand <= 100 && !isGameOver(); ++hand) {
+			for (int hand = 1; hand <= 1 && !isGameOver(); ++hand) {
 				String banner = String.format("====================  Playing hand %-5d===================", hand);
 				ui.showText(banner);
 				deck.shuffle ();
@@ -134,7 +140,11 @@ public class PigChase extends CardGame {
 						CardPlayer p = getPlayers().get ((starter + i) % 4);
 						CardEventTurnToPlay turn = new CardEventTurnToPlay (p);
 						turn.setRule (checkRules (hand, round, p, played, suitsPlayed));
-						ui.sendEvent (this, turn);
+						synchronized (p) {
+							p.setCardPlayed(null);
+							ui.sendEvent (this, turn);
+							p.wait ();
+						}
 						played.add(p.getCardPlayed());
 					}
 					CardPlayer winner = getPlayers().get (starter);

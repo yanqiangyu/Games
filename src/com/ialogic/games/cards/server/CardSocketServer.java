@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import com.ialogic.games.cards.Card;
 import com.ialogic.games.cards.CardGame;
 import com.ialogic.games.cards.CardPlayer;
 import com.ialogic.games.cards.PigChase;
@@ -20,20 +21,28 @@ import com.ialogic.games.cards.ui.CardUI;
 public class CardSocketServer implements CardUI {
 	Queue<CardEvent>events = new LinkedBlockingQueue<CardEvent> ();
 	List<CardPlayerClient> sessions = new ArrayList<CardPlayerClient>();
-	public CardSocketServer (int port){
-		try {
-			ServerSocket s = new ServerSocket (port);
-			while (s.isBound()) {
-				Socket client = s.accept();
-				CardPlayerClient c = new CardPlayerClient (client);
-				c.register (this);
+	public CardSocketServer (final int port){
+		new Thread () {
+			public void run () {
+			try {
+				ServerSocket s = new ServerSocket (port);
+				System.out.println(String.format ("Port %d ready", port));
+				
+				while (s.isBound()) {
+					Socket client = s.accept();
+					CardPlayerClient c = new CardPlayerClient (client, CardSocketServer.this );
+					String name = "Player " + (sessions.size() + 1); 
+					c.setName(name);
+					sessions.add(c);
+					System.out.println(String.format ("New Client %s", c.getName()));
+				}
+				s.close();
 			}
-			s.close();
-		}
-		catch (IOException e) {
-			System.out.println(String.format ("Port %d error : %s", port, e.getMessage()));
-			System.exit(0);
-		}
+			catch (IOException e) {
+				System.out.println(String.format ("Port %d error : %s", port, e.getMessage()));
+				System.exit(0);
+			}
+		}}.start();;
 	}
 	public void showText(String text) {
 		for (CardPlayerClient c : sessions) {
@@ -41,8 +50,9 @@ public class CardSocketServer implements CardUI {
 		}
 	}
 	public void open(CardGame cardGame) {
-		showText ("Welcome to a game of \"" + cardGame.getName() + "\"!");
 		addEvent(new CardEventGameStart ());
+		System.out.println(String.format ("Game %s Started.", cardGame.getName()));
+		showText ("Welcome to a game of \"" + cardGame.getName() + "\"!");
 	}
 
 	public void close(CardGame cardGame) {
@@ -51,11 +61,16 @@ public class CardSocketServer implements CardUI {
 	}
 
 	public void sendEvent(CardGame cardGame, CardEvent request) {
+		if (request instanceof CardEventGameOver) {
+			addEvent(request);
+		}
 		if (request.getPlayer() != null) {
+			System.out.println(String.format ("Debug: %s - %s", request.getMessage(), request.getPlayer().getName()));
 			CardPlayer p = request.getPlayer();
 			p.handleEvent (this, request);
 		}
 		else {
+			System.out.println(String.format ("Debug: %s", request.getMessage()));
 			for (CardPlayer p : cardGame.getPlayers()) {
 				p.handleEvent (this, request);
 			}
@@ -63,6 +78,18 @@ public class CardSocketServer implements CardUI {
 	}
 	public void playerEvent(CardEvent request) {
 		addEvent (request);
+		for (CardPlayer p : sessions) {
+			Card c= p.getCardPlayed();
+			String faceUp = Card.showList (p.getFaceup());
+			String points = Card.showList (p.getPoints());
+			String card = (c == null ? "()" : c.toString());
+			String line = String.format("%12s -> %4s |%-20s |%s", 
+					p.displayString (),
+					card, 
+					faceUp, 
+					points);
+			showText (line);
+		}
 	}
 	public CardEvent getEvent(CardGame cardGame) {
 		synchronized (events) {
