@@ -107,7 +107,7 @@ public class PigChase extends CardGame {
 			teams[1].getPlayers().add (getPlayers().get(3));
 			
 			int starter = -1;
-			for (int hand = 1; hand <= 1 && !isGameOver(); ++hand) {
+			for (int hand = 1; hand <= 100 && !isGameOver(); ++hand) {
 				String banner = String.format("====================  Playing hand %-5d===================", hand);
 				ui.showText(banner);
 				deck.shuffle ();

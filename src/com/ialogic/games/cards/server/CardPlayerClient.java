@@ -126,7 +126,7 @@ public class CardPlayerClient extends CardPlayer {
 					out.print ("Press Enter to play:");
 				}
 				try {
-					if (size > 13) {
+					if (size > 1) {
 						while (in.ready())
 							in.read();
 						String ns = trim (in.readLine());
