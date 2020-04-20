@@ -1,9 +1,14 @@
 <!DOCTYPE html>
-<html lang="en" class=""><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <link rel="shortcut icon" href="image/ialogic.jpg" type="image/jpeg">
+<html lang="en" class="">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1, user-scalable=0" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+	<link rel="shortcut icon" href="image/ialogic.jpg" type="image/jpeg">
     <link rel="apple-touch-icon" href="image/ialogic.jpg" type="image/jpeg">
-<script type="text/javascript" src="js/main.js"></script>
+	<script type="text/javascript" src="js/main.js"></script>
 <style>
 
 .container {
@@ -20,10 +25,10 @@
 	position: absolute;
 	left: 5vw;
 	top: 5vh;
-	width:  100px;
-	height: 100px;
+	width:  64px;
+	height: 64px;
 	display: block;
-	opacity: 1;
+	opacity: 0.5;
 	box-shadow: 5px 5px 5px black;
 }
 
@@ -41,23 +46,28 @@
 
 .overlay {
   position: absolute;
-  top: 5%;
-  bottom: 20%;
+  top: 10%;
+  bottom: 10%;
   left: 20%;
-  right: 20%;
-  height: 60%;
-  width: 60%;
+  right: 10%;
+  height: 350px;
+  width: 250px;
   opacity: 0;
   transition: 1s ease;
+  background-image: url('image/QS.jpg');
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-size: cover;
   background-color: #004C00;
 }
 
 .container:hover .overlay {
-  opacity: 0.75;
+  opacity: 0.70;
 }
 
 .text {
   color: white;
+  background-color: gray;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 24px;
   position: absolute;

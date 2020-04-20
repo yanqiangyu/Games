@@ -50,57 +50,70 @@ function createDeck()
 	}
 }
 
-function dealCards()
-{
-	for (i=0; i<52; ++i) {
-	  var c = document.getElementById("scene" + i);   
-	  var player = i%4;
-	  var n = Math.floor(i/4);
-	  var x=0;
-	  var y=0;
-	  var rotate=0;
-	  if (player == 0) {
-		  x = n*4 + 15;
-		  y = 75;
-	  }
-	  else if (player == 1) {
-		  x = 75;
-		  y = 64 - n*4;
-		  c.classList.add("rotated");  
-	  }
-	  else if (player == 2) {
-		  x = 64 - n*4;
-		  y = 5;
-	  }
-	  else if (player == 3) {
-		  x = 5;
-		  y = n*4 + 16;
-		  c.classList.add("rotated");  
-	  }
-	  deal(x,y);
-	}
-}
-
-function deal(x,y)
+function getCardLocation (i)
 {
   var c = document.getElementById("scene" + i);   
-  var step = 100;
-  var id = setInterval(frame, 25);
+  var player = i%4;
+  var n = Math.floor(i/4);
+  var x=0;
+  var y=0;
+  var rotate=0;
+  var location = {x: 0, y: 0,};
+  
+  if (player == 0) {
+	  x = n*4 + 15;
+	  y = 75;
+  }
+  else if (player == 1) {
+	  x = 75;
+	  y = 64 - n*4;
+	  c.classList.add("rotated");  
+  }
+  else if (player == 2) {
+	  x = 64 - n*4;
+	  y = 5;
+  }
+  else if (player == 3) {
+	  x = 5;
+	  y = n*4 + 16;
+	  c.classList.add("rotated");  
+  }
+  location.x = x;
+  location.y = y;
+  return location;
+}
+
+function dealCards()
+{
+  var i = 0;
+  var c = document.getElementById("scene" + i);   
+  var step = 50;
+  var location=getCardLocation (i);
+  var x=location.x;
+  var y=location.y;
+  var id = setInterval(frame, 10);
   
   function frame() {
-    if (step <= 0) {
-      c.style.left=x+'vw'; 
-      c.style.top=y+'vh'
+	if (i == 52) {
       clearInterval(id);
-    } else {
-      var cx=parseFloat(c.style.left, 10);
-      var cy=parseFloat(c.style.top, 10);
-	  var dx = (x - cx) / step;
-	  var dy = (y - cy) / step;
-      c.style.left=cx + dx + 'vw'; 
-      c.style.top=cy + dy + 'vh';  
-      --step;
+	}
+	if (step <= 0) {
+      c.style.left=x+'vw'; 
+      c.style.top=y+'vh';
+      ++i;
+      c = document.getElementById("scene" + i);   
+      location=getCardLocation (i);
+      x=location.x;
+      y=location.y;
+      step = 50;
     }
+	var cx=parseFloat(c.style.left, 10);
+	var cy=parseFloat(c.style.top, 10);
+	var dx = (x - cx) / step;
+	var dy = (y - cy) / step;
+	c.style.left=cx + dx + 'vw'; 
+	c.style.top=cy + dy + 'vh';  
+	--step;
   }
 }
 
