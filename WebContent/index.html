@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" class=""><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <link rel="shortcut icon" href="image/ialogic.jpg" type="image/jpeg">
+    <link rel="apple-touch-icon" href="image/ialogic.jpg" type="image/jpeg">
+<script type="text/javascript" src="js/main.js"></script>
+<style>
+
+.container {
+	background-image: url('image/splash.jpg');
+	background-repeat: no-repeat;
+	background-size: 100% 100%;
+	position: absolute;
+}
+
+.logo {
+	background-image: url('image/ialogic.jpg');
+	background-repeat: no-repeat;
+	background-size: cover;
+	position: absolute;
+	left: 5vw;
+	top: 5vh;
+	width:  100px;
+	height: 100px;
+	display: block;
+	opacity: 1;
+	box-shadow: 5px 5px 5px black;
+}
+
+.footnote {
+	position: absolute;
+	left: 0vw;
+	top: 95vh;
+	width: 100vw;
+	color: white;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 20px;
+	position: absolute;
+	text-align: center;
+}
+
+.overlay {
+  position: absolute;
+  top: 5%;
+  bottom: 20%;
+  left: 20%;
+  right: 20%;
+  height: 60%;
+  width: 60%;
+  opacity: 0;
+  transition: 1s ease;
+  background-color: #004C00;
+}
+
+.container:hover .overlay {
+  opacity: 0.75;
+}
+
+.text {
+  color: white;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 24px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.card_scene {
+  position: absolute;
+  display: block;
+  perspective: 600px;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transform-origin: center right;
+  transition: transform 2s;
+}
+
+.card.is-flipped {
+  transform: translateX(-100%) rotateY(-180deg);
+}
+
+.card__face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  backface-visibility: hidden;
+}
+
+.card__face--front {
+	background-image: url("image/QS.jpg");
+  	background-size: cover;
+}
+
+.card__face--back {
+	background-image: url("image/CB.jpg");
+	transform: rotateY(180deg);
+}
+
+.card.is-flipped {
+  transform: translateX(-100%) rotateY(-180deg);
+}
+
+.rotated {
+  transform: rotate(90deg);
+}
+
+input[type=text], select {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+input[type=button] {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 24px;
+}
+
+input[type=button]:hover {
+  background-color: #45FF49;
+}
+
+@keyframes spin {
+    from {
+        transform:rotate(0deg);
+    }
+    to {
+        transform:rotate(360deg);
+    }
+}
+</style>
+</head>
+<body>
+<div class="container" id="splash" 
+	style="width: 95vw; 
+		height: 95vh;
+		left: 2.5vw;
+		top: 2.5vh;"
+	>
+  	<div class="overlay" id="over">
+    <div class="text" id="register">
+    	<form>
+		  <label for="fname">Name:</label>
+		  <input type="text" id="fname" name="fname"><BR>
+		  <label for="lname">Code:</label>
+		  <input type="text" id="lname" name="lname"><BR>
+		  <input type="button" onclick="startGame()" value="Let's Go!">
+		</form>
+    </div>
+  </div>		
+</div>
+<div class="logo" id="logo">
+</div>
+<div class="footnote" id="footnote">
+© 2020 IALogic
+</div>
+
+</body></html>

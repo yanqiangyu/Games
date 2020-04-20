@@ -3,7 +3,6 @@ package com.ialogic.games.cards;
 import java.util.List;
 
 import com.ialogic.games.cards.event.CardEvent;
-import com.ialogic.games.cards.ui.CardUI;
 
 public abstract class CardGame {
 	protected CardUI ui;

@@ -2,7 +2,6 @@ package com.ialogic.games.cards.server;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.Socket;
@@ -10,6 +9,7 @@ import java.net.Socket;
 import com.ialogic.games.cards.Card;
 import com.ialogic.games.cards.CardGameRule;
 import com.ialogic.games.cards.CardPlayer;
+import com.ialogic.games.cards.CardUI;
 import com.ialogic.games.cards.event.CardEvent;
 import com.ialogic.games.cards.event.CardEventDealCards;
 import com.ialogic.games.cards.event.CardEventEndRound;
@@ -18,7 +18,6 @@ import com.ialogic.games.cards.event.CardEventFaceUpResponse;
 import com.ialogic.games.cards.event.CardEventPlayerAction;
 import com.ialogic.games.cards.event.CardEventPlayerRegister;
 import com.ialogic.games.cards.event.CardEventTurnToPlay;
-import com.ialogic.games.cards.ui.CardUI;
 
 public class CardPlayerClient extends CardPlayer {
 	Socket client;

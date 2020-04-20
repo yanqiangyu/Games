@@ -11,12 +11,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 import com.ialogic.games.cards.Card;
 import com.ialogic.games.cards.CardGame;
 import com.ialogic.games.cards.CardPlayer;
+import com.ialogic.games.cards.CardUI;
 import com.ialogic.games.cards.PigChase;
 import com.ialogic.games.cards.event.CardEvent;
 import com.ialogic.games.cards.event.CardEventGameIdle;
 import com.ialogic.games.cards.event.CardEventGameOver;
 import com.ialogic.games.cards.event.CardEventGameStart;
-import com.ialogic.games.cards.ui.CardUI;
 
 public class CardSocketServer implements CardUI {
 	Queue<CardEvent>events = new LinkedBlockingQueue<CardEvent> ();
