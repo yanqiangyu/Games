@@ -12,7 +12,11 @@ Simple Server based test program, it listens to port 8080 and clients can connec
 
 Browser based client is under development. You are welcome to contribute to it.
 
+	http://www.ialogic.com/
+
+I have the basic client HTML5 and JS framework and need to work on HTTP server to complete the setup.
+
 Have fun!
 
 Steve Yu
-2020/04/16
+2020/04/19
