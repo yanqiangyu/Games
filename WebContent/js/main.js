@@ -1,3 +1,58 @@
+var carddeck=[
+	{img: "2C", x: 0, y: 0,},
+	{img: "2D", x: 0, y: 0,},	
+	{img: "2H", x: 0, y: 0,},	
+	{img: "2S", x: 0, y: 0,},	
+	{img: "3C", x: 0, y: 0,},
+	{img: "3D", x: 0, y: 0,},	
+	{img: "3H", x: 0, y: 0,},	
+	{img: "3S", x: 0, y: 0,},	
+	{img: "4C", x: 0, y: 0,},
+	{img: "4D", x: 0, y: 0,},	
+	{img: "4H", x: 0, y: 0,},	
+	{img: "5S", x: 0, y: 0,},	
+	{img: "5C", x: 0, y: 0,},
+	{img: "5D", x: 0, y: 0,},	
+	{img: "5H", x: 0, y: 0,},	
+	{img: "5S", x: 0, y: 0,},	
+	{img: "6C", x: 0, y: 0,},
+	{img: "6D", x: 0, y: 0,},	
+	{img: "6H", x: 0, y: 0,},	
+	{img: "6S", x: 0, y: 0,},	
+	{img: "7C", x: 0, y: 0,},
+	{img: "7D", x: 0, y: 0,},	
+	{img: "7H", x: 0, y: 0,},	
+	{img: "7S", x: 0, y: 0,},	
+	{img: "8C", x: 0, y: 0,},
+	{img: "8D", x: 0, y: 0,},	
+	{img: "8H", x: 0, y: 0,},	
+	{img: "8S", x: 0, y: 0,},	
+	{img: "9C", x: 0, y: 0,},
+	{img: "9D", x: 0, y: 0,},	
+	{img: "9H", x: 0, y: 0,},	
+	{img: "9S", x: 0, y: 0,},	
+	{img: "XC", x: 0, y: 0,},
+	{img: "XD", x: 0, y: 0,},	
+	{img: "XH", x: 0, y: 0,},	
+	{img: "XS", x: 0, y: 0,},	
+	{img: "JC", x: 0, y: 0,},
+	{img: "JD", x: 0, y: 0,},	
+	{img: "JH", x: 0, y: 0,},	
+	{img: "JS", x: 0, y: 0,},	
+	{img: "QC", x: 0, y: 0,},
+	{img: "QD", x: 0, y: 0,},	
+	{img: "QH", x: 0, y: 0,},	
+	{img: "QS", x: 0, y: 0,},	
+	{img: "KC", x: 0, y: 0,},
+	{img: "KD", x: 0, y: 0,},	
+	{img: "KH", x: 0, y: 0,},	
+	{img: "KS", x: 0, y: 0,},	
+	{img: "AC", x: 0, y: 0,},
+	{img: "AD", x: 0, y: 0,},	
+	{img: "AH", x: 0, y: 0,},	
+	{img: "AS", x: 0, y: 0,},	
+];
+
 function startGame() 
 {
 	var player=document.getElementById("player").value;
@@ -13,6 +68,9 @@ function startGame()
 		splash.style.backgroundImage="url('image/table.jpg')";
 		splash.style.opacity="1";
 		setUpTable();
+	}
+	else {
+		prompt ("Player Name/Code required.");
 	}
 }
 
@@ -50,12 +108,13 @@ function showDeck ()
 		var cf=document.createElement('div');
 		c.appendChild(cf);
 		cf.classList.add('card__face', 'card__face--front');
+		cf.style.backgroundImage="url('image/cards/" + carddeck[i].img + ".jpg')";
 		
 		var cb=document.createElement('div');
 		c.appendChild(cb);
 		cb.classList.add('card__face', 'card__face--back');
 
-		collect(i, (viewwidth-cw)/2, (viewheight-ch)/2);
+		collectCards(i, (viewwidth-cw)/2, (viewheight-ch)/2);
 	}
 }
 
@@ -169,7 +228,7 @@ function dealCards()
   }
 }
 
-function collect(i, x,y) 
+function collectCards (i, x, y) 
 {
   var c = document.getElementById("scene" + i);   
   var step = 100;
@@ -180,11 +239,13 @@ function collect(i, x,y)
       c.style.left=x+'vw'; 
       c.style.top=y+'vh';  
       clearInterval(id);
-	  flipCard(i);
 	  if (i == 51) {
 		  dealCards();
 	  }
     } else {
+      if (step == 90) {
+    	  flipCard(i);
+      }
       var cx=parseFloat(c.style.left, 10);
       var cy=parseFloat(c.style.top, 10);
 	  var dx = (x - cx) / step;
@@ -224,11 +285,17 @@ function clickCard (i)
 }
 
 function login (player, code) {
-	httpGetAsync("http://www.ialogic.com/cardgame" + 
+	if (player != "" && code != "") {
+		httpGetAsync("http://www.ialogic.com/cardgame" + 
 			"?CardEvent=CardEventPlayerRegister" +
 			"&player="+ player+
 			"&code=" + code);
-	return "OK";
+		return "OK";
+	}
+	else if (code == "test") {
+		return "OK";
+	}
+	return "";
 }
 
 function httpGetAsync(theUrl)
@@ -236,5 +303,22 @@ function httpGetAsync(theUrl)
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open("GET", theUrl, false); 
     xmlHttp.send(null);
-    alert (xmlHttp.responseText);
+    prompt (xmlHttp.responseText);
+}
+
+function prompt (text)
+{
+	var c=document.getElementById("prompt");
+	c.innerHTML=text;
+	c.style.display="block";
+	var id = setInterval(dismiss, 2000);
+	function dismiss () {
+		c.style.display="none";
+		clearInterval(id);
+	}
+}
+function dismissPrompt ()
+{
+	var c=document.getElementById("prompt");
+	c.style.display="none";
 }

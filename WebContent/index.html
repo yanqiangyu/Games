@@ -6,6 +6,7 @@
 	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1, user-scalable=0" />
 	<meta name="apple-mobile-web-app-capable" content="yes" />
 	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+	<link rel="icon" href="image/ialogic.jpg" type="image/jpeg">
 	<link rel="shortcut icon" href="image/ialogic.jpg" type="image/jpeg">
     <link rel="apple-touch-icon" href="image/ialogic.jpg" type="image/jpeg">
 	<script type="text/javascript" src="js/main.js"></script>
@@ -16,6 +17,24 @@
 	background-repeat: no-repeat;
 	background-size: 100% 100%;
 	position: absolute;
+}
+
+.prompt {
+    color: white;
+    background-color: lightgray;
+    background-image: url('image/table.jpg');
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 18px;
+    opacity: .75;
+    margin: auto;
+    top: 5vh;
+    width:  auto;
+	height: auto;
+	padding: 10px 10px;
+	box-shadow: 5px 5px 5px black;
+	text-align: center;
+	position: absolute;
+	display: none;
 }
 
 .logo {
@@ -54,10 +73,9 @@
   width: 250px;
   opacity: 0;
   transition: 1s ease;
-  background-image: url('image/QS.jpg');
+  background-image: url('image/cards/QS.jpg');
   background-repeat: no-repeat;
   background-size: 100% 100%;
-  background-size: cover;
   background-color: #004C00;
 }
 
@@ -104,17 +122,16 @@
   width: 100%;
   height: 100%;
   background-repeat: no-repeat;
-  background-size: cover;
+  background-size: 100% 100%;
   backface-visibility: hidden;
 }
 
 .card__face--front {
-	background-image: url("image/QS.jpg");
-  	background-size: cover;
+	background-image: url("image/cards/QS.jpg");
 }
 
 .card__face--back {
-	background-image: url("image/CB.jpg");
+	background-image: url("image/cards/CB.jpg");
 	transform: rotateY(180deg);
 }
 
@@ -202,6 +219,9 @@ input[type=button]:hover {
 </div>
 <div class="footnote" id="footnote">
 © 2020 IALogic
+</div>
+<div class="prompt" id="prompt" onClick="dismissPrompt()">
+I AM HERE!
 </div>
 
 </body></html>

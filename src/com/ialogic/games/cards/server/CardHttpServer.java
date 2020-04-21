@@ -70,7 +70,7 @@ public class CardHttpServer implements CardUI {
 			if (e instanceof CardEventPlayerRegister ) {
 				// TODO check for already registered
 				if (getServer().sessions.containsKey(player)) {
-					System.out.println (String.format("Player %s already exists, replacing.", player));
+					System.out.println (String.format("Player %s already exists, welcome back.", player));
 					response=String.format ("Hi %s! Welcome back!", player);
 				}
 				else {
