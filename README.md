@@ -14,9 +14,8 @@ Browser based client is under development. You are welcome to contribute to it.
 
 	http://www.ialogic.com/
 
-I have the basic client HTML5 and JS framework and need to work on HTTP server to complete the setup.
+04/20/2020	I have the basic client HTML5 and JS framework and a basic java HTTP server proxy through Apache
 
 Have fun!
 
 Steve Yu
-2020/04/19
