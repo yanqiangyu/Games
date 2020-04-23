@@ -1,3 +1,11 @@
+var idleThread;
+var gameState = "Initial";
+var session = {player: "", code: "",};
+var pollingInterval = 5000;
+var testThreadInterval = 5000;
+var testStage = 0;
+var testUsers = ['Steve', 'Ying','Chris','Tiff'];
+
 var carddeck=[
 	{img: "2C", x: 0, y: 0,},
 	{img: "2D", x: 0, y: 0,},	
@@ -53,31 +61,28 @@ var carddeck=[
 	{img: "AS", x: 0, y: 0,},	
 ];
 
-function startGame() 
+function sendLogin()
 {
 	var player=document.getElementById("player").value;
 	var code=document.getElementById("code").value;
-	var splash = document.getElementById("splash");
-	
-	if (splash.requestFullScreen)
-		splash.requestFullScreen();
-	
-	if (login(player, code) == "OK") {
-		var x=document.getElementById("over");
-		x.parentNode.removeChild(x);
-		splash.style.backgroundImage="url('image/table.jpg')";
-		splash.style.opacity="1";
-		setUpTable();
-	}
-	else {
-		prompt ("Player Name/Code required.");
-	}
+	gameState = "Login";
+	prompt (login (player, code));
 }
 
-
-function setUpTable() {
+function startGame() 
+{
+	gameState = "Idle";
+	var splash = document.getElementById("splash");
+	if (splash.requestFullScreen)
+		splash.requestFullScreen();
+	var x=document.getElementById("over");
+	idleThread = setInterval(mainLoop, pollingInterval); 
+	x.parentNode.removeChild(x);
+	splash.style.backgroundImage="url('image/table.jpg')";
+	splash.style.opacity="1";
 	showDeck ();
 	showPlayers ();
+	randomMove ();
 }
 
 function showDeck ()
@@ -95,8 +100,6 @@ function showDeck ()
 		table.appendChild(scene);
 		scene.style.width="50px";
 		scene.style.height="70px";
-		scene.style.left=(Math.random() * (viewwidth-cw)) + "vw";
-		scene.style.top=(Math.random() * (viewheight-ch)) + "vh";
 		scene.style.display='block';
 		
 		var c=document.createElement('div');
@@ -107,14 +110,21 @@ function showDeck ()
 		
 		var cf=document.createElement('div');
 		c.appendChild(cf);
+		cf.setAttribute('id', 'cardface'+i);
 		cf.classList.add('card__face', 'card__face--front');
 		cf.style.backgroundImage="url('image/cards/" + carddeck[i].img + ".jpg')";
 		
 		var cb=document.createElement('div');
 		c.appendChild(cb);
 		cb.classList.add('card__face', 'card__face--back');
-
-		collectCards(i, (viewwidth-cw)/2, (viewheight-ch)/2);
+		
+		carddeck[i].x = (viewwidth-cw) / 2 - 1;
+		carddeck[i].y = (viewheight-ch) / 2;
+		scene.style.left = carddeck[i].x + "vw";
+		scene.style.top = carddeck[i].y + "vh";
+		
+		var logo=document.getElementById("logo");
+		logo.setAttribute('onClick', 'clickLogo()');
 	}
 }
 
@@ -125,10 +135,18 @@ function showPlayers ()
 		var l = getPlayerLocation (p);
 		var view=document.createElement('div');
 		table.appendChild(view);
-		view.classList.add('logo');
+		view.classList.add('player');
 		view.style.left = l.x + 'vw';
 		view.style.top = l.y + 'vh';
+		view.setAttribute('id', "player"+p);
 	}
+	setPlayer(0, session.player);
+}
+
+function setPlayer (p, name)
+{
+	var view=document.getElementById("player"+p);
+	view.innerHTML=name;
 }
 
 function getPlayerLocation (player) {
@@ -184,7 +202,7 @@ function getCardLocation (i)
   return location;
 }
 
-function dealCards()
+function dealCards(hand)
 {
   var speed=10;
   var i = 0;
@@ -194,18 +212,24 @@ function dealCards()
   var x=location.x;
   var y=location.y;
   var p=location.p;
+  var codes = hand.split(",");
   var id = setInterval(frame, 5);
-  
+
+  gameState = "DealCards";
   function frame() {
 	if (i == 52) {
       clearInterval(id);
+      nextEffect ();
 	}
 	else {
 		if (step <= 0) {
 	      c.style.left=x+'vw'; 
 	      c.style.top=y+'vh';
-	      if (p == 0)
+	      if (p == 0) {
+	    	  var cf=document.getElementById('cardface'+i);
+	    	  cf.style.backgroundImage="url('image/cards/" + codes[Math.floor(i/4)] + ".jpg')";
 	    	  flipCard(i);
+	      }
 	      ++i;
 	      c = document.getElementById("scene" + i);   
 	      location=getCardLocation (i);
@@ -228,6 +252,7 @@ function dealCards()
   }
 }
 
+
 function collectCards (i, x, y) 
 {
   var c = document.getElementById("scene" + i);   
@@ -240,7 +265,7 @@ function collectCards (i, x, y)
       c.style.top=y+'vh';  
       clearInterval(id);
 	  if (i == 51) {
-		  dealCards();
+		  nextEffect ();
 	  }
     } else {
       if (step == 90) {
@@ -256,6 +281,7 @@ function collectCards (i, x, y)
     }
   }
 }
+
 
 function flipCard(i)
 {
@@ -290,28 +316,155 @@ function login (player, code) {
 			"?CardEvent=CardEventPlayerRegister" +
 			"&player="+ player+
 			"&code=" + code);
-		return "OK";
+		session.player=player;
+		session.code=code;
+		return "Wait for response...";
 	}
-	else if (code == "test") {
-		return "OK";
+	else if (code.toUpperCase() == "TEST") {
+		var testThread = setInterval(testLoop, testThreadInterval);
+		session.player=testUsers[0];
+		session.code=code;
+		return "Waiting for test cases...";
 	}
-	return "";
+	return "Playe/Code Required";
 }
+
+function testLoop () 
+{
+	var testResponse=
+		"<event name='CardEventGameIdle'>" +
+		"<message> Game State:" + gameState + " ready for new test cases</message>" +
+		"</event>";
+	
+	switch (gameState) {
+	case "Login":
+		testResponse=
+			"<event name='CardEventGameIdle'>" +
+			"<message>OK</message>" +
+			"</event>";
+		break;
+	case "Idle":
+		++testStage;
+		if (testStage == 1) {
+			testResponse=
+				"<event name='CardEventGameIdle'>" +
+				"<message>Waiting for game to start</message>" +
+				"</event>";
+		}
+		else if (testStage < 5) {
+			testResponse=
+				"<event name='CardEventPlayerRegister'>" +
+				"<message>New Player Joined " + testStage + "</message>";
+				for (i = 0; i < testStage; ++i) {
+					testResponse = testResponse + 
+						"<player name='" + testUsers[i] + "' position='" + i + "' >" + 
+						"</player>";
+				}
+				testResponse = testResponse + "</event>";
+		}
+		else {
+			testResponse=
+				"<event name='CardEventShuffleEffect'>" +
+				"<message>Let's play</message>";
+				testResponse = testResponse + "</event>";
+		}
+		break;
+	case "Ready":
+		testResponse=
+			"<event name='CardEventDealCards'>" +
+			"<message>Dealing Cards</message>" +
+				"<player name='Steve' position='0'>" +
+				"<hand>(3C)(5C)(JC)(KC)(7D)(8D)(AD)(7H)(9H)(AH)(3S)(JS)(KS)</hand>" +
+				"</player>";
+			testResponse = testResponse + "</event>";
+			break;
+	case "Negotiate":
+		testResponse=
+			"<event name='CardEventFaceUp'>" +
+			"<message>Choose Cards or pass</message>" + 
+			"<rule reason='Show Special card For double points' allowed='(AH)(QS)(XC)(JD)'/>";
+			testResponse = testResponse + "</event>";
+			break;
+		default:;
+	}
+	handleResponseText (testResponse);
+}
+
+function handleResponseText (text)
+{
+	var response = new DOMParser().parseFromString(text,"text/xml");
+	var event=response.getElementsByTagName("event")[0].getAttribute("name");
+	var message = response.getElementsByTagName("message")[0].childNodes[0].nodeValue;
+	prompt ("Game State:" + gameState + "Message:" + message );
+	switch (event) {
+	case "CardEventGameIdle":
+		switch (gameState) {
+		case "Login":
+			if (message == "OK") {
+				startGame ();
+			}
+			break;
+		default:
+			prompt (message);
+			break;
+		}
+		// update game board
+		break;
+	case "CardEventPlayerRegister":
+		var players = response.getElementsByTagName("player");
+		if (players) {
+			for (i = 0; i < players.length; ++i) {
+				setPlayer (players[i].getAttribute("position"),
+					players[i].getAttribute("name"));
+			}
+		}
+		prompt (message);
+		break;
+	case "CardEventShuffleEffect":
+		prompt (message);
+		gameState = "CleanUp";
+		break;
+	case "CardEventDealCards":
+		var hand = response.getElementsByTagName("hand")[0].childNodes[0].nodeValue;
+		hand = hand.replace(/\)\(/gi, ",").replace(/\)/,"").replace(/\(/g,"");
+		dealCards (hand);
+		break;
+	case "CardEventFaceUp":
+		var rule = response.getElementsByTagName("rule")[0];
+		var reason = rule.getAttribute("reason");
+		var allowed = rule.getAttribute("allowed");
+		allowed = allowed.replace(/\)\(/gi, ",").replace(/\)/,"").replace(/\(/g,"");
+		prompt (message);
+		// enableCards (reason, allowed);
+		gameState = "FaceUpResponse";
+		break;
+	default:
+		prompt ("Event Name:" + event);
+	}
+} 
 
 function httpGetAsync(theUrl)
 {
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open("GET", theUrl, false); 
-    xmlHttp.send(null);
-    prompt (xmlHttp.responseText);
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+        	handleResponseText (xhttp.responseText);
+        }
+        else {
+           	handleResponseText ("Server not available");
+        }
+    };
+    xhttp.open("GET", theUrl, true); 
+    xhttp.send(null);
 }
+
 
 function prompt (text)
 {
 	var c=document.getElementById("prompt");
 	c.innerHTML=text;
 	c.style.display="block";
-	var id = setInterval(dismiss, 2000);
+	var id = setInterval(dismiss, 3000);
 	function dismiss () {
 		c.style.display="none";
 		clearInterval(id);
@@ -321,4 +474,75 @@ function dismissPrompt ()
 {
 	var c=document.getElementById("prompt");
 	c.style.display="none";
+}
+
+function mainLoop ()
+{
+	/*
+	httpGetAsync("http://www.ialogic.com/cardgame" + 
+			"?CardEvent=CardEventGameIdle" +
+			"&player="+ session.player+
+			"&code=" + session.code);
+	*/
+}
+
+function nextEffect ()
+{
+	switch (gameState) {
+		case "Login":
+		case "Idle":
+				randomMove ();
+				break;
+		case "CleanUp":
+				cleanup ();
+				gameState = "Ready";
+				break;
+		case "DealCards":
+				gameState = "Negotiate";
+				break;
+		default:;
+	}
+}
+
+function randomMove ()
+{
+	for (i=0; i<52; ++i) {
+		var x = carddeck[i].x + (Math.random() - 0.5) * 30;
+		var y = carddeck[i].y + (Math.random() - 0.5) * 30;
+		
+		if (x > 90) x = 180 - x;
+		if (y > 90) y = 180 - y;
+		if (x < 10) x = 10 - x;
+		if (y < 10) y = 10 - y;
+		carddeck[i].x = x;
+		carddeck[i].y = y;
+		collectCards (i, carddeck[i].x, carddeck[i].y);
+	}
+}
+
+function cleanup ()
+{
+	var table=document.getElementById("splash");
+	var viewwidth=parseInt(table.style.width);
+	var viewheight=parseInt(table.style.height);
+	var ch=Math.floor(viewheight / 8);
+	var cw=Math.floor(ch*0.7);
+
+	for (i=0; i<52; ++i) {
+		carddeck[i].x = (viewwidth-cw) / 2 - 1;
+		carddeck[i].y = (viewheight-ch) / 2;
+		var c = document.getElementById('card'+i);
+		c.classList.toggle ('is-flipped', false);
+		collectCards (i, carddeck[i].x, carddeck[i].y);
+	}
+}
+
+function clickLogo () {
+	if (gameState == "Idle") {
+		gameState = "CleanUp";
+	}
+	else if (gameState == "Ready") {
+		gameState = "Idle";
+		randomMove ();
+	}
 }

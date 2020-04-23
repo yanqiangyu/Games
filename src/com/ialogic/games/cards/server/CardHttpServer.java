@@ -51,14 +51,14 @@ public class CardHttpServer implements CardUI {
 	      String path = requestURI.getPath();
 	      String query = requestURI.getQuery();
 	      if (path.contentEquals("/") && !query.isEmpty()) {
-	    	  response = createResponse (query);
+	    	  response = getServer().createResponse (query);
 	      }
 		  exchange.sendResponseHeaders(200, response.getBytes().length);
 		  OutputStream os = exchange.getResponseBody();
 		  os.write(response.getBytes());
 		  os.close();
 	}
-	private static String createResponse(String query) {
+	private String createResponse(String query) {
 		String response = "Unknown Request";
 		try {
 			HashMap<String, String>request = parseQuery(query);
@@ -69,23 +69,24 @@ public class CardHttpServer implements CardUI {
 			CardEvent e = (CardEvent) Class.forName(clz).getConstructor(paramType).newInstance("Register Player");
 			if (e instanceof CardEventPlayerRegister ) {
 				// TODO check for already registered
-				if (getServer().sessions.containsKey(player)) {
+				if (sessions.containsKey(player)) {
 					System.out.println (String.format("Player %s already exists, welcome back.", player));
 					response=String.format ("Hi %s! Welcome back!", player);
 				}
 				else {
-					CardPlayerHttpClient c = new CardPlayerHttpClient (player, getServer());
+					CardPlayerHttpClient c = new CardPlayerHttpClient (player, this);
 					e.setPlayer(c);
-					getServer().sessions.put(player, c);
+					sessions.put(player, c);
 					System.out.println(String.format ("New Client %s", c.getName()));
-					getServer().playerEvent(e);
+					playerEvent(e);
 					response=String.format ("Hi %s! please stay tuned... I am almost there...", player);
 				}
 			}
-			else if (getServer().sessions.containsKey(player)) {
-				//TODO
-				// response = "Find Client and send over all the queued messages.";
-				response = "OK";
+			else if (sessions.containsKey(player)) {
+				if (e instanceof CardEventGameIdle) {
+					CardPlayerHttpClient s = sessions.get(player);
+					response = "Update Gate State for player:" + player;
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

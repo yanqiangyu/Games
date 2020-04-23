@@ -37,6 +37,26 @@
 	display: none;
 }
 
+.player {
+    color: White;
+    background-color: lightgray;
+    background-image: url('image/table.jpg');
+	background-size: 100% 100%;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 18px;
+    font-weight: bold;
+    opacity: .75;
+    margin: auto;
+    top: 5vh;
+	width:  64px;
+	height: 64px;
+	text-align: center;
+	padding: 5px 5px;
+	box-shadow: 5px 5px 5px black;
+	position: absolute;
+	display: block;
+}
+
 .logo {
 	background-image: url('image/ialogic.jpg');
 	background-repeat: no-repeat;
@@ -210,7 +230,7 @@ input[type=button]:hover {
 		  <input type="text" id="player" name="player"><BR>
 		  <label for="code">Code:</label>
 		  <input type="text" id="code" name="code"><BR>
-		  <input type="button" onclick="startGame()" value="Let's Go!">
+		  <input type="button" onclick="sendLogin()" value="Let's Go!">
 		</form>
     </div>
   </div>		

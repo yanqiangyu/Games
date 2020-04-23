@@ -22,4 +22,7 @@ public class CardPlayerHttpClient extends CardPlayer {
 		System.out.println (debug);
 		events.add (request);
 	}
+	public String getGameState() {
+		return null;
+	}
 }
