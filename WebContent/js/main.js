@@ -5,6 +5,10 @@ var pollingInterval = 5000;
 var testThreadInterval = 5000;
 var testStage = 0;
 var testUsers = ['Steve', 'Ying','Chris','Tiff'];
+var myCards;
+var selectMask = [0,0,0,0,0,0,0,0,0,0,0,0,0];
+var selectedCards = [0,0,0,0,0,0,0,0,0,0,0,0,0];
+var maskReason = "Not your turn yet";
 
 var carddeck=[
 	{img: "2C", x: 0, y: 0,},
@@ -60,6 +64,8 @@ var carddeck=[
 	{img: "AH", x: 0, y: 0,},	
 	{img: "AS", x: 0, y: 0,},	
 ];
+
+//======================================================================
 
 function sendLogin()
 {
@@ -139,6 +145,7 @@ function showPlayers ()
 		view.style.left = l.x + 'vw';
 		view.style.top = l.y + 'vh';
 		view.setAttribute('id', "player"+p);
+		view.setAttribute('onClick', "clickPlayer('" + p + "')");
 	}
 	setPlayer(0, session.player);
 }
@@ -212,7 +219,8 @@ function dealCards(hand)
   var x=location.x;
   var y=location.y;
   var p=location.p;
-  var codes = hand.split(",");
+
+  myCards = hand.split(",");
   var id = setInterval(frame, 5);
 
   gameState = "DealCards";
@@ -226,8 +234,8 @@ function dealCards(hand)
 	      c.style.left=x+'vw'; 
 	      c.style.top=y+'vh';
 	      if (p == 0) {
-	    	  var cf=document.getElementById('cardface'+i);
-	    	  cf.style.backgroundImage="url('image/cards/" + codes[Math.floor(i/4)] + ".jpg')";
+	    	  var m = Math.floor(i/4);
+	    	  setCardFace (i, myCards[m]);
 	    	  flipCard(i);
 	      }
 	      ++i;
@@ -295,18 +303,118 @@ function rotateCard(i)
 	c.classList.add('rotated');
 }
 
+function setCardFace (i, face) {
+	var cf=document.getElementById('cardface'+i);
+	cf.style.backgroundImage="url('image/cards/" + face + ".jpg')";
+}
+
+
+function enableCards (reason, allowed)
+{
+	var cards=allowed.split(",");
+	for (j = 0; j < myCards.length; ++j) {
+		allowCard (j, 0);
+		for (i = 0; i < cards.length; ++i) {
+			if (myCards[j] == cards[i]) {
+				allowCard(j, 1);
+				break;
+			}
+		}
+	}
+	maskReason = reason;
+}
+
+function allowCard (i, allowed) 
+{
+	selectMask[i] = allowed;
+	var idx=i*4;
+	var cd=document.getElementById('card'+idx);
+	if (allowed == 1) {
+		cd.classList.toggle ('selectable', true);
+	}
+	else {
+		cd.classList.toggle ('selectable', false);
+	}
+}
+
+function showFaceup (p, c)
+{
+	if (c != ""  && p != 0) {
+		var cards=c.split(",");
+		for (i = 0; i < cards.length; ++i) {
+			var idx = p - i*4 + 48;
+			var pos = getCardLocation (idx);
+			setCardFace (idx, cards[i]);
+			switch (p){
+				case "1": pos.x = pos.x - 4;break;
+				case "2": pos.y = pos.y + 4;break;
+				case "3": pos.x = pos.x + 4;break;
+			}
+			collectCards (idx, pos.x, pos.y);
+		}
+	}
+}
+
+
+function clickPlayer (p)
+{
+	if (p == 0) {
+		switch (gameState) {
+		case "FaceUpResponse":
+			var s = "";
+			enableCards ("Waiting", "");
+			for (i = 0; i < myCards.length; ++ i) {
+				if (selectedCards[i] != 0) {
+					s += "(" + myCards[i] + ")";
+					faceupMyCard (i*4);
+				}
+			}
+			if (s == "") {
+				s = "()";
+			}
+			prompt (s);
+			break;
+		default:;
+		}
+	}
+}
+
 function clickCard (i)
+{
+	var idx = Math.floor(i/4);
+	if (selectMask[idx] == 1) {
+		toggleCardSelection (i)
+	}
+	else {
+		prompt (maskReason);
+	}
+}
+
+function toggleCardSelection (i) 
 {
 	var location=getCardLocation (i);
 	if (location.p == 0 ) {
 		var c=document.getElementById('scene'+i);
 	    var cy=parseFloat(c.style.top, 10);
+	    var idx=Math.floor(i/4);
 	    if (cy >= location.y - 0.1) {
 	    	c.style.top=cy - 2 + 'vh';
+	    	selectedCards[idx]=1;
 	    }
 	    else {
 	    	c.style.top=location.y + 'vh';
-	    }	
+	    	selectedCards[idx]=0;
+	    }
+	}
+}
+
+function faceupMyCard (i) 
+{
+	var location=getCardLocation (i);
+	if (location.p == 0 ) {
+		var c=document.getElementById('scene'+i);
+		location.y -= 4;
+    	c.style.top = location.y + 'vh';
 	}
 }
 
@@ -348,13 +456,13 @@ function testLoop ()
 		if (testStage == 1) {
 			testResponse=
 				"<event name='CardEventGameIdle'>" +
-				"<message>Waiting for game to start</message>" +
+				"<message>Waiting for Players</message>" +
 				"</event>";
 		}
 		else if (testStage < 5) {
 			testResponse=
 				"<event name='CardEventPlayerRegister'>" +
-				"<message>New Player Joined " + testStage + "</message>";
+				"<message>New Player Joined " + testUsers[testStage-1] + "</message>";
 				for (i = 0; i < testStage; ++i) {
 					testResponse = testResponse + 
 						"<player name='" + testUsers[i] + "' position='" + i + "' >" + 
@@ -365,7 +473,7 @@ function testLoop ()
 		else {
 			testResponse=
 				"<event name='CardEventShuffleEffect'>" +
-				"<message>Let's play</message>";
+				"<message>Shuffling Cards</message>";
 				testResponse = testResponse + "</event>";
 		}
 		break;
@@ -374,18 +482,49 @@ function testLoop ()
 			"<event name='CardEventDealCards'>" +
 			"<message>Dealing Cards</message>" +
 				"<player name='Steve' position='0'>" +
-				"<hand>(3C)(5C)(JC)(KC)(7D)(8D)(AD)(7H)(9H)(AH)(3S)(JS)(KS)</hand>" +
+				"<hand>(XC)(3D)(6D)(7D)(QD)(AD)(6H)(7H)(4S)(5S)(9S)(QS)(AS)</hand>" +
 				"</player>";
 			testResponse = testResponse + "</event>";
 			break;
 	case "Negotiate":
 		testResponse=
 			"<event name='CardEventFaceUp'>" +
-			"<message>Choose Cards or pass</message>" + 
-			"<rule reason='Show Special card For double points' allowed='(AH)(QS)(XC)(JD)'/>";
+			"<message>Choose Cards or Pass</message>" + 
+			"<rule reason='Special card only' allowed='(AH)(QS)(XC)(JD)'/>";
 			testResponse = testResponse + "</event>";
+			testStage = 0;
 			break;
-		default:;
+	case "FaceUpResponse":
+		if (testStage == 0) {
+			testResponse=
+				"<event name='CardEventFaceUpResponse'>" +
+				"<message>Player Face Up</message>" + 
+				"<player name='Chris' position='2'>" +
+				"<faceup>(JD)</faceup>" +
+				"</player>";
+			testResponse = testResponse + "</event>";
+		}
+		else if (testStage == 1) {
+			testResponse=
+				"<event name='CardEventFaceUpResponse'>" +
+				"<message>Player Face Up</message>" + 
+				"<player name='Tiff' position='3'>" +
+				"<faceup>(AH)</faceup>" +
+				"</player>";
+			testResponse = testResponse + "</event>";
+		}
+		else if (testStage == 2) {
+			testResponse=
+				"<event name='CardEventFaceUpResponse'>" +
+				"<message>Player Face Up</message>" + 
+				"<player name='Ying' position='1'>" +
+				"<faceup>()</faceup>" +
+				"</player>";
+			testResponse = testResponse + "</event>";
+		}
+		++testStage;
+			break;
+	default:;
 	}
 	handleResponseText (testResponse);
 }
@@ -395,7 +534,7 @@ function handleResponseText (text)
 	var response = new DOMParser().parseFromString(text,"text/xml");
 	var event=response.getElementsByTagName("event")[0].getAttribute("name");
 	var message = response.getElementsByTagName("message")[0].childNodes[0].nodeValue;
-	prompt ("Game State:" + gameState + "Message:" + message );
+	prompt ("Game State:" + gameState + " Message:" + message );
 	switch (event) {
 	case "CardEventGameIdle":
 		switch (gameState) {
@@ -435,8 +574,14 @@ function handleResponseText (text)
 		var allowed = rule.getAttribute("allowed");
 		allowed = allowed.replace(/\)\(/gi, ",").replace(/\)/,"").replace(/\(/g,"");
 		prompt (message);
-		// enableCards (reason, allowed);
+		enableCards (reason, allowed);
 		gameState = "FaceUpResponse";
+		break;
+	case "CardEventFaceUpResponse":
+		var position = response.getElementsByTagName("player")[0].getAttribute("position");
+		var cards = response.getElementsByTagName("faceup")[0].childNodes[0].nodeValue;
+		cards = cards.replace(/\)\(/gi, ",").replace(/\)/,"").replace(/\(/g,"");
+		showFaceup (position, cards);
 		break;
 	default:
 		prompt ("Event Name:" + event);
@@ -544,5 +689,8 @@ function clickLogo () {
 	else if (gameState == "Ready") {
 		gameState = "Idle";
 		randomMove ();
+	}
+	else  {
+		prompt("Test Move");
 	}
 }
