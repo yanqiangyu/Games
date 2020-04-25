@@ -27,6 +27,7 @@
     font-size: 18px;
     opacity: .75;
     margin: auto;
+    left: 5vh;
     top: 5vh;
     width:  auto;
 	height: auto;
@@ -55,6 +56,11 @@
 	box-shadow: 5px 5px 5px black;
 	position: absolute;
 	display: block;
+}
+
+.player_input{
+	animation: flashing 1500ms infinite;
+	cursor: pointer;
 }
 
 .logo {
@@ -121,6 +127,7 @@
   position: absolute;
   display: block;
   perspective: 600px;
+  z-index: 99;
 }
 
 .card {
@@ -143,11 +150,6 @@
   background-repeat: no-repeat;
   background-size: 100% 100%;
   backface-visibility: hidden;
-}
-
-.selectable {
-	cursor: pointer;
-	box-shadow: 5px 5px 5px red;
 }
 
 .card__face--front {
@@ -198,6 +200,12 @@ input[type=button] {
 input[type=button]:hover {
     background-color: #00B200; box-shadow: 0 0 3px #00B200;
 	animation: glowing 1500ms 1;
+}
+
+@keyframes flashing {
+  0% { box-shadow: 0 0 3px #00B200; }
+  50% { box-shadow: 0 0 40px #00FF00; }
+  100% { box-shadow: 0 0 3px #00B200; }
 }
 
 @keyframes glowing {

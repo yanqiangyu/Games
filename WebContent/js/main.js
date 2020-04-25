@@ -1,14 +1,16 @@
 var idleThread;
 var gameState = "Initial";
 var session = {player: "", code: "",};
-var pollingInterval = 5000;
-var testThreadInterval = 5000;
+var pollingInterval = 3000;
+var testThreadInterval = 1000;
 var testStage = 0;
 var testUsers = ['Steve', 'Ying','Chris','Tiff'];
 var myCards;
 var selectMask = [0,0,0,0,0,0,0,0,0,0,0,0,0];
 var selectedCards = [0,0,0,0,0,0,0,0,0,0,0,0,0];
 var maskReason = "Not your turn yet";
+var center={x:0, y:0,};
+var discarded=[];
 
 var carddeck=[
 	{img: "2C", x: 0, y: 0,},
@@ -150,12 +152,6 @@ function showPlayers ()
 	setPlayer(0, session.player);
 }
 
-function setPlayer (p, name)
-{
-	var view=document.getElementById("player"+p);
-	view.innerHTML=name;
-}
-
 function getPlayerLocation (player) {
   // Center card position for each player;
   var l = {x: 0, y: 0,};
@@ -264,7 +260,7 @@ function dealCards(hand)
 function collectCards (i, x, y) 
 {
   var c = document.getElementById("scene" + i);   
-  var step = 100;
+  var step = 50;
   var id = setInterval(frame, 25);
   
   function frame() {
@@ -276,7 +272,7 @@ function collectCards (i, x, y)
 		  nextEffect ();
 	  }
     } else {
-      if (step == 90) {
+      if (step == 45) {
     	  flipCard(i);
       }
       var cx=parseFloat(c.style.left, 10);
@@ -303,11 +299,17 @@ function rotateCard(i)
 	c.classList.add('rotated');
 }
 
+function cleanCard (i) {
+	var c = document.getElementById('card'+i);
+	c.classList.toggle ('is-flipped', false);
+	var s = document.getElementById('scene'+i);
+	s.classList.toggle ('rotated', false);
+}
+
 function setCardFace (i, face) {
 	var cf=document.getElementById('cardface'+i);
 	cf.style.backgroundImage="url('image/cards/" + face + ".jpg')";
 }
-
 
 function enableCards (reason, allowed)
 {
@@ -329,16 +331,12 @@ function allowCard (i, allowed)
 	selectMask[i] = allowed;
 	var idx=i*4;
 	var cd=document.getElementById('card'+idx);
-	if (allowed == 1) {
-		cd.classList.toggle ('selectable', true);
-	}
-	else {
-		cd.classList.toggle ('selectable', false);
-	}
+	cd.classList.toggle ('player_input', allowed==1);
 }
 
 function showFaceup (p, c)
 {
+	flashPlayer (p, false);
 	if (c != ""  && p != 0) {
 		var cards=c.split(",");
 		for (i = 0; i < cards.length; ++i) {
@@ -355,28 +353,73 @@ function showFaceup (p, c)
 	}
 }
 
+function faceupMyCard (i) 
+{
+	var location=getCardLocation (i);
+	if (location.p == 0 ) {
+		var c=document.getElementById('scene'+i);
+		location.y -= 4;
+    	c.style.top = location.y + 'vh';
+	}
+}
+
+function playCard (position, round, card) {
+	flashPlayer (position, false);
+	var i = round * 4 + position;
+	var l = getPlayerLocation (position);
+	setCardFace (i, card);
+	collectCards (i, l.x+1, l.y+2.5);
+	discarded.push(i);
+}
+
+function discardCards () {
+	while (discarded.length > 0) {
+		i = discarded.shift();
+		cleanCard(i);
+		collectCards (i, center.x, center.y);
+	}
+}
 
 function clickPlayer (p)
 {
 	if (p == 0) {
-		switch (gameState) {
-		case "FaceUpResponse":
-			var s = "";
-			enableCards ("Waiting", "");
-			for (i = 0; i < myCards.length; ++ i) {
-				if (selectedCards[i] != 0) {
-					s += "(" + myCards[i] + ")";
+		var s = "";
+		enableCards ("Waiting", "");
+		for (i = 0; i < myCards.length; ++ i) {
+			if (selectedCards[i] != 0) {
+				s += "(" + myCards[i] + ")";
+				if (gameState == "FaceUpResponse") {
 					faceupMyCard (i*4);
 				}
+				else if (gameState == "PlayerTurnResponse") {
+					flipCard (i*4);
+					playCard (0, i, myCards[i]);
+					break;
+				}
 			}
-			if (s == "") {
-				s = "()";
-			}
-			prompt (s);
-			break;
-		default:;
 		}
+		if (s == "") {
+			s = "()";
+		}
+		for (i = 0; i < myCards.length; ++ i) {
+			selectedCards[i] = 0;
+		}
+		flashPlayer (0, false);
+		gameState="PlayerReady";
 	}
+}
+
+function setPlayer (p, name)
+{
+	var view=document.getElementById("player"+p);
+	view.innerHTML=name;
+}
+
+function flashPlayer (p, on)
+{
+	var player=document.getElementById("player"+p);
+	player.classList.toggle("player_input", on);
+	player.style.cursor = ((on && p == 0) ? "pointer" : "");
 }
 
 function clickCard (i)
@@ -408,15 +451,6 @@ function toggleCardSelection (i)
 	}
 }
 
-function faceupMyCard (i) 
-{
-	var location=getCardLocation (i);
-	if (location.p == 0 ) {
-		var c=document.getElementById('scene'+i);
-		location.y -= 4;
-    	c.style.top = location.y + 'vh';
-	}
-}
 
 function login (player, code) {
 	if (player != "" && code != "") {
@@ -441,7 +475,7 @@ function testLoop ()
 {
 	var testResponse=
 		"<event name='CardEventGameIdle'>" +
-		"<message> Game State:" + gameState + " ready for new test cases</message>" +
+		"<message>Game State:" + gameState + ", stage:" + testStage + "</message>" +
 		"</event>";
 	
 	switch (gameState) {
@@ -462,7 +496,7 @@ function testLoop ()
 		else if (testStage < 5) {
 			testResponse=
 				"<event name='CardEventPlayerRegister'>" +
-				"<message>New Player Joined " + testUsers[testStage-1] + "</message>";
+				"<message>New Player: " + testUsers[testStage-1] + "</message>";
 				for (i = 0; i < testStage; ++i) {
 					testResponse = testResponse + 
 						"<player name='" + testUsers[i] + "' position='" + i + "' >" + 
@@ -503,6 +537,7 @@ function testLoop ()
 				"<faceup>(JD)</faceup>" +
 				"</player>";
 			testResponse = testResponse + "</event>";
+			++testStage;
 		}
 		else if (testStage == 1) {
 			testResponse=
@@ -512,6 +547,7 @@ function testLoop ()
 				"<faceup>(AH)</faceup>" +
 				"</player>";
 			testResponse = testResponse + "</event>";
+			++testStage;
 		}
 		else if (testStage == 2) {
 			testResponse=
@@ -521,9 +557,71 @@ function testLoop ()
 				"<faceup>()</faceup>" +
 				"</player>";
 			testResponse = testResponse + "</event>";
+			++testStage;
 		}
-		++testStage;
-			break;
+		else if (testStage == 3) {
+			// auto play
+			clickPlayer(0);
+		}
+		break;
+	case "PlayerReady":
+		if (testStage > 106) {
+			gameState="EndHand";
+		}
+		else {
+			if (testStage < 3) {
+				gameState = "FaceUpResponse";
+			}
+			else if (testStage >= 3) {
+				var p = (Math.floor ((testStage -3)/2) + 1) % 4;
+				var r = Math.floor((Math.floor ((testStage -3)/2)) / 4);
+				if ((testStage % 2) == 1) {
+					testResponse=
+						"<event name='CardEventTurnToPlay'>" +
+						"<message>Player event</message>" + 
+						"<player name='" + testUsers[p] +"' position='" + p + "' allowed=''>" +
+						"</player>";
+					testResponse = testResponse + "</event>";
+					if (p == 0) {
+						gameState = "PlayerTurnResponse";
+					}
+					++testStage;
+				}
+				else {
+					if (p != 0) {
+						testResponse=
+							"<event name='CardEventPlayerAction'>" +
+							"<message>Player event</message>" + 
+							"<player name='" + testUsers[p] +"' position='" + p + "'>" +
+							"<cardPlayed card='8S' round='" + r + "'/>" +
+							"</player>";
+						testResponse = testResponse + "</event>";
+					}
+					else {
+						gameState="EndRound";
+					}
+					++testStage;
+				}
+			}
+		}
+		break;
+	case "PlayerTurnResponse":
+		// auto play
+		var r = Math.floor((Math.floor ((testStage -3)/2)) / 4);
+		selectedCards[r]=1;
+		clickPlayer(0);
+		gameState = "PlayerReady";
+		break;
+	case "EndRound":
+		testResponse=
+			"<event name='CardEventEndRound'>" +
+			"<message>Round Ended</message>" + 
+			"</player>";
+		testResponse = testResponse + "</event>";
+		break;
+	case "EndHand":
+		testStagge = 0;
+		break;
 	default:;
 	}
 	handleResponseText (testResponse);
@@ -575,6 +673,9 @@ function handleResponseText (text)
 		allowed = allowed.replace(/\)\(/gi, ",").replace(/\)/,"").replace(/\(/g,"");
 		prompt (message);
 		enableCards (reason, allowed);
+		for (i = 0; i < 4; ++i) {
+			flashPlayer(i, true);
+		}
 		gameState = "FaceUpResponse";
 		break;
 	case "CardEventFaceUpResponse":
@@ -582,6 +683,25 @@ function handleResponseText (text)
 		var cards = response.getElementsByTagName("faceup")[0].childNodes[0].nodeValue;
 		cards = cards.replace(/\)\(/gi, ",").replace(/\)/,"").replace(/\(/g,"");
 		showFaceup (position, cards);
+		break;
+	case "CardEventTurnToPlay":
+		var position = response.getElementsByTagName("player")[0].getAttribute("position");
+		for (i = 0; i < 4; ++i) {
+			flashPlayer (i, i==position);
+			if (position == 0) {
+				// TODO;
+			}
+		}
+		break;
+	case "CardEventPlayerAction":
+		var position = parseInt(response.getElementsByTagName("player")[0].getAttribute("position"));
+		var round = parseInt(response.getElementsByTagName("cardPlayed")[0].getAttribute("round"));
+		var card = response.getElementsByTagName("cardPlayed")[0].getAttribute("card");
+		playCard (position, round, card);
+		break;
+	case "CardEventEndRound":
+		discardCards ();
+		gameState="PlayerReady";
 		break;
 	default:
 		prompt ("Event Name:" + event);
@@ -607,14 +727,11 @@ function httpGetAsync(theUrl)
 function prompt (text)
 {
 	var c=document.getElementById("prompt");
+	var idle = 3;
 	c.innerHTML=text;
 	c.style.display="block";
-	var id = setInterval(dismiss, 3000);
-	function dismiss () {
-		c.style.display="none";
-		clearInterval(id);
-	}
 }
+
 function dismissPrompt ()
 {
 	var c=document.getElementById("prompt");
@@ -636,15 +753,18 @@ function nextEffect ()
 	switch (gameState) {
 		case "Login":
 		case "Idle":
-				randomMove ();
-				break;
+			randomMove ();
+			break;
 		case "CleanUp":
-				cleanup ();
-				gameState = "Ready";
-				break;
+			cleanup ();
+			gameState = "CleaningUp";
+			break;
+		case "CleaningUp":
+			gameState = "Ready";
+			break;
 		case "DealCards":
-				gameState = "Negotiate";
-				break;
+			gameState = "Negotiate";
+			break;
 		default:;
 	}
 }
@@ -673,11 +793,13 @@ function cleanup ()
 	var ch=Math.floor(viewheight / 8);
 	var cw=Math.floor(ch*0.7);
 
+	center.x = (viewwidth-cw) / 2 - 1;
+	center.y = (viewheight-ch) / 2;
+
 	for (i=0; i<52; ++i) {
-		carddeck[i].x = (viewwidth-cw) / 2 - 1;
-		carddeck[i].y = (viewheight-ch) / 2;
-		var c = document.getElementById('card'+i);
-		c.classList.toggle ('is-flipped', false);
+		carddeck[i].x = center.x;
+		carddeck[i].y = center.y;
+		cleanCard (i)
 		collectCards (i, carddeck[i].x, carddeck[i].y);
 	}
 }
@@ -691,6 +813,6 @@ function clickLogo () {
 		randomMove ();
 	}
 	else  {
-		prompt("Test Move");
+		location.reload();
 	}
 }
