@@ -93,28 +93,34 @@ function clickPlayer (p)
 {
 	if (p == 0) {
 		var s = "";
-		enableCards ("Waiting", "");
+		var sep = "";
+		var card = -1;
 		for (i = 0; i < myCards.length; ++ i) {
 			if (selectedCards[i] != 0) {
-				s += "(" + myCards[i] + ")";
+				s += sep + myCards[i];
+				sep = ",";
 				if (gameState == "FaceUpResponse") {
 					faceupMyCard (i*4);
 				}
-				else if (gameState == "PlayerTurnResponse") {
-					flipCard (i*4);
-					playCard (0, i, myCards[i]);
-					break;
-				}
+				card = i;
 			}
 		}
-		if (s == "") {
-			s = "()";
+		if (card < 0 && gameState == "PlayerTurnResponse") {
+			// Can't end turn without select a card;
+			prompt ("Choose a card");
 		}
-		for (i = 0; i < myCards.length; ++ i) {
-			selectedCards[i] = 0;
+		else {
+			if (gameState == "PlayerTurnResponse") {
+				flipCard (card *4);
+				playCard (0, card, myCards[card]);
+			}
+			for (i = 0; i < myCards.length; ++ i) {
+				selectedCards[i] = 0;
+			}
+			enableCards ("Turn Over", "");
+			flashPlayer (0, false);
+			gameState="EndTurn";
 		}
-		flashPlayer (0, false);
-		gameState="PlayerReady";
 	}
 }
 
@@ -296,13 +302,13 @@ function showFaceup (p, c)
 	if (c != ""  && p != 0) {
 		var cards=c.split(",");
 		for (i = 0; i < cards.length; ++i) {
-			var idx = p - i*4 + 48;
+			var idx = p + i*4;
 			var pos = getCardLocation (idx);
 			setCardFace (idx, cards[i]);
 			switch (p){
-				case "1": pos.x = pos.x - 4;break;
-				case "2": pos.y = pos.y + 4;break;
-				case "3": pos.x = pos.x + 4;break;
+				case 1: pos.x -= 4; break;
+				case 2: pos.y += 4; break;
+				case 3: pos.x += 4; break;
 			}
 			moveCardEffect (idx, pos.x, pos.y);
 		}
@@ -337,7 +343,7 @@ function discardCards () {
 }
 
 // *******************************************************************************
-// Animation Module base on CSS
+// Animation Module based on CSS
 // *******************************************************************************
 function getPlayerLocation (player) {
   // Center card position for each player;
@@ -495,16 +501,17 @@ function setCardFace (i, face) {
 function enableCards (reason, allowed)
 {
 	var cards=allowed.split(",");
-	for (j = 0; j < myCards.length; ++j) {
-		allowCard (j, false);
-		for (i = 0; i < cards.length; ++i) {
-			if (myCards[j] == cards[i]) {
-				allowCard(j, true);
+	
+	maskReason = reason;
+	for (i = 0; i < myCards.length; ++i) {
+		allowCard (i, false);
+		for (j = 0; j < cards.length; ++j) {
+			if (myCards[i] == cards[j]) {
+				allowCard(i, true);
 				break;
 			}
 		}
 	}
-	maskReason = reason;
 }
 
 function allowCard (i, is_allowed) 
@@ -535,7 +542,9 @@ function toggleCardSelection (i)
 	    }
 	}
 }
-
+//=========================================
+// Display player name and input pending
+//=========================================
 function setPlayer (p, name)
 {
 	var view=document.getElementById("player"+p);
@@ -633,14 +642,12 @@ function handleResponseText (text)
 		break;
 	case "CardEventDealCards":
 		var hand = response.getElementsByTagName("hand")[0].childNodes[0].nodeValue;
-		hand = hand.replace(/\)\(/gi, ",").replace(/\)/,"").replace(/\(/g,"");
 		dealCards (hand);
 		break;
 	case "CardEventFaceUp":
 		var rule = response.getElementsByTagName("rule")[0];
 		var reason = rule.getAttribute("reason");
 		var allowed = rule.getAttribute("allowed");
-		allowed = allowed.replace(/\)\(/gi, ",").replace(/\)/,"").replace(/\(/g,"");
 		prompt (message);
 		enableCards (reason, allowed);
 		for (i = 0; i < 4; ++i) {
@@ -649,17 +656,28 @@ function handleResponseText (text)
 		gameState = "FaceUpResponse";
 		break;
 	case "CardEventFaceUpResponse":
-		var position = response.getElementsByTagName("player")[0].getAttribute("position");
+		var position = parseInt(response.getElementsByTagName("player")[0].getAttribute("position"));
 		var cards = response.getElementsByTagName("faceup")[0].childNodes[0].nodeValue;
-		cards = cards.replace(/\)\(/gi, ",").replace(/\)/,"").replace(/\(/g,"");
 		showFaceup (position, cards);
 		break;
 	case "CardEventTurnToPlay":
-		var position = response.getElementsByTagName("player")[0].getAttribute("position");
+		var player = response.getElementsByTagName("player")[0];
+		var position = parseInt(player.getAttribute("position"));
+		var r = parseInt(player.getAttribute("round"));
+		var rule = response.getElementsByTagName("rule")[0];
+		var reason = rule.getAttribute("reason");
+		var allowed = rule.getAttribute("allowed");
 		for (i = 0; i < 4; ++i) {
 			flashPlayer (i, i==position);
 			if (position == 0) {
-				// TODO;
+				if (allowed != "") {
+					enableCards (reason, allowed);
+				}
+				else {
+					// Exception or test, play the next card
+					enableCards (reason, myCards[r]);
+					toggleCardSelection (r*4);
+				}
 			}
 		}
 		break;
@@ -678,15 +696,20 @@ function handleResponseText (text)
 	}
 } 
 //*******************************************************************************
-//Test Code Functions:
-//This is client side only test code to test XML parsing and animation
-//event handlers.
-//It does not try to validate state transition from server side. 
+// Test Code Functions:
+// This is client side only test code to validate 
+// 1. XML parsing
+// 2. Animation effects
+// 3. Event handlers.
+// It does not try to validate state transition from server side. 
 //*******************************************************************************
 var testThread;
 var testThreadInterval = 1000;
 var testStage = 0;
 var testUsers = ['Steve', 'Ying','Chris','Tiff'];
+var testHand="XC,3D,6D,7D,QD,AD,6H,7H,4S,5S,9S,QS,AS";
+var testFaceups = ['', 'JD','AH']
+var testDeck = ['Steve', 'Ying','Chris','Tiff'];
 
 function testLoop () 
 {
@@ -733,7 +756,7 @@ function testLoop ()
 			"<event name='CardEventDealCards'>" +
 			"<message>Dealing Cards</message>" +
 				"<player name='Steve' position='0'>" +
-				"<hand>(XC)(3D)(6D)(7D)(QD)(AD)(6H)(7H)(4S)(5S)(9S)(QS)(AS)</hand>" +
+				"<hand>" + testHand + "</hand>" +
 				"</player>";
 			testResponse = testResponse + "</event>";
 			break;
@@ -741,93 +764,76 @@ function testLoop ()
 		testResponse=
 			"<event name='CardEventFaceUp'>" +
 			"<message>Choose Cards or Pass</message>" + 
-			"<rule reason='Special card only' allowed='(AH)(QS)(XC)(JD)'/>";
+			"<rule reason='Special card only' allowed='AH,QS,XC,JD'/>";
 			testResponse = testResponse + "</event>";
 			testStage = 0;
 			break;
 	case "FaceUpResponse":
-		if (testStage == 0) {
+		if (testFaceups.length > 0) {
+			var card = testFaceups.shift();
+			var p = (testStage + 1) % 4;
 			testResponse=
 				"<event name='CardEventFaceUpResponse'>" +
 				"<message>Player Face Up</message>" + 
-				"<player name='Chris' position='2'>" +
-				"<faceup>(JD)</faceup>" +
+				"<player name='" + testUsers[p] + "' position='" + p + "'>" +
+				"<faceup>" + card + "</faceup>" +
 				"</player>";
 			testResponse = testResponse + "</event>";
 			++testStage;
 		}
-		else if (testStage == 1) {
-			testResponse=
-				"<event name='CardEventFaceUpResponse'>" +
-				"<message>Player Face Up</message>" + 
-				"<player name='Tiff' position='3'>" +
-				"<faceup>(AH)</faceup>" +
-				"</player>";
-			testResponse = testResponse + "</event>";
-			++testStage;
-		}
-		else if (testStage == 2) {
-			testResponse=
-				"<event name='CardEventFaceUpResponse'>" +
-				"<message>Player Face Up</message>" + 
-				"<player name='Ying' position='1'>" +
-				"<faceup>()</faceup>" +
-				"</player>";
-			testResponse = testResponse + "</event>";
-			++testStage;
-		}
-		else if (testStage == 3) {
-			// auto play
+		else {
+			testStage = 0;
 			clickPlayer(0);
 		}
 		break;
+	case "EndTurn":
+		gameState = (testFaceups.length > 0) ?
+			"FaceUpResponse" : "PlayerReady";
+		break;
 	case "PlayerReady":
-		if (testStage > 106) {
+		if (testStage > 103) {
 			gameState="EndHand";
 		}
 		else {
-			if (testStage < 3) {
-				gameState = "FaceUpResponse";
+			var turn = Math.floor (testStage/2);
+			var p = (turn + 1) % 4;
+			var r = Math.floor (turn / 4);
+			if ((testStage % 2) == 0) {
+				testResponse=
+					"<event name='CardEventTurnToPlay'>" +
+					"<message>Player event</message>" + 
+					"<player name='" + testUsers[p] +
+						"' position='" + p + 
+						"' round='" + r +
+						"'>" +
+					"</player>" +
+					"<rule reason='Test Only' allowed=''/>";
+				testResponse = testResponse + "</event>";
+				if (p == 0) {
+					gameState = "PlayerTurnResponse";
+				}
+				++testStage;
 			}
-			else if (testStage >= 3) {
-				var p = (Math.floor ((testStage -3)/2) + 1) % 4;
-				var r = Math.floor((Math.floor ((testStage -3)/2)) / 4);
-				if ((testStage % 2) == 1) {
+			else {
+				if (p != 0) {
 					testResponse=
-						"<event name='CardEventTurnToPlay'>" +
+						"<event name='CardEventPlayerAction'>" +
 						"<message>Player event</message>" + 
-						"<player name='" + testUsers[p] +"' position='" + p + "' allowed=''>" +
+						"<player name='" + testUsers[p] +"' position='" + p + "'>" +
+						"<cardPlayed card='8S' round='" + r + "'/>" +
 						"</player>";
 					testResponse = testResponse + "</event>";
-					if (p == 0) {
-						gameState = "PlayerTurnResponse";
-					}
-					++testStage;
 				}
 				else {
-					if (p != 0) {
-						testResponse=
-							"<event name='CardEventPlayerAction'>" +
-							"<message>Player event</message>" + 
-							"<player name='" + testUsers[p] +"' position='" + p + "'>" +
-							"<cardPlayed card='8S' round='" + r + "'/>" +
-							"</player>";
-						testResponse = testResponse + "</event>";
-					}
-					else {
-						gameState="EndRound";
-					}
-					++testStage;
+					gameState="EndRound";
 				}
+				++testStage;
 			}
 		}
 		break;
 	case "PlayerTurnResponse":
 		// auto play
-		var r = Math.floor((Math.floor ((testStage -3)/2)) / 4);
-		selectedCards[r]=1;
 		clickPlayer(0);
-		gameState = "PlayerReady";
 		break;
 	case "EndRound":
 		testResponse=
@@ -838,7 +844,6 @@ function testLoop ()
 		break;
 	case "EndHand":
 		testStage = 0;
-		prompt ("Test Completed.");
 		clearInterval(testThread);
 		break;
 	default:;
