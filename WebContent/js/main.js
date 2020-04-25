@@ -111,7 +111,6 @@ function clickPlayer (p)
 		}
 		else {
 			if (gameState == "PlayerTurnResponse") {
-				flipCard (card *4);
 				playCard (0, card, myCards[card]);
 			}
 			for (i = 0; i < myCards.length; ++ i) {
@@ -299,7 +298,7 @@ function dealCards(hand)
 function showFaceup (p, c)
 {
 	flashPlayer (p, false);
-	if (c != ""  && p != 0) {
+	if (c != ""  && c != "NA" && p != 0) {
 		var cards=c.split(",");
 		for (i = 0; i < cards.length; ++i) {
 			var idx = p + i*4;
@@ -329,16 +328,19 @@ function playCard (position, round, card) {
 	flashPlayer (position, false);
 	var i = round * 4 + position;
 	var l = getPlayerLocation (position);
+	faceDownCard (i);
 	setCardFace (i, card);
 	moveCardEffect (i, l.x+1, l.y+2.5);
 	discarded.push(i);
 }
 
-function discardCards () {
+function discardCards (p) {
+	var l = getPlayerLocation (p);
 	while (discarded.length > 0) {
 		i = discarded.shift();
-		cleanCard(i);
-		moveCardEffect (i, center.x, center.y);
+		faceUpCard (i);
+		lowerCard (i)
+		moveCardEffect (i,  l.x+1, l.y+2.5);
 	}
 }
 
@@ -478,6 +480,24 @@ function flipCard(i)
 {
 	var c = document.getElementById('card'+i);
 	c.classList.toggle('is-flipped');
+}
+
+function faceDownCard(i)
+{
+	var c = document.getElementById('card'+i);
+	c.classList.toggle('is-flipped', true);
+}
+
+function faceUpCard(i)
+{
+	var c = document.getElementById('card'+i);
+	c.classList.toggle('is-flipped', false);
+}
+
+function lowerCard(i)
+{
+	var c = document.getElementById('scene'+i);
+	c.style.zIndex = 50; 
 }
 
 function rotateCard(i)
@@ -674,7 +694,6 @@ function handleResponseText (text)
 					enableCards (reason, allowed);
 				}
 				else {
-					// Exception or test, play the next card
 					enableCards (reason, myCards[r]);
 					toggleCardSelection (r*4);
 				}
@@ -688,7 +707,9 @@ function handleResponseText (text)
 		playCard (position, round, card);
 		break;
 	case "CardEventEndRound":
-		discardCards ();
+		var position = parseInt(response.getElementsByTagName("player")[0].getAttribute("position"));
+		var points = response.getElementsByTagName("player")[0].getAttribute("position");
+		discardCards (position);
 		gameState="PlayerReady";
 		break;
 	default:
@@ -704,12 +725,26 @@ function handleResponseText (text)
 // It does not try to validate state transition from server side. 
 //*******************************************************************************
 var testThread;
-var testThreadInterval = 1000;
+var testThreadInterval = 500;
 var testStage = 0;
 var testUsers = ['Steve', 'Ying','Chris','Tiff'];
-var testHand="XC,3D,6D,7D,QD,AD,6H,7H,4S,5S,9S,QS,AS";
-var testFaceups = ['', 'JD','AH']
-var testDeck = ['Steve', 'Ying','Chris','Tiff'];
+var testHand="8S,JS,3H,5C,4D,8D,XS,2D,KD,KC,9C,JD,6C";
+var testFaceups = ["NA", 'AH',"NA"];
+var testGame = [
+	[0, 'KD,XD,AD,3D', 2, ''],
+	[2, '6S,AS,JS,9S', 3, ''],
+	[3, 'QH,3H,KH,AH', 2, '3H,QH,KH,AH'],
+	[2, '3C,XC,5C,JC', 1, 'XC'],
+	[1, '9D,5D,6D,JD', 0, 'JD'],
+	[0, '6C,8C,4C,2C', 1, ''],
+	[1, 'JH,8H,2H,2D', 1, '2H,8H,JH'],
+	[1, 'QC,6H,7C,KC', 0, '6H'],
+	[0, '4D,7D,7S,5H', 1, '5H'],
+	[1, 'XH,9H,4H,8D', 1, '4H,9H,XH'],
+	[1, '4S,QS,5S,8S', 2, 'QS'],
+	[2, 'KS,3S,XS,AC', 2, ''],
+	[2, '7H,2S,9C,QD', 2, '7H'],
+];
 
 function testLoop () 
 {
@@ -796,8 +831,12 @@ function testLoop ()
 		}
 		else {
 			var turn = Math.floor (testStage/2);
-			var p = (turn + 1) % 4;
+			var step = turn % 4;
 			var r = Math.floor (turn / 4);
+			var start = testGame[r][0];
+			var p = (turn + start) % 4;
+			var card = testGame[r][1].split(",")[step];
+			
 			if ((testStage % 2) == 0) {
 				testResponse=
 					"<event name='CardEventTurnToPlay'>" +
@@ -807,7 +846,7 @@ function testLoop ()
 						"' round='" + r +
 						"'>" +
 					"</player>" +
-					"<rule reason='Test Only' allowed=''/>";
+					"<rule reason='Test Only' allowed='" + card + "'/>";
 				testResponse = testResponse + "</event>";
 				if (p == 0) {
 					gameState = "PlayerTurnResponse";
@@ -820,12 +859,12 @@ function testLoop ()
 						"<event name='CardEventPlayerAction'>" +
 						"<message>Player event</message>" + 
 						"<player name='" + testUsers[p] +"' position='" + p + "'>" +
-						"<cardPlayed card='8S' round='" + r + "'/>" +
+						"<cardPlayed card='" + card + "' round='" + r + "'/>" +
 						"</player>";
 					testResponse = testResponse + "</event>";
 				}
-				else {
-					gameState="EndRound";
+				if (step == 3) {
+					gameState = "Pause";
 				}
 				++testStage;
 			}
@@ -833,12 +872,32 @@ function testLoop ()
 		break;
 	case "PlayerTurnResponse":
 		// auto play
+		for (i = 0; i < selectMask.length; ++i) {
+			if (selectMask[i] == 1) {
+				if (selectedCards[i] !=1) {
+					toggleCardSelection (i*4);
+				}
+				break;
+			}
+		}
 		clickPlayer(0);
 		break;
+	case "Pause":
+		gameState = "EndRound";
+		break;
 	case "EndRound":
+		var turn = Math.floor ((testStage-1)/2);
+		var r = Math.floor (turn / 4);
+		var p = testGame[r][2];
+		var points = testGame[r][3];
 		testResponse=
 			"<event name='CardEventEndRound'>" +
-			"<message>Round Ended</message>" + 
+			"<message>Round Ended</message>" +
+			"<player name='" + testUsers[p] +
+				"' position='" + p + 
+				"' round='" + r +
+				"' points='" + points +
+				"'>" +
 			"</player>";
 		testResponse = testResponse + "</event>";
 		break;

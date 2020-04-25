@@ -107,4 +107,13 @@ public class Card implements Comparable<Card>{
 		s += "]";
 		return s;
 	}
+	public static String showCSList(List<Card> played) {
+		String s = "";
+		String p = "";
+		for (Card c : played) {
+			s += p + c.rank.toString() + c.suit.toString();
+			p = ",";
+		}
+		return s;
+	}
 }

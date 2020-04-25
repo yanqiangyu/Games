@@ -108,11 +108,13 @@ public class PigChase extends CardGame {
 			
 			int starter = -1;
 			for (int hand = 1; hand <= 100 && !isGameOver(); ++hand) {
+				ArrayList<String>testCases = new ArrayList<String>();
 				String banner = String.format("====================  Playing hand %-5d===================", hand);
 				ui.showText(banner);
 				deck.shuffle ();
 				ui.sendEvent (this, new CardEventShuffleEffect());
 				deck.deal (players);
+				testCases.add (Card.showCSList (players.get(0).getHand()));
 				for (CardPlayer p : getPlayers()) {
 					ui.sendEvent (this, new CardEventDealCards (p));
 				}
@@ -164,6 +166,12 @@ public class PigChase extends CardGame {
 					CardEventEndRound endRound = new CardEventEndRound (winner);
 					endRound.setPoints(getCardWithPoints (played));
 					ui.sendEvent (this, endRound);
+					
+					String trick = Card.showCSList (played);
+					String points = Card.showCSList (endRound.getPoints());
+					String testString = String.format("\t\t[%d, '%s', %d, '%s'],", 
+							starter, trick, newStarter, points);
+					testCases.add (testString);
 					starter = newStarter;
 				}
 				banner = String.format("==================== Score For Hand %-4d===================", hand);
@@ -185,7 +193,12 @@ public class PigChase extends CardGame {
 					team.setTeamScore(total);
 				}
 				ui.showText("===========================================================");
+				while (!testCases.isEmpty()) {
+					String t = testCases.remove(0);
+					System.out.println(t);
+				}
 				starter = findLastPig();
+				ui.showText("===========================================================");
 			}
 			ui.showText("=======================Game Over!==========================");
 			if (teams[0].getTeamScore() > teams[1].getTeamScore()) {
