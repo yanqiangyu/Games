@@ -180,8 +180,8 @@ function showDeck ()
 	var table=document.getElementById("splash");
 	var viewwidth=parseInt(table.style.width);
 	var viewheight=parseInt(table.style.height);
-	var ch=Math.floor(viewheight / 8);
-	var cw=Math.floor(ch*0.7);
+	var ch=viewheight / 8;
+	var cw=ch*0.7;
 	center.x = (viewwidth-cw) / 2 - 1;
 	center.y = (viewheight-ch) / 2;
 	
@@ -190,8 +190,8 @@ function showDeck ()
 		scene.setAttribute('id', 'scene'+i);
 		scene.classList.add('card_scene', 'card_scene--card');
 		table.appendChild(scene);
-		scene.style.width="50px";
-		scene.style.height="70px";
+		scene.style.width="60px";
+		scene.style.height="84px";
 		scene.style.display='block';
 		
 		var c=document.createElement('div');
@@ -363,14 +363,16 @@ function discardCards (p, points) {
 		if (found) {
 			playerPoints[p].push (i);
 			faceDownCard (i);
+			
 			if (p == 1 || p == 3) {
 				rotateCard (i);
 			}
 			var d = ((playerPoints[p].length - 1) % 13) * 4 + p;
 			var m = (playerPoints[p].length < 14 ? 1 : 2);
 			var dx = (p == 0 || p == 2) ? 0 : ((p == 1) ? 2 : -2);
-			var dy = (p == 1 || p == 3) ? 0 : ((p == 0) ? 2 : -2);
+			var dy = (p == 1 || p == 3) ? 0 : ((p == 0) ? 4 : -4);
 			var l2 = getCardLocation (d);
+			raiseCard (i, 100 + d);
 			moveCardEffect (i,  l2.x + dx * m, l2.y + dy * m);
 		}
 		else {
@@ -415,19 +417,19 @@ function getCardLocation (i)
   
   if (player == 0) {
 	  x = n*4 + 20;
-	  y = 75;
+	  y = 70;
   }
   else if (player == 1) {
 	  x = 75;
-	  y = 64 - n*4;
+	  y = 55 - n*2;
   }
   else if (player == 2) {
 	  x = 69 - n*4;
-	  y = 5;
+	  y = 10;
   }
   else if (player == 3) {
 	  x = 10;
-	  y = n*4 + 16;
+	  y = n*2 + 30;
   }
   location.x = x;
   location.y = y;
@@ -531,8 +533,13 @@ function faceUpCard(i)
 
 function lowerCard(i)
 {
+	raiseCard (i, 50);
+}
+
+function raiseCard(i, index)
+{
 	var c = document.getElementById('scene'+i);
-	c.style.zIndex = 50; 
+	c.style.zIndex = index; 
 }
 
 function rotateCard(i)
