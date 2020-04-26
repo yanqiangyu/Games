@@ -303,7 +303,7 @@ function showFaceup (p, c)
 	if (c != ""  && c != "NA" && p != 0) {
 		var cards=c.split(",");
 		for (i = 0; i < cards.length; ++i) {
-			var idx = p + i*4;
+			var idx = p - i*4 + 48;
 			var pos = getCardLocation (idx);
 			setCardFace (idx, cards[i]);
 			switch (p){
@@ -312,7 +312,7 @@ function showFaceup (p, c)
 				case 3: pos.x += 4; break;
 			}
 			moveCardEffect (idx, pos.x, pos.y);
-			playerCards[p][i] = cards[i]; 
+			playerCards[p][12-i] = cards[i]; 
 		}
 	}
 }
@@ -334,7 +334,7 @@ function playCard (position, round, card) {
 	flashPlayer (position, false);
 	
 	var found = false;
-	for (c = 0; !found && c < cards.length; ++c) {
+	for (c = cards.length; !found && c >= 0; --c) {
 		found = (cards[c] == "NA" || cards[c] == card);
 		if (found) {
 			cards[c]="XX";
@@ -348,7 +348,6 @@ function playCard (position, round, card) {
 }
 
 function discardCards (p, points) {
-	var l = getPlayerLocation (p);
 	var cards = points.split(",");
 	while (discarded.length > 0) {
 		var i = discarded.shift();
@@ -370,13 +369,14 @@ function discardCards (p, points) {
 			var d = ((playerPoints[p].length - 1) % 13) * 4 + p;
 			var m = (playerPoints[p].length < 14 ? 1 : 2);
 			var dx = (p == 0 || p == 2) ? 0 : ((p == 1) ? 2 : -2);
-			var dy = (p == 1 || p == 3) ? 0 : ((p == 0) ? 4 : -4);
-			var l2 = getCardLocation (d);
+			var dy = (p == 1 || p == 3) ? 0 : ((p == 0) ? 5 : -4);
+			var l = getCardLocation (d);
 			raiseCard (i, 100 + d);
-			moveCardEffect (i,  l2.x + dx * m, l2.y + dy * m);
+			moveCardEffect (i,  l.x + dx * m, l.y + dy * m);
 		}
 		else {
-			moveCardEffect (i,  l.x + 1, l.y+2.5);
+			rotateCard (i);
+			moveCardEffect (i,  center.x, center.y);
 		}
 	}
 }
