@@ -114,7 +114,7 @@ public class PigChase extends CardGame {
 				deck.shuffle ();
 				ui.sendEvent (this, new CardEventShuffleEffect());
 				deck.deal (players);
-				testCases.add (Card.showCSList (players.get(0).getHand()));
+				testCases.add (Card.showCSList (Card.sort(players.get(0).getHand())));
 				for (CardPlayer p : getPlayers()) {
 					ui.sendEvent (this, new CardEventDealCards (p));
 				}

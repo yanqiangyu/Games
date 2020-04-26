@@ -91,8 +91,8 @@ public class Card implements Comparable<Card>{
 	public boolean isTwoOfClubs () {
 		return rank == Ranks.TWO && suit == Suits.CLUBS; 
 	}
-	public static String showList(List<Card> hand) {
-		hand.sort(new Comparator<Card>() {
+	public static List<Card> sort (List<Card> list) {
+		list.sort(new Comparator<Card>() {
 			public int compare(Card o1, Card o2) {
 				if (o1.getSuit() == o2.getSuit()) {
 					return o1.getRank().compareTo(o2.getRank());
@@ -100,6 +100,10 @@ public class Card implements Comparable<Card>{
 				return o1.getSuit().compareTo(o2.getSuit());
 			}
 		});
+		return list;
+	}
+	public static String showList(List<Card> hand) {
+		hand = sort (hand);
 		String s = "[";
 		for (Card c : hand) {
 			s += c.toString();

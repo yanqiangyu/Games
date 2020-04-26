@@ -8,6 +8,8 @@ var selectedCards = [0,0,0,0,0,0,0,0,0,0,0,0,0];
 var maskReason = "Not your turn yet";
 var center={x:0, y:0,};
 var discarded=[];
+var playerCards=[[],[],[],[]];
+var playerPoints=[[],[],[],[]];
 
 var carddeck=[
 	{img: "2C", x: 0, y: 0,},
@@ -208,8 +210,8 @@ function showDeck ()
 		c.appendChild(cb);
 		cb.classList.add('card__face', 'card__face--back');
 		
-		carddeck[i].x = (viewwidth-cw) / 2 - 1;
-		carddeck[i].y = (viewheight-ch) / 2;
+		carddeck[i].x = center.x;
+		carddeck[i].y = center.y;
 		scene.style.left = carddeck[i].x + "vw";
 		scene.style.top = carddeck[i].y + "vh";
 		
@@ -310,6 +312,7 @@ function showFaceup (p, c)
 				case 3: pos.x += 4; break;
 			}
 			moveCardEffect (idx, pos.x, pos.y);
+			playerCards[p][i] = cards[i]; 
 		}
 	}
 }
@@ -325,22 +328,54 @@ function faceupMyCard (i)
 }
 
 function playCard (position, round, card) {
-	flashPlayer (position, false);
 	var i = round * 4 + position;
+	var cards = playerCards[position];
 	var l = getPlayerLocation (position);
+	flashPlayer (position, false);
+	
+	var found = false;
+	for (c = 0; !found && c < cards.length; ++c) {
+		found = (cards[c] == "NA" || cards[c] == card);
+		if (found) {
+			cards[c]="XX";
+			i = c * 4 + position;
+		}
+	}
 	faceDownCard (i);
 	setCardFace (i, card);
 	moveCardEffect (i, l.x+1, l.y+2.5);
 	discarded.push(i);
 }
 
-function discardCards (p) {
+function discardCards (p, points) {
 	var l = getPlayerLocation (p);
+	var cards = points.split(",");
 	while (discarded.length > 0) {
-		i = discarded.shift();
-		faceUpCard (i);
+		var i = discarded.shift();
+		var found = false;
+		var card = getCardFace (i);
+
+		cleanCard (i);
 		lowerCard (i)
-		moveCardEffect (i,  l.x+1, l.y+2.5);
+		for (j = 0; !found && j < cards.length; ++j) {
+			found = (card == cards[j]);
+		}
+		if (found) {
+			playerPoints[p].push (i);
+			faceDownCard (i);
+			if (p == 1 || p == 3) {
+				rotateCard (i);
+			}
+			var d = ((playerPoints[p].length - 1) % 13) * 4 + p;
+			var m = (playerPoints[p].length < 14 ? 1 : 2);
+			var dx = (p == 0 || p == 2) ? 0 : ((p == 1) ? 2 : -2);
+			var dy = (p == 1 || p == 3) ? 0 : ((p == 0) ? 2 : -2);
+			var l2 = getCardLocation (d);
+			moveCardEffect (i,  l2.x + dx * m, l2.y + dy * m);
+		}
+		else {
+			moveCardEffect (i,  l.x + 1, l.y+2.5);
+		}
 	}
 }
 
@@ -518,6 +553,14 @@ function setCardFace (i, face) {
 	cf.style.backgroundImage="url('image/cards/" + face + ".jpg')";
 }
 
+function getCardFace (i) {
+	var face = "";
+	var cf=document.getElementById('cardface'+i);
+	face = String(cf.style.backgroundImage);
+	face = face.substring(face.length-8, face.length-6);
+	return face; 
+}
+
 function enableCards (reason, allowed)
 {
 	var cards=allowed.split(",");
@@ -662,6 +705,12 @@ function handleResponseText (text)
 		break;
 	case "CardEventDealCards":
 		var hand = response.getElementsByTagName("hand")[0].childNodes[0].nodeValue;
+		playerCards[0] = hand.split(",");
+		for (i = 1; i < 4; ++i) {
+			for (j = 0; j < 13; ++j) {
+				playerCards[i].push ("NA");
+			}
+		}
 		dealCards (hand);
 		break;
 	case "CardEventFaceUp":
@@ -708,8 +757,8 @@ function handleResponseText (text)
 		break;
 	case "CardEventEndRound":
 		var position = parseInt(response.getElementsByTagName("player")[0].getAttribute("position"));
-		var points = response.getElementsByTagName("player")[0].getAttribute("position");
-		discardCards (position);
+		var points = response.getElementsByTagName("player")[0].getAttribute("points");
+		discardCards (position, points);
 		gameState="PlayerReady";
 		break;
 	default:
@@ -725,25 +774,25 @@ function handleResponseText (text)
 // It does not try to validate state transition from server side. 
 //*******************************************************************************
 var testThread;
-var testThreadInterval = 500;
+var testThreadInterval = 700;
 var testStage = 0;
 var testUsers = ['Steve', 'Ying','Chris','Tiff'];
-var testHand="8S,JS,3H,5C,4D,8D,XS,2D,KD,KC,9C,JD,6C";
-var testFaceups = ["NA", 'AH',"NA"];
+var testHand="5C,7C,JC,3D,4D,2H,6H,KH,AH,2S,3S,6S,8S";
+var testFaceups = ["JD,QS", 'XC',""];
 var testGame = [
-	[0, 'KD,XD,AD,3D', 2, ''],
-	[2, '6S,AS,JS,9S', 3, ''],
-	[3, 'QH,3H,KH,AH', 2, '3H,QH,KH,AH'],
-	[2, '3C,XC,5C,JC', 1, 'XC'],
-	[1, '9D,5D,6D,JD', 0, 'JD'],
-	[0, '6C,8C,4C,2C', 1, ''],
-	[1, 'JH,8H,2H,2D', 1, '2H,8H,JH'],
-	[1, 'QC,6H,7C,KC', 0, '6H'],
-	[0, '4D,7D,7S,5H', 1, '5H'],
-	[1, 'XH,9H,4H,8D', 1, '4H,9H,XH'],
-	[1, '4S,QS,5S,8S', 2, 'QS'],
-	[2, 'KS,3S,XS,AC', 2, ''],
-	[2, '7H,2S,9C,QD', 2, '7H'],
+	[3, 'AC,5C,6C,XC', 3, 'XC'],
+	[3, '5D,3D,KD,6D', 1, ''],
+	[1, '7H,3H,XH,AH', 0, '3H,7H,XH,AH'],
+	[0, '2H,8H,5H,XD', 1, '2H,5H,8H'],
+	[1, '9H,4H,8C,KH', 0, '4H,9H,KH'],
+	[0, '2S,4S,JS,5S', 2, ''],
+	[2, '2D,8D,4D,9D', 1, ''],
+	[1, 'KS,AS,XS,6S', 2, ''],
+	[2, 'AD,3C,6H,JD', 2, 'JD,6H'],
+	[2, '7S,QC,8S,QS', 1, 'QS'],
+	[1, 'QH,7D,4C,JC', 1, 'QH'],
+	[1, '2C,QD,KC,7C', 3, ''],
+	[3, '9C,3S,JH,9S', 3, 'JH'],
 ];
 
 function testLoop () 
