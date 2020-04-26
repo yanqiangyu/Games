@@ -643,6 +643,7 @@ function mainLoop ()
 }
 
 function login (player, code) {
+	/*
 	if (player != "" && code != "") {
 		serverRequest ("http://www.ialogic.com/cardgame" + 
 			"?CardEvent=CardEventPlayerRegister" +
@@ -650,15 +651,17 @@ function login (player, code) {
 			"&code=" + code);
 		session.player=player;
 		session.code=code;
-		return "Wait for response...";
+		return "Server not available, enter code test...";
 	}
-	else if (code.toUpperCase() == "TEST") {
+	*/
+	if (code.toUpperCase() == "TEST") {
 		testThread = setInterval(testLoop, testThreadInterval);
 		session.player=testUsers[0];
 		session.code=code;
 		return "Waiting for test cases...";
 	}
-	return "Playe/Code Required";
+	return "Server not available, enter 'test' to test";
+//	"Player/Code Required";
 }
 
 function serverRequest (theUrl)
@@ -784,22 +787,22 @@ var testThread;
 var testThreadInterval = 700;
 var testStage = 0;
 var testUsers = ['Steve', 'Ying','Chris','Tiff'];
-var testHand="5C,7C,JC,3D,4D,2H,6H,KH,AH,2S,3S,6S,8S";
-var testFaceups = ["JD,QS", 'XC',""];
+var testHand="3C,4C,5C,8C,7D,AD,5H,XH,JH,QH,KH,5S,9S";
+var testFaceups = ["XC,QS", 'AH',"JD"];
 var testGame = [
-	[3, 'AC,5C,6C,XC', 3, 'XC'],
-	[3, '5D,3D,KD,6D', 1, ''],
-	[1, '7H,3H,XH,AH', 0, '3H,7H,XH,AH'],
-	[0, '2H,8H,5H,XD', 1, '2H,5H,8H'],
-	[1, '9H,4H,8C,KH', 0, '4H,9H,KH'],
-	[0, '2S,4S,JS,5S', 2, ''],
-	[2, '2D,8D,4D,9D', 1, ''],
-	[1, 'KS,AS,XS,6S', 2, ''],
-	[2, 'AD,3C,6H,JD', 2, 'JD,6H'],
-	[2, '7S,QC,8S,QS', 1, 'QS'],
-	[1, 'QH,7D,4C,JC', 1, 'QH'],
-	[1, '2C,QD,KC,7C', 3, ''],
-	[3, '9C,3S,JH,9S', 3, 'JH'],
+	[2, '6D,XD,AD,2D', 0, ''],
+	[0, 'XH,6H,2H,7H', 0, '2H,6H,7H,XH'],
+	[0, '5H,4S,4H,9H', 3, '4H,5H,9H'],
+	[3, '2C,8C,9C,QC', 2, ''],
+	[2, '3H,4D,KH,8S', 0, '3H,KH'],
+	[0, 'QH,XC,AH,6S', 2, 'XC,QH,AH'],
+	[2, '8H,7C,JH,QD', 0, '8H,JH'],
+	[0, '4C,6C,3D,AC', 3, ''],
+	[3, '2S,9S,XS,AS', 2, ''],
+	[2, '9D,KD,7D,7S', 3, ''],
+	[3, '8D,3C,KC,5D', 3, ''],
+	[3, 'KS,5S,QS,3S', 3, 'QS'],
+	[3, 'JD,5C,JC,JS', 3, 'JD'],
 ];
 
 function testLoop () 
