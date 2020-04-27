@@ -92,14 +92,16 @@ public class Card implements Comparable<Card>{
 		return rank == Ranks.TWO && suit == Suits.CLUBS; 
 	}
 	public static List<Card> sort (List<Card> list) {
-		list.sort(new Comparator<Card>() {
-			public int compare(Card o1, Card o2) {
-				if (o1.getSuit() == o2.getSuit()) {
-					return o1.getRank().compareTo(o2.getRank());
+		if (!list.isEmpty()) {
+			list.sort(new Comparator<Card>() {
+				public int compare(Card o1, Card o2) {
+					if (o1.getSuit() == o2.getSuit()) {
+						return o1.getRank().compareTo(o2.getRank());
+					}
+					return o1.getSuit().compareTo(o2.getSuit());
 				}
-				return o1.getSuit().compareTo(o2.getSuit());
-			}
-		});
+			});
+		}
 		return list;
 	}
 	public static String showList(List<Card> hand) {

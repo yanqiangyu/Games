@@ -45,7 +45,7 @@ public class CardHttpServer implements CardUI {
 		}
 	}
 	private static void handleRequest(HttpExchange exchange) throws IOException {
-		  printRequestInfo (exchange);
+		  // printRequestInfo (exchange);
 	      URI requestURI = exchange.getRequestURI();
 		  String response = "Invalid URI";
 	      String path = requestURI.getPath();
@@ -59,7 +59,8 @@ public class CardHttpServer implements CardUI {
 		  os.close();
 	}
 	private String createResponse(String query) {
-		String response = "Unknown Request";
+		String response = "<event name='CardEventLoginAck'><status>ERROR</status>" + 
+				"<message>Unexpected Event, please restart.</message></event>";
 		try {
 			HashMap<String, String>request = parseQuery(query);
 			String clz = "com.ialogic.games.cards.event." + request.get("CardEvent");
@@ -67,11 +68,12 @@ public class CardHttpServer implements CardUI {
 			@SuppressWarnings("rawtypes")
 			Class[] paramType = {String.class};
 			CardEvent e = (CardEvent) Class.forName(clz).getConstructor(paramType).newInstance("Register Player");
-			if (e instanceof CardEventPlayerRegister ) {
+			if (e instanceof CardEventPlayerRegister) {
 				// TODO check for already registered
 				if (sessions.containsKey(player)) {
-					System.out.println (String.format("Player %s already exists, welcome back.", player));
-					response=String.format ("Hi %s! Welcome back!", player);
+					response = String.format("<event name='CardEventLoginAck'><status>OK</status>" + 
+								"<message>Player %s welcome back!</message></event>", player);
+					System.out.println(String.format ("Existing Client %s", player));
 				}
 				else {
 					CardPlayerHttpClient c = new CardPlayerHttpClient (player, this);
@@ -79,13 +81,14 @@ public class CardHttpServer implements CardUI {
 					sessions.put(player, c);
 					System.out.println(String.format ("New Client %s", c.getName()));
 					playerEvent(e);
-					response=String.format ("Hi %s! please stay tuned... I am almost there...", player);
+					response = String.format("<event name='CardEventLoginAck'><status>OK</status>" + 
+							"<message>Welcome %s!</message></event>", player);
 				}
 			}
 			else if (sessions.containsKey(player)) {
 				if (e instanceof CardEventGameIdle) {
 					CardPlayerHttpClient s = sessions.get(player);
-					response = "Update Gate State for player:" + player;
+					response = s.getEventFromQueue ();
 				}
 			}
 		} catch (Exception e) {

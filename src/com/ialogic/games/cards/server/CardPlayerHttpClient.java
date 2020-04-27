@@ -25,4 +25,19 @@ public class CardPlayerHttpClient extends CardPlayer {
 	public String getGameState() {
 		return null;
 	}
+	public String getEventFromQueue() {
+		String response = 
+				"<event name='CardEventGameIdle'>" +
+				"<message>Waiting for Players</message>" +
+				"</event>";
+		if (!events.isEmpty()) {
+			CardEvent e= events.remove ();
+			String eventName = e.getClass().getSimpleName();
+			String hand = Card.showCSList(getHand());
+			response = String.format("<event name='%s' position='0'><message>%s</message><player name='%s'></player><hand>%s</hand><event>",
+					eventName, e.getMessage(), getName(), hand);
+			System.out.println (response);
+		}
+		return response;
+	}
 }

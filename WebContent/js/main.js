@@ -1,7 +1,5 @@
-var idleThread;
 var gameState = "Initial";
-var session = {player: "", code: "",};
-var pollingInterval = 3000;
+var pollingInterval = 2000;
 var myCards;
 var selectMask = [0,0,0,0,0,0,0,0,0,0,0,0,0];
 var selectedCards = [0,0,0,0,0,0,0,0,0,0,0,0,0];
@@ -79,16 +77,7 @@ function sendLogin()
 }
 
 function clickLogo () {
-	if (gameState == "Idle") {
-		gameState = "CleanUp";
-	}
-	else if (gameState == "Ready") {
-		gameState = "Idle";
-		randomMove ();
-	}
-	else  {
-		location.reload();
-	}
+	location.reload();
 }
 
 function clickPlayer (p)
@@ -142,6 +131,18 @@ function dismissPrompt ()
 	c.style.display="none";
 }
 
+function disableLogin ()
+{
+	var c=document.getElementById("login");
+	c.style.display="none";
+}
+
+function enableLogin ()
+{
+	var c=document.getElementById("login");
+	c.style.display="block";
+}
+
 // *******************************************************************************
 // Game Play Functions:
 // These are the functions that describes the game play
@@ -154,7 +155,6 @@ function dismissPrompt ()
 function prompt (text)
 {
 	var c=document.getElementById("prompt");
-	var idle = 3;
 	c.innerHTML=text;
 	c.style.display="block";
 }
@@ -238,63 +238,50 @@ function showPlayers ()
 
 function cleanup ()
 {
+	var count = 0;
+    gameState = "CleanUp";
 	for (i=0; i<52; ++i) {
 		carddeck[i].x = center.x;
 		carddeck[i].y = center.y;
 		cleanCard (i)
-		moveCardEffect (i, carddeck[i].x, carddeck[i].y);
+		moveCardEffect (i, carddeck[i].x, carddeck[i].y, nextStep);
+	}
+	function nextStep () {
+		++count;
+		if (count == 52) {
+			gameState = "Ready"; 
+		}
 	}
 }
 
 function dealCards(hand)
 {
-  var speed=10;
-  var i = 0;
-  var c = document.getElementById("scene" + i);   
-  var step = speed;
-  var location=getCardLocation (i);
-  var x=location.x;
-  var y=location.y;
-  var p=location.p;
-
-  myCards = hand.split(",");
-  var id = setInterval(frame, 5);
-
-  gameState = "DealCards";
-  function frame() {
-	if (i == 52) {
-      clearInterval(id);
-      nextEffect ();
-	}
-	else {
-		if (step <= 0) {
-	      c.style.left=x+'vw'; 
-	      c.style.top=y+'vh';
-	      if (p == 0) {
-	    	  var m = Math.floor(i/4);
-	    	  setCardFace (i, myCards[m]);
-	    	  flipCard(i);
-	      }
-	      ++i;
-	      c = document.getElementById("scene" + i);   
-	      location=getCardLocation (i);
-	      x=location.x;
-	      y=location.y;
-	      p=location.p;
-	      step = speed;
-	    }
-		if (step == speed && (p == 1 || p == 3)) {
-	    	  rotateCard(i);
-		}
-		var cx=parseFloat(c.style.left, 10);
-		var cy=parseFloat(c.style.top, 10);
-		var dx = (x - cx) / step;
-		var dy = (y - cy) / step;
-		c.style.left=cx + dx + 'vw'; 
-		c.style.top=cy + dy + 'vh';  
-		--step;
-	}
-  }
+	  gameState = "DealCards";
+	  myCards = hand.split(",");
+	  dealCard (0, myCards);
+}
+	
+function dealCard (i, myCards) {
+	  var l=getCardLocation (i);
+	  
+	  if (l.p == 0) {
+		  var m = Math.floor(i/4);
+		  setCardFace (i, myCards[m]);
+		  flipCard(i);
+	  }
+	  else if (l.p == 1 || l.p == 3) {
+		  rotateCard(i);
+	  }
+	  moveCardEffect (i, l.x, l.y, nextCard, 25, 5);
+	  function nextCard () {
+		  ++i;
+		  if (i < 52) {
+			  dealCard (i, myCards);
+		  }
+		  else {
+			  gameState = "Negotiate";
+		  }
+	  }
 }
 
 function showFaceup (p, c)
@@ -311,6 +298,7 @@ function showFaceup (p, c)
 				case 2: pos.y += 4; break;
 				case 3: pos.x += 4; break;
 			}
+			flipCard (idx);
 			moveCardEffect (idx, pos.x, pos.y);
 			playerCards[p][12-i] = cards[i]; 
 		}
@@ -341,7 +329,7 @@ function playCard (position, round, card) {
 			i = c * 4 + position;
 		}
 	}
-	faceDownCard (i);
+	faceUpCard (i);
 	setCardFace (i, card);
 	moveCardEffect (i, l.x+1, l.y+2.5);
 	discarded.push(i);
@@ -361,7 +349,7 @@ function discardCards (p, points) {
 		}
 		if (found) {
 			playerPoints[p].push (i);
-			faceDownCard (i);
+			faceUpCard (i);
 			
 			if (p == 1 || p == 3) {
 				rotateCard (i);
@@ -442,60 +430,46 @@ function getCardLocation (i)
 // Next effects is based on gameState for now,
 // it can be improved to use a call back function
 //=========================================================
-function moveCardEffect (i, x, y) 
+
+function moveCardEffect (i, x, y, onComplete, step, time, flip) 
 {
-  var c = document.getElementById("scene" + i);   
-  var step = 50;
-  var id = setInterval(frame, 25);
+  step = step == null ? 50 : step;
+  time = time == null ? 10 : time;
+  flip = flip == null ? false : flip;
+  
+  var moverId = setInterval(frame, time);
+  var c = document.getElementById("scene" + i);
+  var fp = Math.floor (step * 0.9);
   
   function frame() {
     if (step <= 0) {
-      c.style.left=x+'vw'; 
-      c.style.top=y+'vh';  
-      clearInterval(id);
-	  if (i == 51) {
-		  nextEffect ();
-	  }
+	      c.style.left=x+'vw'; 
+	      c.style.top=y+'vh';  
+	      clearInterval(moverId);
+	      if (onComplete) {
+	    	  onComplete ();
+	      }
     } else {
-      if (step == 45) {
-    	  flipCard(i);
-      }
-      var cx=parseFloat(c.style.left, 10);
-      var cy=parseFloat(c.style.top, 10);
-	  var dx = (x - cx) / step;
-	  var dy = (y - cy) / step;
-      c.style.left=cx + dx + 'vw'; 
-      c.style.top=cy + dy + 'vh';  
-      --step;
+    	  if (flip && step == fp) {
+    		  flipCard(i);
+    	  }
+	      var cx=parseFloat(c.style.left, 10);
+	      var cy=parseFloat(c.style.top, 10);
+		  var dx = (x - cx) / step;
+		  var dy = (y - cy) / step;
+	      c.style.left=cx + dx + 'vw'; 
+	      c.style.top=cy + dy + 'vh';  
+	      --step;
     }
   }
 }
 
-function nextEffect ()
-{
-	switch (gameState) {
-		case "Login":
-		case "Idle":
-			randomMove ();
-			break;
-		case "CleanUp":
-			cleanup ();
-			gameState = "CleaningUp";
-			break;
-		case "CleaningUp":
-			gameState = "Ready";
-			break;
-		case "DealCards":
-			gameState = "Negotiate";
-			break;
-		default:;
-	}
-}
 //=========================================================
 // Random effects to show when waiting  
 //=========================================================
 function randomMove ()
 {
+	var count = 0;
 	for (i=0; i<52; ++i) {
 		var x = carddeck[i].x + (Math.random() - 0.5) * 30;
 		var y = carddeck[i].y + (Math.random() - 0.5) * 30;
@@ -506,7 +480,13 @@ function randomMove ()
 		if (y < 10) y = 10 - y;
 		carddeck[i].x = x;
 		carddeck[i].y = y;
-		moveCardEffect (i, carddeck[i].x, carddeck[i].y);
+		moveCardEffect (i, carddeck[i].x, carddeck[i].y, loopback, 100, 25, true);
+	}
+	function loopback () {
+		count ++;
+		if (count == 52 && gameState == "Idle") {
+			randomMove ();
+		}
 	}
 }
 //=========================================================
@@ -550,7 +530,7 @@ function rotateCard(i)
 
 function cleanCard (i) {
 	var c = document.getElementById('card'+i);
-	c.classList.toggle ('is-flipped', false);
+	c.classList.toggle ('is-flipped', true);
 	var s = document.getElementById('scene'+i);
 	s.classList.toggle ('rotated', false);
 }
@@ -633,35 +613,60 @@ function flashPlayer (p, on)
 // HTTP based XML response assumed.
 // JASON and other POJO protocols can be easily adapted to
 // *******************************************************************************
+var session = {player: "", code: "",};
+var serverState="Disconnected";
+
+function serverDebug (s) {
+	prompt ("<code>" + s + "</code>");
+}
+
 function mainLoop ()
 {
-	/*
-	 * serverRequest ("http://www.ialogic.com/cardgame" +
-	 * "?CardEvent=CardEventGameIdle" + "&player="+ session.player+ "&code=" +
-	 * session.code);
-	 */
+	prompt ("Server State:" + serverState);
+	serverRequest ("http://www.ialogic.com/cardgame" +
+		 "?CardEvent=CardEventGameIdle" + "&player="+ session.player+ "&code=" +
+			 session.code);
 }
 
 function login (player, code) {
-	/*
 	if (player != "" && code != "") {
+		disableLogin ()
 		serverRequest ("http://www.ialogic.com/cardgame" + 
 			"?CardEvent=CardEventPlayerRegister" +
 			"&player="+ player+
 			"&code=" + code);
 		session.player=player;
 		session.code=code;
-		return "Server not available, enter code test...";
+		setServerState ("LoginWait");
+		var timeout = setInterval(checkLogin, 2000);
+		function checkLogin () {
+			if (serverState == "LoginWait") {
+				prompt ("Server timeout, please try later.");
+				setServerState ("Disconnected");
+			}
+			if (serverState == "Disconnected") {
+				dismissPrompt ();
+				clearInterval (timeout);
+				enableLogin ()
+			}
+		}
+		return "Waiting for server response";
 	}
-	*/
-	if (code.toUpperCase() == "TEST") {
+	else if (code.toUpperCase() == "TEST") {
 		testThread = setInterval(testLoop, testThreadInterval);
 		session.player=testUsers[0];
 		session.code=code;
 		return "Waiting for test cases...";
 	}
-	return "Server not available, enter 'test' to test";
-//	"Player/Code Required";
+	return "Player/Code Required";
+}
+
+function setServerState (s) {
+	serverState = s;
+	prompt("Server State:" + s);
+	if (serverState == "ResponseReceived") {
+		idleCount = 0;
+	}
 }
 
 function serverRequest (theUrl)
@@ -669,10 +674,11 @@ function serverRequest (theUrl)
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
+        	serverDebug ("Server:" + xhttp.responseText);
         	handleResponseText (xhttp.responseText);
         }
         else {
-           	handleResponseText ("Server not available");
+           	prompt ("Server Error!");
         }
     };
     xhttp.open("GET", theUrl, true); 
@@ -684,21 +690,17 @@ function handleResponseText (text)
 	var response = new DOMParser().parseFromString(text,"text/xml");
 	var event=response.getElementsByTagName("event")[0].getAttribute("name");
 	var message = response.getElementsByTagName("message")[0].childNodes[0].nodeValue;
+	setServerState ("ResponseReceived");
 	prompt ("Game State:" + gameState + " Message:" + message );
 	switch (event) {
-	case "CardEventGameIdle":
-		switch (gameState) {
-		case "Login":
-			if (message == "OK") {
-				startGame ();
-			}
-			break;
-		default:
-			prompt (message);
-			break;
+	case "CardEventLoginAck":
+		var status = response.getElementsByTagName("status")[0].childNodes[0].nodeValue;
+		if (status == "OK") {
+			startGame ();
 		}
-		// update game board
-		break;
+		else {
+			prompt (message);
+		}
 	case "CardEventPlayerRegister":
 		var players = response.getElementsByTagName("player");
 		if (players) {
@@ -711,7 +713,7 @@ function handleResponseText (text)
 		break;
 	case "CardEventShuffleEffect":
 		prompt (message);
-		gameState = "CleanUp";
+		cleanup ();
 		break;
 	case "CardEventDealCards":
 		var hand = response.getElementsByTagName("hand")[0].childNodes[0].nodeValue;
@@ -772,7 +774,7 @@ function handleResponseText (text)
 		gameState="PlayerReady";
 		break;
 	default:
-		prompt ("Event Name:" + event);
+		prompt ("Event Name:" + event + ", Message:" + Message);
 	}
 } 
 //*******************************************************************************
@@ -784,7 +786,7 @@ function handleResponseText (text)
 // It does not try to validate state transition from server side. 
 //*******************************************************************************
 var testThread;
-var testThreadInterval = 700;
+var testThreadInterval = 1000;
 var testStage = 0;
 var testUsers = ['Steve', 'Ying','Chris','Tiff'];
 var testHand="3C,4C,5C,8C,7D,AD,5H,XH,JH,QH,KH,5S,9S";
@@ -815,8 +817,9 @@ function testLoop ()
 	switch (gameState) {
 	case "Login":
 		testResponse=
-			"<event name='CardEventGameIdle'>" +
-			"<message>OK</message>" +
+			"<event name='CardEventLoginAck'>" +
+			"<message>Welcome</message>" +
+			"<status>OK</status>" +
 			"</event>";
 		break;
 	case "Idle":
@@ -828,15 +831,14 @@ function testLoop ()
 				"</event>";
 		}
 		else if (testStage < 5) {
+			var i = testStage - 1;
 			testResponse=
 				"<event name='CardEventPlayerRegister'>" +
 				"<message>New Player: " + testUsers[testStage-1] + "</message>";
-				for (i = 0; i < testStage; ++i) {
-					testResponse = testResponse + 
-						"<player name='" + testUsers[i] + "' position='" + i + "' >" + 
-						"</player>";
-				}
-				testResponse = testResponse + "</event>";
+			testResponse = testResponse + 
+				"<player name='" + testUsers[i] + "' position='" + i + "' >" + 
+				"</player>";
+			testResponse = testResponse + "</event>";
 		}
 		else {
 			testResponse=

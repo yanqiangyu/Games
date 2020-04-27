@@ -1,6 +1,7 @@
 package com.ialogic.games.cards;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.ialogic.games.cards.event.CardEvent;
@@ -8,10 +9,10 @@ import com.ialogic.games.cards.event.CardEvent;
 public abstract class CardPlayer {
 	String name;
 	int score;
-	List<Card>hand = new ArrayList<Card>();
-	List<Card>faceup = new ArrayList<Card>();
-	List<Card>points = new ArrayList<Card>();
-	List<Card>tricks = new ArrayList<Card>();
+	List<Card>hand = Collections.synchronizedList(new ArrayList<Card>());
+	List<Card>faceup =  Collections.synchronizedList(new ArrayList<Card>());
+	List<Card>points =  Collections.synchronizedList(new ArrayList<Card>());
+	List<Card>tricks =  Collections.synchronizedList(new ArrayList<Card>());
 	Card cardPlayed = null;
 	public String getName() {
 		return name;
