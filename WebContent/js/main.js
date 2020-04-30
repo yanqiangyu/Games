@@ -1,5 +1,16 @@
+//=============================================================
+//	State Transition:
+//=============================================================
+//  Initial->Login->Idle->PlayerReady->FaceUpResponse
+//                          ^ | ^ | ^         	|
+//	                        | | | | |-------------
+//                          | | | |----->PlayerTurnResponse
+//                          | | |----- --------|
+//                          | |--------->EndRound
+//                          |---------------|
+//=============================================================
 var gameState = "Initial";
-var pollingInterval = 2000;
+var pollingInterval = 3000;
 var myCards;
 var selectMask = [0,0,0,0,0,0,0,0,0,0,0,0,0];
 var selectedCards = [0,0,0,0,0,0,0,0,0,0,0,0,0];
@@ -68,16 +79,26 @@ var carddeck=[
 // These functions are called by the HTML objects.
 // Changing the names requires change in index.html.
 // *******************************************************************************
+var idleThread;
 function sendLogin()
 {
 	var player=document.getElementById("player").value;
 	var code=document.getElementById("code").value;
 	gameState = "Login";
+	if (idleThread == null) {
+		idleThread = setInterval(mainLoop, pollingInterval); 
+		logo.setAttribute('onClick', 'clickLogo()');
+	}
 	prompt (login (player, code));
 }
 
 function clickLogo () {
-	location.reload();
+	if (gameState == "EndHand") {
+		location.reload();
+	}
+	else {
+		mainLoop ();
+	}
 }
 
 function clickPlayer (p)
@@ -109,7 +130,6 @@ function clickPlayer (p)
 			}
 			enableCards ("Turn Over", "");
 			flashPlayer (0, false);
-			gameState="EndTurn";
 		}
 	}
 }
@@ -166,7 +186,6 @@ function startGame()
 	if (splash.requestFullScreen)
 		splash.requestFullScreen();
 	var x=document.getElementById("over");
-	idleThread = setInterval(mainLoop, pollingInterval); 
 	x.parentNode.removeChild(x);
 	splash.style.backgroundImage="url('image/table.jpg')";
 	splash.style.opacity="1";
@@ -216,7 +235,6 @@ function showDeck ()
 		scene.style.top = carddeck[i].y + "vh";
 		
 		var logo=document.getElementById("logo");
-		logo.setAttribute('onClick', 'clickLogo()');
 	}
 }
 
@@ -238,29 +256,49 @@ function showPlayers ()
 
 function cleanup ()
 {
-	var count = 0;
-    gameState = "CleanUp";
-	for (i=0; i<52; ++i) {
-		carddeck[i].x = center.x;
-		carddeck[i].y = center.y;
-		cleanCard (i)
-		moveCardEffect (i, carddeck[i].x, carddeck[i].y, nextStep);
-	}
-	function nextStep () {
-		++count;
-		if (count == 52) {
-			gameState = "Ready"; 
-		}
-	}
+    var id = setInterval (work, 100);
+    function work () {
+    	// Wait for animation finishes
+    	if (!animationPlaying) {
+    		clearInterval (id);
+    	    gameState = "CleanUp";
+			var count = 0;
+			for (i=0; i<52; ++i) {
+				carddeck[i].x = center.x;
+				carddeck[i].y = center.y;
+				cleanCard (i)
+				moveCardEffect (i, carddeck[i].x, carddeck[i].y, nextStep);
+			}
+			function nextStep () {
+				++count;
+				if (count == 52) {
+					gameState = "CleanupEnd";
+				}
+			}
+    	}
+    }
 }
 
 function dealCards(hand)
 {
-	  gameState = "DealCards";
-	  myCards = hand.split(",");
-	  dealCard (0, myCards);
+    var id = setInterval (work, 100);
+    function work () {
+		// Wait for animation finishes
+	  if (gameState == "CleanupEnd") {
+			playerCards[0] = hand.split(",");
+			for (i = 1; i < 4; ++i) {
+				for (j = 0; j < 13; ++j) {
+					playerCards[i].push ("NA");
+				}
+			}
+			clearInterval (id);
+			gameState = "DealCards";
+			myCards = hand.split(",");
+			dealCard (0, myCards);
+	  }
+    }
 }
-	
+
 function dealCard (i, myCards) {
 	  var l=getCardLocation (i);
 	  
@@ -279,30 +317,92 @@ function dealCard (i, myCards) {
 			  dealCard (i, myCards);
 		  }
 		  else {
-			  gameState = "Negotiate";
+			  gameState = "PlayerReady";
 		  }
 	  }
 }
 
+function faceupReady (reason, allowed) {
+    var id = setInterval (work, 100);
+    alert ("Ha");
+    function work () {
+  	  if (gameState == "PlayerReady") {
+  		  	clearInterval (id);
+	  		enableCards (reason, allowed);
+			for (i = 0; i < 4; ++i) {
+				flashPlayer(i, true);
+			}
+			gameState = "FaceUpResponse";
+  	  }
+    }
+}
+
 function showFaceup (p, c)
 {
-	flashPlayer (p, false);
-	if (c != ""  && c != "NA" && p != 0) {
-		var cards=c.split(",");
-		for (i = 0; i < cards.length; ++i) {
-			var idx = p - i*4 + 48;
-			var pos = getCardLocation (idx);
-			setCardFace (idx, cards[i]);
-			switch (p){
-				case 1: pos.x -= 4; break;
-				case 2: pos.y += 4; break;
-				case 3: pos.x += 4; break;
+    var id = setInterval (work, 100);
+    function work () {
+    	if (gameState == "FaceUpResponse") {
+   		  	clearInterval (id);
+			flashPlayer (p, false);
+			if (c != ""  && c != "NA" && p != 0) {
+				var cards=c.split(",");
+				for (i = 0; i < cards.length; ++i) {
+					var idx = p - i*4 + 48;
+					var pos = getCardLocation (idx);
+					setCardFace (idx, cards[i]);
+					switch (p){
+						case 1: pos.x -= 4; break;
+						case 2: pos.y += 4; break;
+						case 3: pos.x += 4; break;
+					}
+					flipCard (idx);
+					moveCardEffect (idx, pos.x, pos.y);
+					playerCards[p][12-i] = cards[i]; 
+				}
 			}
-			flipCard (idx);
-			moveCardEffect (idx, pos.x, pos.y);
-			playerCards[p][12-i] = cards[i]; 
-		}
-	}
+    	}
+    }
+}
+
+function playerReady (r, position, reason, allowed)
+{
+    var id = setInterval (work, 100);
+    function work () {
+    	if (gameState == "PlayerReady") {
+   		  	clearInterval (id);
+			for (i = 0; i < 4; ++i) {
+				flashPlayer (i, i==position);
+				if (position == 0) {
+					if (allowed != "") {
+						enableCards (reason, allowed);
+					}
+					else {
+						enableCards (reason, myCards[r]);
+						toggleCardSelection (r*4);
+					}
+					gameState = "PlayerTurnResponse";
+				}
+			}
+    	}
+    }
+}
+
+function autoPlayCard ()
+{
+   var id = setInterval (work, 100);
+    function work () {
+    	if (gameState == "PlayerTurnResponse" || gameState == "FaceUpResponse") {
+   		  	clearInterval (id);
+		 	for (i = 0; i < selectMask.length; ++i) {
+				if (selectMask[i] == 1) {
+					toggleCardSelection (i*4);
+					break;
+				}
+			}
+			clickPlayer (0);
+			gameState = "PlayerReady";
+    	}
+    }
 }
 
 function faceupMyCard (i) 
@@ -316,23 +416,29 @@ function faceupMyCard (i)
 }
 
 function playCard (position, round, card) {
-	var i = round * 4 + position;
-	var cards = playerCards[position];
-	var l = getPlayerLocation (position);
-	flashPlayer (position, false);
-	
-	var found = false;
-	for (c = cards.length; !found && c >= 0; --c) {
-		found = (cards[c] == "NA" || cards[c] == card);
-		if (found) {
-			cards[c]="XX";
-			i = c * 4 + position;
-		}
-	}
-	faceUpCard (i);
-	setCardFace (i, card);
-	moveCardEffect (i, l.x+1, l.y+2.5);
-	discarded.push(i);
+    var id = setInterval (work, 100);
+    function work () {
+    	if (gameState == "PlayerReady") {
+   		  	clearInterval (id);
+			var i = round * 4 + position;
+			var cards = playerCards[position];
+			var l = getPlayerLocation (position);
+			flashPlayer (position, false);
+			
+			var found = false;
+			for (c = cards.length; !found && c >= 0; --c) {
+				found = (cards[c] == "NA" || cards[c] == card);
+				if (found) {
+					cards[c]="XX";
+					i = c * 4 + position;
+				}
+			}
+			faceUpCard (i);
+			setCardFace (i, card);
+			moveCardEffect (i, l.x+1, l.y+2.5);
+			discarded.push(i);
+    	}
+    }
 }
 
 function discardCards (p, points) {
@@ -467,8 +573,10 @@ function moveCardEffect (i, x, y, onComplete, step, time, flip)
 //=========================================================
 // Random effects to show when waiting  
 //=========================================================
+var animationPlaying = false;
 function randomMove ()
 {
+	animationPlaying = true;
 	var count = 0;
 	for (i=0; i<52; ++i) {
 		var x = carddeck[i].x + (Math.random() - 0.5) * 30;
@@ -487,8 +595,12 @@ function randomMove ()
 		if (count == 52 && gameState == "Idle") {
 			randomMove ();
 		}
+		else {
+			animationPlaying = false;
+		}
 	}
 }
+
 //=========================================================
 // CSS based animation 
 // Mobile CSS enhancement needed
@@ -615,6 +727,7 @@ function flashPlayer (p, on)
 // *******************************************************************************
 var session = {player: "", code: "",};
 var serverState="Disconnected";
+var eventQueue=[];
 
 function serverDebug (s) {
 	prompt ("<code>" + s + "</code>");
@@ -623,9 +736,22 @@ function serverDebug (s) {
 function mainLoop ()
 {
 	prompt ("Server State:" + serverState);
-	serverRequest ("http://www.ialogic.com/cardgame" +
-		 "?CardEvent=CardEventGameIdle" + "&player="+ session.player+ "&code=" +
-			 session.code);
+	if (testThread == null) {
+		if (eventQueue.length > 0 ) {
+			handleResponseText (eventQueue.shift());
+		}
+		else {
+			serverRequest ("http://www.ialogic.com/cardgame" +
+				 "?CardEvent=CardEventPlayerUpdate" + "&player="+ session.player+ "&code=" +
+					 session.code);
+		}
+	}
+	else {
+		if (eventQueue.length > 0 ) {
+			handleResponseText (eventQueue.shift());
+		}
+	}
+	
 }
 
 function login (player, code) {
@@ -674,11 +800,10 @@ function serverRequest (theUrl)
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
-        	serverDebug ("Server:" + xhttp.responseText);
-        	handleResponseText (xhttp.responseText);
+        	eventQueue.push (xhttp.responseText);
         }
-        else {
-           	prompt ("Server Error!");
+        else if (this.status != 200 && this.status != 0) {
+           	prompt ("Server Error! Status=" + this.status);
         }
     };
     xhttp.open("GET", theUrl, true); 
@@ -712,29 +837,19 @@ function handleResponseText (text)
 		prompt (message);
 		break;
 	case "CardEventShuffleEffect":
+		gameState = "PlayerReady";
 		prompt (message);
 		cleanup ();
 		break;
 	case "CardEventDealCards":
 		var hand = response.getElementsByTagName("hand")[0].childNodes[0].nodeValue;
-		playerCards[0] = hand.split(",");
-		for (i = 1; i < 4; ++i) {
-			for (j = 0; j < 13; ++j) {
-				playerCards[i].push ("NA");
-			}
-		}
 		dealCards (hand);
 		break;
 	case "CardEventFaceUp":
 		var rule = response.getElementsByTagName("rule")[0];
 		var reason = rule.getAttribute("reason");
 		var allowed = rule.getAttribute("allowed");
-		prompt (message);
-		enableCards (reason, allowed);
-		for (i = 0; i < 4; ++i) {
-			flashPlayer(i, true);
-		}
-		gameState = "FaceUpResponse";
+		faceupReady (reason, allowed);
 		break;
 	case "CardEventFaceUpResponse":
 		var position = parseInt(response.getElementsByTagName("player")[0].getAttribute("position"));
@@ -748,18 +863,7 @@ function handleResponseText (text)
 		var rule = response.getElementsByTagName("rule")[0];
 		var reason = rule.getAttribute("reason");
 		var allowed = rule.getAttribute("allowed");
-		for (i = 0; i < 4; ++i) {
-			flashPlayer (i, i==position);
-			if (position == 0) {
-				if (allowed != "") {
-					enableCards (reason, allowed);
-				}
-				else {
-					enableCards (reason, myCards[r]);
-					toggleCardSelection (r*4);
-				}
-			}
-		}
+		playerReady (r, position, reason, allowed);
 		break;
 	case "CardEventPlayerAction":
 		var position = parseInt(response.getElementsByTagName("player")[0].getAttribute("position"));
@@ -767,11 +871,13 @@ function handleResponseText (text)
 		var card = response.getElementsByTagName("cardPlayed")[0].getAttribute("card");
 		playCard (position, round, card);
 		break;
+	case "CardEventPlayerAutoAction":
+		autoPlayCard ();
+		break;
 	case "CardEventEndRound":
 		var position = parseInt(response.getElementsByTagName("player")[0].getAttribute("position"));
 		var points = response.getElementsByTagName("player")[0].getAttribute("points");
 		discardCards (position, points);
-		gameState="PlayerReady";
 		break;
 	default:
 		prompt ("Event Name:" + event + ", Message:" + Message);
@@ -785,10 +891,11 @@ function handleResponseText (text)
 // 3. Event handlers.
 // It does not try to validate state transition from server side. 
 //*******************************************************************************
-var testThread;
+var testThread=null;
 var testThreadInterval = 1000;
-var testStage = 0;
 var testUsers = ['Steve', 'Ying','Chris','Tiff'];
+var testState = "Test_Login";
+var testStage = 0;
 var testHand="3C,4C,5C,8C,7D,AD,5H,XH,JH,QH,KH,5S,9S";
 var testFaceups = ["XC,QS", 'AH',"JD"];
 var testGame = [
@@ -811,18 +918,19 @@ function testLoop ()
 {
 	var testResponse=
 		"<event name='CardEventGameIdle'>" +
-		"<message>Game State:" + gameState + ", stage:" + testStage + "</message>" +
+		"<message>testState: " + testState + ", stage:" + testStage + "</message>" +
 		"</event>";
 	
-	switch (gameState) {
-	case "Login":
+	switch (testState) {
+	case "Test_Login":
 		testResponse=
 			"<event name='CardEventLoginAck'>" +
 			"<message>Welcome</message>" +
 			"<status>OK</status>" +
 			"</event>";
+		testState = "Test_Idle";
 		break;
-	case "Idle":
+	case "Test_Idle":
 		++testStage;
 		if (testStage == 1) {
 			testResponse=
@@ -845,9 +953,10 @@ function testLoop ()
 				"<event name='CardEventShuffleEffect'>" +
 				"<message>Shuffling Cards</message>";
 				testResponse = testResponse + "</event>";
+			testState = "Test_DealCard";
 		}
 		break;
-	case "Ready":
+	case "Test_DealCard":
 		testResponse=
 			"<event name='CardEventDealCards'>" +
 			"<message>Dealing Cards</message>" +
@@ -855,16 +964,18 @@ function testLoop ()
 				"<hand>" + testHand + "</hand>" +
 				"</player>";
 			testResponse = testResponse + "</event>";
+			testState = "Test_Negotiate";
 			break;
-	case "Negotiate":
+	case "Test_Negotiate":
 		testResponse=
 			"<event name='CardEventFaceUp'>" +
 			"<message>Choose Cards or Pass</message>" + 
 			"<rule reason='Special card only' allowed='AH,QS,XC,JD'/>";
 			testResponse = testResponse + "</event>";
 			testStage = 0;
+			testState = "Test_FaceUpResponse";
 			break;
-	case "FaceUpResponse":
+	case "Test_FaceUpResponse":
 		if (testFaceups.length > 0) {
 			var card = testFaceups.shift();
 			var p = (testStage + 1) % 4;
@@ -879,16 +990,32 @@ function testLoop ()
 		}
 		else {
 			testStage = 0;
-			clickPlayer(0);
+			testResponse=
+				"<event name='CardEventPlayerAutoAction'>" +
+				"<message>Player event</message>" + 
+				"<player name='" + testUsers[0] +"' position='0'>" +
+				"</player>";
+			testResponse = testResponse + "</event>";
+			testState = "Test_EndTurn";
 		}
 		break;
-	case "EndTurn":
-		gameState = (testFaceups.length > 0) ?
-			"FaceUpResponse" : "PlayerReady";
+	case "Test_EndTurn":
+		if (testFaceups.length > 0) {
+			testState = "Test_FaceUpResponse";
+		}
+		else {
+			testState = "Test_PlayerReady";
+			testResponse=
+				"<event name='CardEventGamePlayStart'>" +
+				"<message>Ready To Play</message>" + 
+				"<player name='" + testUsers[0] +"' position='0'>" +
+				"</player>";
+			testResponse = testResponse + "</event>";
+		}
 		break;
-	case "PlayerReady":
+	case "Test_PlayerReady":
 		if (testStage > 103) {
-			gameState="EndHand";
+			testState="Test_EndHand";
 		}
 		else {
 			var turn = Math.floor (testStage/2);
@@ -910,7 +1037,7 @@ function testLoop ()
 					"<rule reason='Test Only' allowed='" + card + "'/>";
 				testResponse = testResponse + "</event>";
 				if (p == 0) {
-					gameState = "PlayerTurnResponse";
+					testState = "Test_PlayerTurnResponse";
 				}
 				++testStage;
 			}
@@ -925,28 +1052,22 @@ function testLoop ()
 					testResponse = testResponse + "</event>";
 				}
 				if (step == 3) {
-					gameState = "Pause";
+					testState = "Test_EndRound";
 				}
 				++testStage;
 			}
 		}
 		break;
-	case "PlayerTurnResponse":
-		// auto play
-		for (i = 0; i < selectMask.length; ++i) {
-			if (selectMask[i] == 1) {
-				if (selectedCards[i] !=1) {
-					toggleCardSelection (i*4);
-				}
-				break;
-			}
-		}
-		clickPlayer(0);
+	case "Test_PlayerTurnResponse":
+		testResponse=
+			"<event name='CardEventPlayerAutoAction'>" +
+			"<message>Player event</message>" + 
+			"<player name='" + testUsers[0] +"' position='0'>" +
+			"</player>";
+		testResponse = testResponse + "</event>";
+		testState = "Test_PlayerReady";
 		break;
-	case "Pause":
-		gameState = "EndRound";
-		break;
-	case "EndRound":
+	case "Test_EndRound":
 		var turn = Math.floor ((testStage-1)/2);
 		var r = Math.floor (turn / 4);
 		var p = testGame[r][2];
@@ -961,12 +1082,13 @@ function testLoop ()
 				"'>" +
 			"</player>";
 		testResponse = testResponse + "</event>";
+		testState = "Test_PlayerReady";
 		break;
-	case "EndHand":
+	case "Test_EndHand":
 		testStage = 0;
 		clearInterval(testThread);
 		break;
 	default:;
 	}
-	handleResponseText (testResponse);
+	eventQueue.push (testResponse);
 }

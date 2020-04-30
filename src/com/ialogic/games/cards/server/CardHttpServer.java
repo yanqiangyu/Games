@@ -20,6 +20,7 @@ import com.ialogic.games.cards.event.CardEventGameIdle;
 import com.ialogic.games.cards.event.CardEventGameOver;
 import com.ialogic.games.cards.event.CardEventGameStart;
 import com.ialogic.games.cards.event.CardEventPlayerRegister;
+import com.ialogic.games.cards.event.CardEventPlayerUpdate;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
@@ -68,6 +69,9 @@ public class CardHttpServer implements CardUI {
 			@SuppressWarnings("rawtypes")
 			Class[] paramType = {String.class};
 			CardEvent e = (CardEvent) Class.forName(clz).getConstructor(paramType).newInstance("Register Player");
+			if (!(e instanceof CardEventPlayerUpdate)) {
+				System.out.println(String.format("DEBUG: %s Event from player %s.", clz, player));
+			}
 			if (e instanceof CardEventPlayerRegister) {
 				// TODO check for already registered
 				if (sessions.containsKey(player)) {
@@ -86,7 +90,7 @@ public class CardHttpServer implements CardUI {
 				}
 			}
 			else if (sessions.containsKey(player)) {
-				if (e instanceof CardEventGameIdle) {
+				if (e instanceof CardEventPlayerUpdate) {
 					CardPlayerHttpClient s = sessions.get(player);
 					response = s.getEventFromQueue ();
 				}
@@ -129,9 +133,7 @@ public class CardHttpServer implements CardUI {
 	      System.out.println(requestURI.getPath());
 	}
 	public void showText(String text) {
-		for (CardPlayerHttpClient c : sessions.values()) {
-			c.handleEvent(this, new CardEventGameIdle (text));
-		}
+		System.out.println ("DEBUG: " + text);
 	}
 	public void open(CardGame cardGame) {
 		addEvent(new CardEventGameStart ());
@@ -162,6 +164,7 @@ public class CardHttpServer implements CardUI {
 	}
 	public void playerEvent(CardEvent request) {
 		addEvent (request);
+		//TODO: broadcast to all players with position update;
 		showText (request.getMessage());
 	}
 	public CardEvent getEvent(CardGame cardGame) {
