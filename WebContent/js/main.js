@@ -104,12 +104,12 @@ function clickLogo () {
 function clickPlayer (p)
 {
 	if (p == 0) {
-		var s = "";
-		var sep = "";
 		var card = -1;
+		var cards = "";
+		var sep = "";
 		for (i = 0; i < myCards.length; ++ i) {
 			if (selectedCards[i] != 0) {
-				s += sep + myCards[i];
+				cards += sep + myCards[i];
 				sep = ",";
 				if (gameState == "FaceUpResponse") {
 					faceupMyCard (i*4);
@@ -121,15 +121,28 @@ function clickPlayer (p)
 			// Can't end turn without select a card;
 			prompt ("Choose a card");
 		}
-		else {
+		else if (gameState == "PlayerTurnResponse" || gameState == "FaceUpResponse") {
+			var event = "";
 			if (gameState == "PlayerTurnResponse") {
 				playCard (0, card, myCards[card]);
+				event="CardEventPlayerAction";
+			}
+			else {
+				event="CardEventFaceUpResponse";
 			}
 			for (i = 0; i < myCards.length; ++ i) {
 				selectedCards[i] = 0;
 			}
 			enableCards ("Turn Over", "");
 			flashPlayer (0, false);
+
+			request = "http://www.ialogic.com/cardgame" + 
+				"?CardEvent=" + event + 
+				"&player="+ session.player + 
+				"&code=" + session.code +
+				"&cards=" + cards;
+			serverRequest (request);
+			gameState="PlayerReady";
 		}
 	}
 }
@@ -324,7 +337,6 @@ function dealCard (i, myCards) {
 
 function faceupReady (reason, allowed) {
     var id = setInterval (work, 100);
-    alert ("Ha");
     function work () {
   	  if (gameState == "PlayerReady") {
   		  	clearInterval (id);
@@ -736,22 +748,14 @@ function serverDebug (s) {
 function mainLoop ()
 {
 	prompt ("Server State:" + serverState);
-	if (testThread == null) {
-		if (eventQueue.length > 0 ) {
-			handleResponseText (eventQueue.shift());
-		}
-		else {
-			serverRequest ("http://www.ialogic.com/cardgame" +
-				 "?CardEvent=CardEventPlayerUpdate" + "&player="+ session.player+ "&code=" +
-					 session.code);
-		}
+	if (eventQueue.length > 0 ) {
+		handleResponseText (eventQueue.shift());
 	}
 	else {
-		if (eventQueue.length > 0 ) {
-			handleResponseText (eventQueue.shift());
-		}
+		serverRequest ("http://www.ialogic.com/cardgame" +
+			 "?CardEvent=CardEventPlayerUpdate" + "&player="+ session.player+ "&code=" +
+				 session.code);
 	}
-	
 }
 
 function login (player, code) {
@@ -767,10 +771,11 @@ function login (player, code) {
 		var timeout = setInterval(checkLogin, 2000);
 		function checkLogin () {
 			if (serverState == "LoginWait") {
-				prompt ("Server timeout, please try later.");
+				prompt ("Please wait..");
 				setServerState ("Disconnected");
 			}
-			if (serverState == "Disconnected") {
+			else if (serverState == "Disconnected") {
+				prompt ("Timeout,  try again...");
 				dismissPrompt ();
 				clearInterval (timeout);
 				enableLogin ()
@@ -797,17 +802,19 @@ function setServerState (s) {
 
 function serverRequest (theUrl)
 {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-        	eventQueue.push (xhttp.responseText);
-        }
-        else if (this.status != 200 && this.status != 0) {
-           	prompt ("Server Error! Status=" + this.status);
-        }
-    };
-    xhttp.open("GET", theUrl, true); 
-    xhttp.send(null);
+	if (testThread == null) {
+	    var xhttp = new XMLHttpRequest();
+	    xhttp.onreadystatechange = function() {
+	        if (this.readyState == 4 && this.status == 200) {
+	        	eventQueue.push (xhttp.responseText);
+	        }
+	        else if (this.status != 200 && this.status != 0) {
+	           	prompt ("Server Error! Status=" + this.status);
+	        }
+	    };
+	    xhttp.open("GET", theUrl, true); 
+	    xhttp.send(null);
+	}
 }
 
 function handleResponseText (text)

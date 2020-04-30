@@ -8,7 +8,9 @@ import java.util.ArrayList;
 
 public class CardEventFaceUpResponse extends CardEvent {
 	List<Card>cards = new ArrayList<Card>();
-
+	public CardEventFaceUpResponse (String message) {
+		super (message);
+	}
 	public List<Card> getCards() {
 		return cards;
 	}

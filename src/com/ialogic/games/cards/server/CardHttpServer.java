@@ -16,9 +16,10 @@ import com.ialogic.games.cards.CardPlayer;
 import com.ialogic.games.cards.CardUI;
 import com.ialogic.games.cards.PigChase;
 import com.ialogic.games.cards.event.CardEvent;
-import com.ialogic.games.cards.event.CardEventGameIdle;
+import com.ialogic.games.cards.event.CardEventFaceUpResponse;
 import com.ialogic.games.cards.event.CardEventGameOver;
 import com.ialogic.games.cards.event.CardEventGameStart;
+import com.ialogic.games.cards.event.CardEventPlayerAction;
 import com.ialogic.games.cards.event.CardEventPlayerRegister;
 import com.ialogic.games.cards.event.CardEventPlayerUpdate;
 import com.sun.net.httpserver.HttpContext;
@@ -26,10 +27,14 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
 public class CardHttpServer implements CardUI {
+//============================================================================================
+// TODO use code to organize them to rooms;
 	static CardHttpServer instance = null;
     HttpServer server;
+	CardGame game;
 	Queue<CardEvent>events = new LinkedBlockingQueue<CardEvent> ();
 	HashMap<String, CardPlayerHttpClient> sessions = new HashMap<String, CardPlayerHttpClient> ();
+//============================================================================================
 	public CardHttpServer (final int port){
 		if (instance == null) {
 			try {
@@ -68,12 +73,11 @@ public class CardHttpServer implements CardUI {
 			String player = request.get("player");
 			@SuppressWarnings("rawtypes")
 			Class[] paramType = {String.class};
-			CardEvent e = (CardEvent) Class.forName(clz).getConstructor(paramType).newInstance("Register Player");
+			CardEvent e = (CardEvent) Class.forName(clz).getConstructor(paramType).newInstance("Client Request");
 			if (!(e instanceof CardEventPlayerUpdate)) {
 				System.out.println(String.format("DEBUG: %s Event from player %s.", clz, player));
 			}
 			if (e instanceof CardEventPlayerRegister) {
-				// TODO check for already registered
 				if (sessions.containsKey(player)) {
 					response = String.format("<event name='CardEventLoginAck'><status>OK</status>" + 
 								"<message>Player %s welcome back!</message></event>", player);
@@ -90,9 +94,15 @@ public class CardHttpServer implements CardUI {
 				}
 			}
 			else if (sessions.containsKey(player)) {
+				CardPlayerHttpClient c = sessions.get(player);
+				e.setPlayer(c);
 				if (e instanceof CardEventPlayerUpdate) {
-					CardPlayerHttpClient s = sessions.get(player);
-					response = s.getEventFromQueue ();
+					response = c.getEventFromQueue ();
+				}
+				else if (e instanceof CardEventFaceUpResponse || e instanceof CardEventPlayerAction) {
+					playerEvent (e);
+					response = "<event name='CardEventPlayerAck'><status>OK</status>" + 
+							"<message>Action Received</message></event>";
 				}
 			}
 		} catch (Exception e) {
@@ -119,6 +129,7 @@ public class CardHttpServer implements CardUI {
 		}
 		return nvPairs;
 	}
+	/*
 	private static void printRequestInfo(HttpExchange exchange) {
 	      System.out.println("-- Remote Address --");
 	      System.out.println(exchange.getRemoteAddress().getHostName());
@@ -132,16 +143,19 @@ public class CardHttpServer implements CardUI {
 	      System.out.println("-- path --");
 	      System.out.println(requestURI.getPath());
 	}
+	*/
 	public void showText(String text) {
 		System.out.println ("DEBUG: " + text);
 	}
 	public void open(CardGame cardGame) {
+		game = cardGame;
 		addEvent(new CardEventGameStart ());
 		System.out.println(String.format ("Game %s Started.", cardGame.getName()));
 		showText ("Welcome to a game of \"" + cardGame.getName() + "\"!");
 	}
 
 	public void close(CardGame cardGame) {
+		game = null;
 		showText ("Good bye!");
 		System.out.println(String.format ("Game %s Stopped.", cardGame.getName()));
 	}
@@ -164,8 +178,13 @@ public class CardHttpServer implements CardUI {
 	}
 	public void playerEvent(CardEvent request) {
 		addEvent (request);
-		//TODO: broadcast to all players with position update;
-		showText (request.getMessage());
+		for (CardPlayerHttpClient c : sessions.values()) {
+			if (c != request.getPlayer()) {
+				c.handleEvent(this, request);
+			}
+		}
+		
+		System.out.println(String.format ("Debug: Player Event - %s", request.getMessage()));
 	}
 	public CardEvent getEvent(CardGame cardGame) {
 		synchronized (events) {

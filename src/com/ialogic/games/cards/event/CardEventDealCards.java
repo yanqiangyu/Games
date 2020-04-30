@@ -10,7 +10,7 @@ public class CardEventDealCards extends CardEvent {
 	}
 	public String getXMLString() {
 		CardPlayer p = getPlayer();
-		String response = String.format("<event name='%s' position='0'><message>%s</message><player name='%s'><hand>%s</hand></player><event>",
+		String response = String.format("<event name='%s'><message>%s</message><player name='%s' position='0'><hand>%s</hand></player><event>",
 				this.getClass().getSimpleName(), getMessage(), p.getName(),Card.showCSList(p.getHand()));
 		return response;
 	}

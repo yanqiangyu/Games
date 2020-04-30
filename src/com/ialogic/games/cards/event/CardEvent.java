@@ -27,9 +27,9 @@ public class CardEvent {
 	public String getXMLString() {
 		String  p = "";
 		if (getPlayer() != null ) {
-			p = String.format("<player name = '%s'", getPlayer().getName());
+			p = String.format("<player name='%s' position='0'/>", getPlayer().getName());
 		}
-		String response = String.format("<event name='%s' position='0'><message>%s</message>%s<event>",
+		String response = String.format("<event name='%s'><message>%s</message>%s<event>",
 				this.getClass().getSimpleName(), getMessage(), p);
 		return response;
 	}
