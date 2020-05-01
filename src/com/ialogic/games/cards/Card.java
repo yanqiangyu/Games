@@ -1,9 +1,21 @@
 package com.ialogic.games.cards;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 
 public class Card implements Comparable<Card>{
+	static HashMap<String,Suits> suitCodes = new HashMap<String,Suits>();
+	static HashMap<String,Ranks> rankCodes = new HashMap<String,Ranks>();
+	{
+		for (Suits s: Suits.values()) {
+			suitCodes.put (s.toString(), s);
+		}
+		for (Ranks r: Ranks.values()) {
+			rankCodes.put (r.toString(), r);
+		}
+	}
+	
 	public enum Suits {
 		CLUBS("C"),
 		DIAMONDS("D"),
@@ -42,11 +54,18 @@ public class Card implements Comparable<Card>{
 	}
 	Suits suit;
 	Ranks rank;
+
+	
 	
 	public Card(Suits s, Ranks r) {
 		super ();
 		setSuit (s);
 		setRank (r);
+	}
+	public Card(String c) {
+		super ();
+		setSuit (suitCodes.get (c.substring(1,2)));
+		setRank (rankCodes.get (c.substring(0,1)));
 	}
 	public Suits getSuit() {
 		return suit;

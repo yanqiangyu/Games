@@ -14,6 +14,7 @@ public abstract class CardPlayer {
 	List<Card>points =  Collections.synchronizedList(new ArrayList<Card>());
 	List<Card>tricks =  Collections.synchronizedList(new ArrayList<Card>());
 	Card cardPlayed = null;
+	int position;
 	public String getName() {
 		return name;
 	}
@@ -63,5 +64,12 @@ public abstract class CardPlayer {
 		String s = getName () + ": ";
 		return s;
 	}
+	public void setPosition(int i) {
+		this.position = i;
+	}
+	public int getPosition() {
+		return this.position;
+	}
+
 	abstract public void handleEvent (CardUI ui, CardEvent request);
 }

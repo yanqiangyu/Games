@@ -858,6 +858,7 @@ function handleResponseText (text)
 			event == "CardEventGamePlayStart" ||
 			event == "CardEventPlayerAction" ||
 			event == "CardEventGameIdle" ||
+			event == "CardEventPlayerAck" ||
 			event == "CardEventTurnToPlay") {
 			break;
 		}

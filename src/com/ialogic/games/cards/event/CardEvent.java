@@ -1,5 +1,7 @@
 package com.ialogic.games.cards.event;
 
+import java.util.HashMap;
+
 import com.ialogic.games.cards.CardPlayer;
 
 public class CardEvent {
@@ -27,10 +29,12 @@ public class CardEvent {
 	public String getXMLString() {
 		String  p = "";
 		if (getPlayer() != null ) {
-			p = String.format("<player name='%s' position='0'/>", getPlayer().getName());
+			p = String.format("<player name='%s' position='%s'/>", getPlayer().getName(), getPlayer().getPosition());
 		}
 		String response = String.format("<event name='%s'><message>%s</message>%s<event>",
 				this.getClass().getSimpleName(), getMessage(), p);
 		return response;
+	}
+	public void setFieldValues(HashMap<String, String> request) {
 	}
 }

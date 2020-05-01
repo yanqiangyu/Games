@@ -33,7 +33,7 @@ public class CardHttpServer implements CardUI {
     HttpServer server;
 	CardGame game;
 	Queue<CardEvent>events = new LinkedBlockingQueue<CardEvent> ();
-	HashMap<String, CardPlayerHttpClient> sessions = new HashMap<String, CardPlayerHttpClient> ();
+	HashMap<String, CardPlayer> sessions = new HashMap<String, CardPlayer> ();
 //============================================================================================
 	public CardHttpServer (final int port){
 		if (instance == null) {
@@ -68,18 +68,20 @@ public class CardHttpServer implements CardUI {
 		String response = "<event name='CardEventLoginAck'><status>ERROR</status>" + 
 				"<message>Unexpected Event, please restart.</message></event>";
 		try {
+			System.out.println (query);
 			HashMap<String, String>request = parseQuery(query);
 			String clz = "com.ialogic.games.cards.event." + request.get("CardEvent");
 			String player = request.get("player");
 			@SuppressWarnings("rawtypes")
 			Class[] paramType = {String.class};
 			CardEvent e = (CardEvent) Class.forName(clz).getConstructor(paramType).newInstance("Client Request");
+			e.setFieldValues (request);
 			if (!(e instanceof CardEventPlayerUpdate)) {
 				System.out.println(String.format("DEBUG: %s Event from player %s.", clz, player));
 			}
 			if (e instanceof CardEventPlayerRegister) {
 				if (sessions.containsKey(player)) {
-					CardPlayerHttpClient c = sessions.get(player);
+					CardPlayerHttpClient c = (CardPlayerHttpClient) sessions.get(player);
 					response = String.format("<event name='CardEventLoginAck'><status>OK</status>" + 
 								"<message>Player %s welcome back!</message>" +
 								"<player name='%s' position='%d'/></event>", c.getName(), c.getPosition());
@@ -88,26 +90,27 @@ public class CardHttpServer implements CardUI {
 				}
 				else {
 					CardPlayerHttpClient c = new CardPlayerHttpClient (player, this);
-					e.setPlayer(c);
-					sessions.put(player, c);
-					for (int i = 0; i < sessions.size(); ++i) {
-						if (sessions.get(i) == c) {
-							c.setPosition (i);
-							break;
-						}
+					synchronized (sessions) {
+						c.setPosition (sessions.size());
+						sessions.put(player, c);
 					}
-					System.out.println(String.format ("New Client %s", c.getName()));
+					((CardEventPlayerRegister)e).setAllPlayers (sessions.values());
+					
+					e.setPlayer(c);
+					c.handleEvent(this, e);
 					playerEvent(e);
+					
+					System.out.println(String.format ("New Client %s", c.getName()));
 					response = String.format("<event name='CardEventLoginAck'><status>OK</status>" + 
 							"<player name='%s' position='%d'/>" +
-							"<message>Welcome %s!</message></event>", c.getName(), c.getPosition());
+							"<message>Welcome %s!</message></event>", c.getName(), c.getPosition(), c.getName());
 				}
 			}
 			else if (sessions.containsKey(player)) {
-				CardPlayerHttpClient c = sessions.get(player);
+				CardPlayer c = sessions.get(player);
 				e.setPlayer(c);
 				if (e instanceof CardEventPlayerUpdate) {
-					response = c.getEventFromQueue ();
+					response = ((CardPlayerHttpClient)c).getEventFromQueue ();
 				}
 				else if (e instanceof CardEventFaceUpResponse || e instanceof CardEventPlayerAction) {
 					playerEvent (e);
@@ -188,13 +191,12 @@ public class CardHttpServer implements CardUI {
 	}
 	public void playerEvent(CardEvent request) {
 		addEvent (request);
-		for (CardPlayerHttpClient c : sessions.values()) {
+		for (CardPlayer c : sessions.values()) {
 			if (c != request.getPlayer()) {
 				c.handleEvent(this, request);
 			}
 		}
-		
-		System.out.println(String.format ("Debug: Player Event - %s", request.getMessage()));
+		System.out.println(String.format ("Debug: Player Event - %s", request.getXMLString()));
 	}
 	public CardEvent getEvent(CardGame cardGame) {
 		synchronized (events) {
