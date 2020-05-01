@@ -9,6 +9,7 @@ import com.ialogic.games.cards.event.CardEvent;
 
 public class CardPlayerHttpClient extends CardPlayer {
 	CardUI server;
+	int position;
 	LinkedBlockingQueue<CardEvent> events = new LinkedBlockingQueue<CardEvent>();
 	
 	public CardPlayerHttpClient (String name, CardUI svr) {
@@ -36,5 +37,11 @@ public class CardPlayerHttpClient extends CardPlayer {
 			System.out.println ("Sent:" + response);
 		}
 		return response;
+	}
+	public void setPosition(int i) {
+		this.position = i;
+	}
+	public int getPosition() {
+		return this.position;
 	}
 }

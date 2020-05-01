@@ -79,18 +79,28 @@ public class CardHttpServer implements CardUI {
 			}
 			if (e instanceof CardEventPlayerRegister) {
 				if (sessions.containsKey(player)) {
+					CardPlayerHttpClient c = sessions.get(player);
 					response = String.format("<event name='CardEventLoginAck'><status>OK</status>" + 
-								"<message>Player %s welcome back!</message></event>", player);
+								"<message>Player %s welcome back!</message>" +
+								"<player name='%s' position='%d'/></event>", c.getName(), c.getPosition());
 					System.out.println(String.format ("Existing Client %s", player));
+					// TODO: Play back message log to catch up;
 				}
 				else {
 					CardPlayerHttpClient c = new CardPlayerHttpClient (player, this);
 					e.setPlayer(c);
 					sessions.put(player, c);
+					for (int i = 0; i < sessions.size(); ++i) {
+						if (sessions.get(i) == c) {
+							c.setPosition (i);
+							break;
+						}
+					}
 					System.out.println(String.format ("New Client %s", c.getName()));
 					playerEvent(e);
 					response = String.format("<event name='CardEventLoginAck'><status>OK</status>" + 
-							"<message>Welcome %s!</message></event>", player);
+							"<player name='%s' position='%d'/>" +
+							"<message>Welcome %s!</message></event>", c.getName(), c.getPosition());
 				}
 			}
 			else if (sessions.containsKey(player)) {

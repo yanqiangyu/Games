@@ -1,17 +1,9 @@
-//=============================================================
-//	State Transition:
-//=============================================================
-//  Initial->Login->Idle->PlayerReady->FaceUpResponse
-//                          ^ | ^ | ^         	|
-//	                        | | | | |-------------
-//                          | | | |----->PlayerTurnResponse
-//                          | | |----- --------|
-//                          | |--------->EndRound
-//                          |---------------|
-//=============================================================
 var gameState = "Initial";
-var pollingInterval = 3000;
+var pollingInterval = 1000;
 var myCards;
+var myPosition = 0;
+var myPlayers = ["","","",""];
+var myRound = 0;
 var selectMask = [0,0,0,0,0,0,0,0,0,0,0,0,0];
 var selectedCards = [0,0,0,0,0,0,0,0,0,0,0,0,0];
 var maskReason = "Not your turn yet";
@@ -358,6 +350,7 @@ function showFaceup (p, c)
 			flashPlayer (p, false);
 			if (c != ""  && c != "NA" && p != 0) {
 				var cards=c.split(",");
+				var count = cards.length;
 				for (i = 0; i < cards.length; ++i) {
 					var idx = p - i*4 + 48;
 					var pos = getCardLocation (idx);
@@ -455,6 +448,8 @@ function playCard (position, round, card) {
 
 function discardCards (p, points) {
 	var cards = points.split(",");
+	var count = discarded.length;
+
 	while (discarded.length > 0) {
 		var i = discarded.shift();
 		var found = false;
@@ -723,6 +718,7 @@ function setPlayer (p, name)
 {
 	var view=document.getElementById("player"+p);
 	view.innerHTML=name;
+	myPlayers[p%4]=name;
 }
 
 function flashPlayer (p, on)
@@ -817,17 +813,84 @@ function serverRequest (theUrl)
 	}
 }
 
+function findPlayerPosition (player)
+{
+	if (player != null) {
+		var name = player.getAttribute("name");
+		for (i = 0; i < myPlayers.length; ++i) {
+			if (myPlayers[i] == name) {
+				return i;
+			}
+		}
+	}
+	return 0;
+}
 function handleResponseText (text)
 {
 	var response = new DOMParser().parseFromString(text,"text/xml");
 	var event=response.getElementsByTagName("event")[0].getAttribute("name");
 	var message = response.getElementsByTagName("message")[0].childNodes[0].nodeValue;
+	var player = response.getElementsByTagName("player")[0];
+	var position = findPlayerPosition (player);
+	//=============================================================
+	//	BEGIN State Transition:
+	//=============================================================
+	switch (gameState) {
+	case "Idle":
+		break;
+	case "Login":
+		if (event == "CardEventLoginAck") {
+			break;
+		}
+	case "CleanupEnd":
+		if (event == "CardEventDealCards") {
+			myRound = 0;
+			break;
+		}
+	case "PlayerReady":
+		if (event == "CardEventEndRound") {
+			eventQueue.unshift(text);
+			prompt ("Round Over");
+			gameState = "EndRound";
+			return;
+		}
+		if (event == "CardEventFaceUp" || 
+			event == "CardEventGamePlayStart" ||
+			event == "CardEventPlayerAction" ||
+			event == "CardEventGameIdle" ||
+			event == "CardEventTurnToPlay") {
+			break;
+		}
+	case "FaceUpResponse":
+		if (event == "CardEventFaceUpResponse" || 
+			event == "CardEventPlayerAutoAction") {
+			break;
+		}
+	case "PlayerTurnResponse":
+		if (event == "CardEventPlayerAutoAction") {
+			break;
+		}
+	case "EndRound":
+		if (event == "CardEventEndRound") {
+			++myRound;
+			break;
+		}
+	default:
+		eventQueue.unshift(text);
+		prompt ("State: " + gameState + " is not Ready for:" + event);
+		return;
+	}
+	//=============================================================
+	//	END State Transition:
+	//=============================================================
 	setServerState ("ResponseReceived");
 	prompt ("Game State:" + gameState + " Message:" + message );
+	
 	switch (event) {
 	case "CardEventLoginAck":
 		var status = response.getElementsByTagName("status")[0].childNodes[0].nodeValue;
 		if (status == "OK") {
+			myPosition = parseInt(player.getAttribute("position"));
 			startGame ();
 		}
 		else {
@@ -837,8 +900,8 @@ function handleResponseText (text)
 		var players = response.getElementsByTagName("player");
 		if (players) {
 			for (i = 0; i < players.length; ++i) {
-				setPlayer (players[i].getAttribute("position"),
-					players[i].getAttribute("name"));
+				var p = (parseInt(players[i].getAttribute("position")) - myPosition + 4) % 4;
+				setPlayer (p, players[i].getAttribute("name"));
 			}
 		}
 		prompt (message);
@@ -859,32 +922,26 @@ function handleResponseText (text)
 		faceupReady (reason, allowed);
 		break;
 	case "CardEventFaceUpResponse":
-		var position = parseInt(response.getElementsByTagName("player")[0].getAttribute("position"));
 		var cards = response.getElementsByTagName("faceup")[0].childNodes[0].nodeValue;
 		showFaceup (position, cards);
 		break;
 	case "CardEventTurnToPlay":
-		var player = response.getElementsByTagName("player")[0];
-		var position = parseInt(player.getAttribute("position"));
-		var r = parseInt(player.getAttribute("round"));
 		var rule = response.getElementsByTagName("rule")[0];
 		var reason = rule.getAttribute("reason");
 		var allowed = rule.getAttribute("allowed");
-		playerReady (r, position, reason, allowed);
+		playerReady (myRound, position, reason, allowed);
 		break;
 	case "CardEventPlayerAction":
-		var position = parseInt(response.getElementsByTagName("player")[0].getAttribute("position"));
-		var round = parseInt(response.getElementsByTagName("cardPlayed")[0].getAttribute("round"));
 		var card = response.getElementsByTagName("cardPlayed")[0].getAttribute("card");
-		playCard (position, round, card);
+		playCard (position, myRound, card);
 		break;
 	case "CardEventPlayerAutoAction":
 		autoPlayCard ();
 		break;
 	case "CardEventEndRound":
-		var position = parseInt(response.getElementsByTagName("player")[0].getAttribute("position"));
 		var points = response.getElementsByTagName("player")[0].getAttribute("points");
 		discardCards (position, points);
+		gameState = "PlayerReady";
 		break;
 	default:
 		prompt ("Event Name:" + event + ", Message:" + Message);
@@ -933,6 +990,7 @@ function testLoop ()
 		testResponse=
 			"<event name='CardEventLoginAck'>" +
 			"<message>Welcome</message>" +
+			"<player name='" + testUsers[0] + "' position='2'/>" +
 			"<status>OK</status>" +
 			"</event>";
 		testState = "Test_Idle";
@@ -951,8 +1009,7 @@ function testLoop ()
 				"<event name='CardEventPlayerRegister'>" +
 				"<message>New Player: " + testUsers[testStage-1] + "</message>";
 			testResponse = testResponse + 
-				"<player name='" + testUsers[i] + "' position='" + i + "' >" + 
-				"</player>";
+				"<player name='" + testUsers[i] + "' position='" + ((i+2)%4) + "' />"; 
 			testResponse = testResponse + "</event>";
 		}
 		else {
@@ -967,7 +1024,7 @@ function testLoop ()
 		testResponse=
 			"<event name='CardEventDealCards'>" +
 			"<message>Dealing Cards</message>" +
-				"<player name='Steve' position='0'>" +
+				"<player name='Steve'>" +
 				"<hand>" + testHand + "</hand>" +
 				"</player>";
 			testResponse = testResponse + "</event>";
@@ -985,11 +1042,11 @@ function testLoop ()
 	case "Test_FaceUpResponse":
 		if (testFaceups.length > 0) {
 			var card = testFaceups.shift();
-			var p = (testStage + 1) % 4;
+			var p = (testStage + 3 + 2) % 4;
 			testResponse=
 				"<event name='CardEventFaceUpResponse'>" +
 				"<message>Player Face Up</message>" + 
-				"<player name='" + testUsers[p] + "' position='" + p + "'>" +
+				"<player name='" + testUsers[p] + "'>" +
 				"<faceup>" + card + "</faceup>" +
 				"</player>";
 			testResponse = testResponse + "</event>";
@@ -1000,8 +1057,7 @@ function testLoop ()
 			testResponse=
 				"<event name='CardEventPlayerAutoAction'>" +
 				"<message>Player event</message>" + 
-				"<player name='" + testUsers[0] +"' position='0'>" +
-				"</player>";
+				"<player name='" + testUsers[0] +"'/>";
 			testResponse = testResponse + "</event>";
 			testState = "Test_EndTurn";
 		}
@@ -1012,12 +1068,6 @@ function testLoop ()
 		}
 		else {
 			testState = "Test_PlayerReady";
-			testResponse=
-				"<event name='CardEventGamePlayStart'>" +
-				"<message>Ready To Play</message>" + 
-				"<player name='" + testUsers[0] +"' position='0'>" +
-				"</player>";
-			testResponse = testResponse + "</event>";
 		}
 		break;
 	case "Test_PlayerReady":
@@ -1036,10 +1086,7 @@ function testLoop ()
 				testResponse=
 					"<event name='CardEventTurnToPlay'>" +
 					"<message>Player event</message>" + 
-					"<player name='" + testUsers[p] +
-						"' position='" + p + 
-						"' round='" + r +
-						"'>" +
+					"<player name='" + testUsers[p] + "'>" +
 					"</player>" +
 					"<rule reason='Test Only' allowed='" + card + "'/>";
 				testResponse = testResponse + "</event>";
@@ -1053,8 +1100,8 @@ function testLoop ()
 					testResponse=
 						"<event name='CardEventPlayerAction'>" +
 						"<message>Player event</message>" + 
-						"<player name='" + testUsers[p] +"' position='" + p + "'>" +
-						"<cardPlayed card='" + card + "' round='" + r + "'/>" +
+						"<player name='" + testUsers[p] +"'>" +
+						"<cardPlayed card='" + card + "'/>" +
 						"</player>";
 					testResponse = testResponse + "</event>";
 				}
@@ -1069,8 +1116,7 @@ function testLoop ()
 		testResponse=
 			"<event name='CardEventPlayerAutoAction'>" +
 			"<message>Player event</message>" + 
-			"<player name='" + testUsers[0] +"' position='0'>" +
-			"</player>";
+			"<player name='" + testUsers[0] +"'/>";
 		testResponse = testResponse + "</event>";
 		testState = "Test_PlayerReady";
 		break;
@@ -1083,8 +1129,6 @@ function testLoop ()
 			"<event name='CardEventEndRound'>" +
 			"<message>Round Ended</message>" +
 			"<player name='" + testUsers[p] +
-				"' position='" + p + 
-				"' round='" + r +
 				"' points='" + points +
 				"'>" +
 			"</player>";
