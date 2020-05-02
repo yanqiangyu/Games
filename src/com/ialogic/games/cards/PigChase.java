@@ -16,6 +16,7 @@ import com.ialogic.games.cards.event.CardEventGameOver;
 import com.ialogic.games.cards.event.CardEventGameStart;
 import com.ialogic.games.cards.event.CardEventPlayerAction;
 import com.ialogic.games.cards.event.CardEventPlayerRegister;
+import com.ialogic.games.cards.event.CardEventScoreBoard;
 import com.ialogic.games.cards.event.CardEventShuffleEffect;
 import com.ialogic.games.cards.event.CardEventTurnToPlay;
 import com.ialogic.games.cards.event.CardEventWaitForPlayers;
@@ -175,9 +176,12 @@ public class PigChase extends CardGame {
 					starter = newStarter;
 				}
 				banner = String.format("==================== Score For Hand %-4d===================", hand);
+				CardEventScoreBoard scoreHand = new CardEventScoreBoard (String.format("Score for hand %d", hand));
 				ui.showText(banner);
 				for (CardPlayer p : getPlayers ()) {
-					ui.showText(updateScore (p));
+					String ps = updateScore (p);
+					ui.showText(ps);
+					scoreHand.addLine (ps.substring(0,30).trim());
 				}
 				ui.showText("...........................................................");
 				for (CardPlayerTeam team : teams) {
@@ -191,8 +195,10 @@ public class PigChase extends CardGame {
 						setGameOver(true);
 					}
 					team.setTeamScore(total);
+					scoreHand.addLine (score);
 				}
 				ui.showText("===========================================================");
+				ui.sendEvent(this, scoreHand);
 				while (!testCases.isEmpty()) {
 					String t = testCases.remove(0);
 					System.out.println(t);

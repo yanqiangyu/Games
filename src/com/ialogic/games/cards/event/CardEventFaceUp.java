@@ -1,8 +1,5 @@
 package com.ialogic.games.cards.event;
 
-import com.ialogic.games.cards.Card;
-import com.ialogic.games.cards.CardPlayer;
-
 public class CardEventFaceUp extends CardEvent {
 
 	public CardEventFaceUp() {

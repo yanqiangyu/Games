@@ -1,5 +1,5 @@
 var gameState = "Initial";
-var pollingInterval = 1000;
+var pollingInterval = 700;
 var myCards;
 var myPosition = 0;
 var myPlayers = ["","","",""];
@@ -89,6 +89,9 @@ function clickLogo () {
 		location.reload();
 	}
 	else {
+		prompt ("Game State:" + gameState);
+		var c=document.getElementById("score");
+		c.style.display="block";
 		mainLoop ();
 	}
 }
@@ -156,6 +159,12 @@ function dismissPrompt ()
 	c.style.display="none";
 }
 
+function dismissScore ()
+{
+	var c=document.getElementById("score");
+	c.style.display="none";
+}
+
 function disableLogin ()
 {
 	var c=document.getElementById("login");
@@ -180,6 +189,13 @@ function enableLogin ()
 function prompt (text)
 {
 	var c=document.getElementById("prompt");
+	c.innerHTML=text;
+	c.style.display="block";
+}
+
+function score (text)
+{
+	var c=document.getElementById("score");
 	c.innerHTML=text;
 	c.style.display="block";
 }
@@ -743,7 +759,6 @@ function serverDebug (s) {
 
 function mainLoop ()
 {
-	prompt ("Server State:" + serverState);
 	if (eventQueue.length > 0 ) {
 		handleResponseText (eventQueue.shift());
 	}
@@ -768,12 +783,13 @@ function login (player, code) {
 		function checkLogin () {
 			if (serverState == "LoginWait") {
 				prompt ("Please wait..");
-				setServerState ("Disconnected");
+				setServerState ("Connecting");
 			}
-			else if (serverState == "Disconnected") {
+			else if (serverState == "Connecting") {
 				prompt ("Timeout,  try again...");
 				dismissPrompt ();
 				clearInterval (timeout);
+				setServerState ("Offline");
 				enableLogin ()
 			}
 		}
@@ -790,9 +806,11 @@ function login (player, code) {
 
 function setServerState (s) {
 	serverState = s;
-	prompt("Server State:" + s);
 	if (serverState == "ResponseReceived") {
 		idleCount = 0;
+	}
+	else {
+		prompt("Server State:" + s);
 	}
 }
 
@@ -838,6 +856,10 @@ function handleResponseText (text)
 	switch (gameState) {
 	case "Idle":
 		break;
+	case "NewHand":
+		gameState="Idle";
+		randomMove();
+		break;
 	case "Login":
 		if (event == "CardEventLoginAck") {
 			break;
@@ -878,9 +900,13 @@ function handleResponseText (text)
 			++myRound;
 			break;
 		}
+		if (event == "CardEventScoreBoard") {
+			gameState = "NewHand";
+			break;
+		}
 	default:
 		eventQueue.unshift(text);
-		prompt ("State: " + gameState + " is not Ready for:" + event);
+		prompt ("State: " + gameState + " Pending:" + event);
 		return;
 	}
 	//=============================================================
@@ -923,6 +949,9 @@ function handleResponseText (text)
 		var reason = rule.getAttribute("reason");
 		var allowed = rule.getAttribute("allowed");
 		faceupReady (reason, allowed);
+		if (position == 0 && (session.code == "auto" || session.code == "test")) {
+			sendAutoPlayAction ();
+		}
 		break;
 	case "CardEventFaceUpResponse":
 		var cards = response.getElementsByTagName("faceup")[0].childNodes[0].nodeValue;
@@ -933,6 +962,9 @@ function handleResponseText (text)
 		var reason = rule.getAttribute("reason");
 		var allowed = rule.getAttribute("allowed");
 		playerReady (myRound, position, reason, allowed);
+		if (position == 0 && (session.code == "auto" || session.code == "test")) {
+			sendAutoPlayAction ();
+		}
 		break;
 	case "CardEventPlayerAction":
 		var card = response.getElementsByTagName("cardPlayed")[0].getAttribute("card");
@@ -946,10 +978,29 @@ function handleResponseText (text)
 		discardCards (position, points);
 		gameState = "PlayerReady";
 		break;
+	case "CardEventScoreBoard":
+		var lines = response.getElementsByTagName("line");
+		var content="<H1>Score</H1>";
+		if (lines) {
+			for (i = 0; i < lines.length; ++i) {
+				content += lines[i].childNodes[0].nodeValue + "<BR>";
+			}
+		}
+		score (content);
+		break;
 	default:
 		prompt ("Event Name:" + event + ", Message:" + Message);
 	}
 } 
+function sendAutoPlayAction () {
+	var response = 
+		"<event name='CardEventPlayerAutoAction'>" +
+		"<message>Auto Player</message>" + 
+		"<player name='" + session.player +"'/>" + 
+		"</event>";
+	eventQueue.unshift (response);
+}
+
 //*******************************************************************************
 // Test Code Functions:
 // This is client side only test code to validate 
@@ -980,6 +1031,14 @@ var testGame = [
 	[3, 'KS,5S,QS,3S', 3, 'QS'],
 	[3, 'JD,5C,JC,JS', 3, 'JD'],
 ];
+var testScore = [
+    "1:  (     0,     0)",
+    "2:  (  -160,   160)",
+    "3:  (  -960,  -960)",
+    "4:  (  -100,  -100)",
+    "(1 3):  Team Score -960",
+    "(2 4):  Team Score  -60"
+]
 
 function testLoop () 
 {
@@ -1057,11 +1116,6 @@ function testLoop ()
 		}
 		else {
 			testStage = 0;
-			testResponse=
-				"<event name='CardEventPlayerAutoAction'>" +
-				"<message>Player event</message>" + 
-				"<player name='" + testUsers[0] +"'/>";
-			testResponse = testResponse + "</event>";
 			testState = "Test_EndTurn";
 		}
 		break;
@@ -1088,7 +1142,7 @@ function testLoop ()
 			if ((testStage % 2) == 0) {
 				testResponse=
 					"<event name='CardEventTurnToPlay'>" +
-					"<message>Player event</message>" + 
+					"<message>" + testUsers[p] + "'s turn to play</message>" + 
 					"<player name='" + testUsers[p] + "'>" +
 					"</player>" +
 					"<rule reason='Test Only' allowed='" + card + "'/>";
@@ -1102,7 +1156,7 @@ function testLoop ()
 				if (p != 0) {
 					testResponse=
 						"<event name='CardEventPlayerAction'>" +
-						"<message>Player event</message>" + 
+						"<message>" + testUsers[p] + " played card</message>" + 
 						"<player name='" + testUsers[p] +"'>" +
 						"<cardPlayed card='" + card + "'/>" +
 						"</player>";
@@ -1116,11 +1170,6 @@ function testLoop ()
 		}
 		break;
 	case "Test_PlayerTurnResponse":
-		testResponse=
-			"<event name='CardEventPlayerAutoAction'>" +
-			"<message>Player event</message>" + 
-			"<player name='" + testUsers[0] +"'/>";
-		testResponse = testResponse + "</event>";
 		testState = "Test_PlayerReady";
 		break;
 	case "Test_EndRound":
@@ -1140,6 +1189,16 @@ function testLoop ()
 		break;
 	case "Test_EndHand":
 		testStage = 0;
+		testResponse=
+			"<event name='CardEventScoreBoard'>" +
+			"<message>Score for Test Hand</message>";
+			for (i = 0; i < testScore.length; ++i) {
+				testResponse += "<line>" + testScore[i] + "</line>";
+			}
+		testResponse = testResponse + "</event>";
+		testState = "Test_End";
+		break;
+	case "Test_End":
 		clearInterval(testThread);
 		break;
 	default:;
