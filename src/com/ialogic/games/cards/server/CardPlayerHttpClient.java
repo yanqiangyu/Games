@@ -6,6 +6,9 @@ import com.ialogic.games.cards.Card;
 import com.ialogic.games.cards.CardPlayer;
 import com.ialogic.games.cards.CardUI;
 import com.ialogic.games.cards.event.CardEvent;
+import com.ialogic.games.cards.event.CardEventFaceUpResponse;
+import com.ialogic.games.cards.event.CardEventPlayerAction;
+import com.ialogic.games.cards.event.CardEventPlayerRegister;
 
 public class CardPlayerHttpClient extends CardPlayer {
 	CardUI server;
@@ -16,7 +19,25 @@ public class CardPlayerHttpClient extends CardPlayer {
 		server = svr;
 	}
 	public void handleEvent(CardUI ui, CardEvent request) {
-		events.add (request);
+		if (request.getPlayer() == this) {
+			if (request instanceof CardEventFaceUpResponse) {
+				ui.playerEvent(request);
+			}
+			else if (request instanceof CardEventPlayerAction) {
+				String card = ((CardEventPlayerAction) request).getCardPlayed();
+				playCard (card);
+				ui.playerEvent(request);
+			}
+			else if (request instanceof CardEventPlayerRegister) {
+				ui.playerEvent(request);
+			}
+			else {
+				events.add (request);
+			}
+		}
+		else {
+			events.add (request);
+		}
 	}
 	public String getGameState() {
 		return null;
@@ -29,7 +50,7 @@ public class CardPlayerHttpClient extends CardPlayer {
 		if (!events.isEmpty()) {
 			CardEvent e= events.remove ();
 			response = e.getXMLString (); 
-			System.out.println ("Sent:" + response);
+			System.out.println ("Sent to:[" + getName() + "]" + response);
 		}
 		return response;
 	}

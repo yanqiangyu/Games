@@ -70,6 +70,19 @@ public abstract class CardPlayer {
 	public int getPosition() {
 		return this.position;
 	}
-
+	public void playCard(String cs) {
+		Card played = null;
+		for (Card c : getHand ()) {
+			if (c.toString().contains(cs)) {
+				played = c;
+				break;
+			}
+		}
+		if (played != null) {
+			getHand ().remove(played);
+			getFaceup().remove(played);
+			setCardPlayed (played);
+		}
+	}
 	abstract public void handleEvent (CardUI ui, CardEvent request);
 }

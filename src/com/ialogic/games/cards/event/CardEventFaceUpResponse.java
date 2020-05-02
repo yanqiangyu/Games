@@ -41,12 +41,15 @@ public class CardEventFaceUpResponse extends CardEvent {
 		if (getCards().size() > 0) {
 			String sep = "";
 			for (Card c : getCards()) {
-				cards = sep + c.getRank().toString() + c.getSuit().toString();
+				cards += sep + c.getRank().toString() + c.getSuit().toString();
 				sep = ",";
 			}
 		}
-		String response = String.format("<event name='%s'><message>%s</message><faceup>%s</faceup><event>",
-				this.getClass().getSimpleName(), getMessage(), cards);
+		else {
+			cards="NA";
+		}
+		String response = String.format("<event name='%s'><message>%s</message><player name='%s'/><faceup>%s</faceup><event>",
+				this.getClass().getSimpleName(), getMessage(), getPlayer().getName(), cards);
 		return response;
 	}
 }

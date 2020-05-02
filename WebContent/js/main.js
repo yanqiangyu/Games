@@ -345,7 +345,7 @@ function showFaceup (p, c)
 {
     var id = setInterval (work, 100);
     function work () {
-    	if (gameState == "FaceUpResponse") {
+    	if (gameState == "FaceUpResponse" || gameState == "PlayerReady") {
    		  	clearInterval (id);
 			flashPlayer (p, false);
 			if (c != ""  && c != "NA" && p != 0) {
@@ -859,11 +859,13 @@ function handleResponseText (text)
 			event == "CardEventPlayerAction" ||
 			event == "CardEventGameIdle" ||
 			event == "CardEventPlayerAck" ||
+			event == "CardEventFaceUpResponse" ||
 			event == "CardEventTurnToPlay") {
 			break;
 		}
 	case "FaceUpResponse":
-		if (event == "CardEventFaceUpResponse" || 
+		if (event == "CardEventFaceUpResponse" ||
+			event == "CardEventGameIdle" ||
 			event == "CardEventPlayerAutoAction") {
 			break;
 		}

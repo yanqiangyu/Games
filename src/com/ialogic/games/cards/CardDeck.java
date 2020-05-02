@@ -50,6 +50,9 @@ public class CardDeck {
 				++top;
 			}
 		}
+		for (CardPlayer p : players) {
+			Card.sort(p.getHand());
+		}
 		
 	}
 }

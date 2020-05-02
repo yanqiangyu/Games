@@ -68,14 +68,12 @@ public class CardHttpServer implements CardUI {
 		String response = "<event name='CardEventLoginAck'><status>ERROR</status>" + 
 				"<message>Unexpected Event, please restart.</message></event>";
 		try {
-			System.out.println (query);
 			HashMap<String, String>request = parseQuery(query);
 			String clz = "com.ialogic.games.cards.event." + request.get("CardEvent");
 			String player = request.get("player");
 			@SuppressWarnings("rawtypes")
 			Class[] paramType = {String.class};
 			CardEvent e = (CardEvent) Class.forName(clz).getConstructor(paramType).newInstance("Client Request");
-			e.setFieldValues (request);
 			if (!(e instanceof CardEventPlayerUpdate)) {
 				System.out.println(String.format("DEBUG: %s Event from player %s.", clz, player));
 			}
@@ -84,7 +82,7 @@ public class CardHttpServer implements CardUI {
 					CardPlayerHttpClient c = (CardPlayerHttpClient) sessions.get(player);
 					response = String.format("<event name='CardEventLoginAck'><status>OK</status>" + 
 								"<message>Player %s welcome back!</message>" +
-								"<player name='%s' position='%d'/></event>", c.getName(), c.getPosition());
+								"<player name='%s' position='%d'/></event>", c.getName(), c.getName(), c.getPosition());
 					System.out.println(String.format ("Existing Client %s", player));
 					// TODO: Play back message log to catch up;
 				}
@@ -95,11 +93,8 @@ public class CardHttpServer implements CardUI {
 						sessions.put(player, c);
 					}
 					((CardEventPlayerRegister)e).setAllPlayers (sessions.values());
-					
 					e.setPlayer(c);
 					c.handleEvent(this, e);
-					playerEvent(e);
-					
 					System.out.println(String.format ("New Client %s", c.getName()));
 					response = String.format("<event name='CardEventLoginAck'><status>OK</status>" + 
 							"<player name='%s' position='%d'/>" +
@@ -113,7 +108,8 @@ public class CardHttpServer implements CardUI {
 					response = ((CardPlayerHttpClient)c).getEventFromQueue ();
 				}
 				else if (e instanceof CardEventFaceUpResponse || e instanceof CardEventPlayerAction) {
-					playerEvent (e);
+					e.setFieldValues (request);
+					((CardPlayerHttpClient)c).handleEvent(this, e);
 					response = "<event name='CardEventPlayerAck'><status>OK</status>" + 
 							"<message>Action Received</message></event>";
 				}
