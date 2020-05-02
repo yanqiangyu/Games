@@ -36,6 +36,7 @@ public class CardPlayerHttpClient extends CardPlayer {
 				events.add (request);
 			}
 			else if (request instanceof CardEventEndRound) {
+				getPoints().addAll(((CardEventEndRound)request).getPoints());
 				ui.playerEvent(request);
 				events.add (request);
 			}
