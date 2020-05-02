@@ -153,15 +153,8 @@ function clickCard (i)
 	}
 }
 
-function dismissPrompt ()
+function dismiss (c)
 {
-	var c=document.getElementById("prompt");
-	c.style.display="none";
-}
-
-function dismissScore ()
-{
-	var c=document.getElementById("score");
 	c.style.display="none";
 }
 
@@ -789,8 +782,10 @@ function login (player, code) {
 				prompt ("Timeout,  try again...");
 				dismissPrompt ();
 				clearInterval (timeout);
+				clearInterval (idleThread);
 				setServerState ("Offline");
 				enableLogin ()
+
 			}
 		}
 		return "Waiting for server response";
@@ -998,7 +993,10 @@ function sendAutoPlayAction () {
 		"<message>Auto Player</message>" + 
 		"<player name='" + session.player +"'/>" + 
 		"</event>";
-	eventQueue.unshift (response);
+	var id = setTimeout (send, 500);
+	function send () {
+		eventQueue.unshift (response);
+	}
 }
 
 //*******************************************************************************

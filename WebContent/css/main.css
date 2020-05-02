@@ -14,7 +14,7 @@
     font-size: 18px;
     opacity: .75;
     margin: auto;
-    left: 5vw;
+    left: 15vw;
     top: 5vh;
     width:  auto;
 	height: auto;
@@ -32,10 +32,10 @@
     font-size: 18px;
     opacity: .75;
     margin: auto;
-    left: 30vw;
-    top: 30vh;
-    width:  40vw;
-	height: 40vh;
+    left: 20vw;
+    top: 10vh;
+    width:  60vw;
+	height: 70vh;
 	padding: 10px 10px;
 	box-shadow: 5px 5px 5px black;
 	text-align: left;
