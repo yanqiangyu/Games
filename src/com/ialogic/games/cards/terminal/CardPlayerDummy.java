@@ -28,7 +28,7 @@ public class CardPlayerDummy extends CardPlayer {
 					getFaceup().add(c);
 				}
 			}
-			e.setCards(getFaceup());
+			e.setCards(Card.showCSList(getFaceup()));
 			ui.playerEvent (e);
 		}
 		else if (request instanceof CardEventTurnToPlay) {

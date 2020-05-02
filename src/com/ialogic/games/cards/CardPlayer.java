@@ -84,5 +84,18 @@ public abstract class CardPlayer {
 			setCardPlayed (played);
 		}
 	}
+	public void faceupCards(String cs) {
+		if (!cs.isEmpty() || !cs.isBlank()) {
+			String cards[] = cs.split(",");
+			for (Card c : getHand ()) {
+				for (String f : cards) {
+					if (c.toString().contains(f)) {
+						getFaceup().add(c);
+						break;
+					}
+				}
+			}
+		}
+	}
 	abstract public void handleEvent (CardUI ui, CardEvent request);
 }

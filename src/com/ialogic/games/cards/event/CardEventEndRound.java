@@ -17,4 +17,15 @@ public class CardEventEndRound extends CardEvent {
 	public void setPoints(List<Card> points) {
 		this.points = points;
 	}
+	public String getXMLString() {
+		String cards = "";
+		String sep = "";
+		for (Card c : points) {
+			cards += sep + c.getRank().toString() + c.getSuit().toString();
+			sep = ",";
+		}
+		String response = String.format("<event name='%s'><message>%s</message><player name='%s' points='%s'/><event>",
+				this.getClass().getSimpleName(), getMessage(), getPlayer().getName(), cards);
+		return response;
+	}
 }

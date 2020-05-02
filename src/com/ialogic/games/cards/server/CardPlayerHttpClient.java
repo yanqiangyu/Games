@@ -6,6 +6,7 @@ import com.ialogic.games.cards.Card;
 import com.ialogic.games.cards.CardPlayer;
 import com.ialogic.games.cards.CardUI;
 import com.ialogic.games.cards.event.CardEvent;
+import com.ialogic.games.cards.event.CardEventEndRound;
 import com.ialogic.games.cards.event.CardEventFaceUpResponse;
 import com.ialogic.games.cards.event.CardEventPlayerAction;
 import com.ialogic.games.cards.event.CardEventPlayerRegister;
@@ -21,6 +22,8 @@ public class CardPlayerHttpClient extends CardPlayer {
 	public void handleEvent(CardUI ui, CardEvent request) {
 		if (request.getPlayer() == this) {
 			if (request instanceof CardEventFaceUpResponse) {
+				String cards = ((CardEventFaceUpResponse) request).getCards();
+				faceupCards (cards);
 				ui.playerEvent(request);
 			}
 			else if (request instanceof CardEventPlayerAction) {
@@ -30,6 +33,11 @@ public class CardPlayerHttpClient extends CardPlayer {
 			}
 			else if (request instanceof CardEventPlayerRegister) {
 				ui.playerEvent(request);
+				events.add (request);
+			}
+			else if (request instanceof CardEventEndRound) {
+				ui.playerEvent(request);
+				events.add (request);
 			}
 			else {
 				events.add (request);
