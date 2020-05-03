@@ -8,9 +8,19 @@ Input 4 player names and the test program will take them a team game up to 100 r
 
 For human players, HTML5 + and server side java is done. User management and multiple room game play is underway. I just created issues list to keep track of things to do.
 
+To run your own game server:
+
+	1. Serve WebContent (index.html, js, cs, image) in Apache or any simple HTTP server
+	
+	2. Start java server listening on you server port 8001
+	
+		com.ialogic.games.cards.server.CardHttpServer
+	
+	3. Redirect relative url "/cardgame" to your appserverhost:8001
+
 For a demo, use the following link.
 
-	http://www.ialogic.com/
+		http://www.ialogic.com/
 
 Leave the player name blank and enter "test" to see the demo and check your browser compatibility. Latest versions of Chrome, Safari and Firefox should work fine on all devices. I personally don't like MS IE or MS edge. 
 
