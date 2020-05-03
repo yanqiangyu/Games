@@ -6,13 +6,12 @@ The Simple test program is available as
 
 Input 4 player names and the test program will simulate a team game up to 100 rounds or when either team's score is over +/-1000.
 
-Browser based client is under development. You are welcome to contribute to it.
 HTML5 + and server side java is done. User management and multiple room game play is underway.
 Created issues list to keep track of things to do.
-
+For a demo:
 	http://www.ialogic.com/
 
-Leave the user blank and enter "test" to see the preview.
+Leave the player name blank and enter "test" to see the demo and check your browser compatibility. Latest versions of Chrome, Safari and Firefox should work fine on all devices. I personally don't like IE or Edge. 
 
 
 04/20/2020	I have the basic client HTML5 and JS framework and a basic java HTTP server proxy through Apache
