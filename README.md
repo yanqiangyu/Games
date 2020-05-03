@@ -2,9 +2,10 @@ This is the java source code for a Hearts-like card game called Pig-Chase. (ф╕нц
 
 The multiplayer game rule engine has a dummy auto player interface that you can extend for more intelligent game play. To test this without the time consuming human UI, run this program.
 
-	com.ialogic.games.cards.CardPlayTest
+		com.ialogic.games.cards.CardPlayTest
 
-	Input 4 player names and the test program will take them a team game up to 100 rounds or when either team's score is over +/-1000 in a second.
+	Input 4 player names and the test program will take them a team game up to 100 rounds 
+	or when either team's score is over +/-1000 in a second.
 
 For human players, HTML5 + and server side java is done. User management and multiple room game play is underway. I just created issues list to keep track of things to do.
 
