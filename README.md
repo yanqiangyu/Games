@@ -1,4 +1,4 @@
-This is the java source code for a Hearts-like card game called Pig-Chase.
+This is the java source code for a Hearts-like card game called Pig-Chase. (中文：拱猪)
 
 The Simple test program is available as
 
