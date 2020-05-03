@@ -9,6 +9,7 @@ Input 4 player names and the test program will simulate a team game up to 100 ro
 HTML5 + and server side java is done. User management and multiple room game play is underway.
 Created issues list to keep track of things to do.
 For a demo:
+
 	http://www.ialogic.com/
 
 Leave the player name blank and enter "test" to see the demo and check your browser compatibility. Latest versions of Chrome, Safari and Firefox should work fine on all devices. I personally don't like IE or Edge. 
