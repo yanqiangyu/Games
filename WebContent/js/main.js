@@ -131,7 +131,7 @@ function clickPlayer (p)
 			enableCards ("Turn Over", "");
 			flashPlayer (0, false);
 
-			request = "http://www.ialogic.com/cardgame" + 
+			request = "/cardgame" + 
 				"?CardEvent=" + event + 
 				"&player="+ session.player + 
 				"&code=" + session.code +
@@ -182,6 +182,13 @@ function enableLogin ()
 function prompt (text)
 {
 	var c=document.getElementById("prompt");
+	c.innerHTML=text;
+	c.style.display="block";
+}
+
+function promptServer (text)
+{
+	var c=document.getElementById("server");
 	c.innerHTML=text;
 	c.style.display="block";
 }
@@ -756,16 +763,17 @@ function mainLoop ()
 		handleResponseText (eventQueue.shift());
 	}
 	else {
-		serverRequest ("http://www.ialogic.com/cardgame" +
+		serverRequest ("/cardgame" +
 			 "?CardEvent=CardEventPlayerUpdate" + "&player="+ session.player+ "&code=" +
 				 session.code);
+		setServerState ("Polling...");
 	}
 }
 
 function login (player, code) {
 	if (player != "" && code != "") {
 		disableLogin ()
-		serverRequest ("http://www.ialogic.com/cardgame" + 
+		serverRequest ("/cardgame" + 
 			"?CardEvent=CardEventPlayerRegister" +
 			"&player="+ player+
 			"&code=" + code);
@@ -784,8 +792,7 @@ function login (player, code) {
 				clearInterval (timeout);
 				clearInterval (idleThread);
 				setServerState ("Offline");
-				enableLogin ()
-
+				enableLogin ();
 			}
 		}
 		return "Waiting for server response";
@@ -799,14 +806,28 @@ function login (player, code) {
 	return "Player/Code Required";
 }
 
+var idleCount=0;
 function setServerState (s) {
 	serverState = s;
-	if (serverState == "ResponseReceived") {
+	if (serverState == "Connected") {
 		idleCount = 0;
 	}
 	else {
-		prompt("Server State:" + s);
+		++idleCount;
+		if (idleCount > 5) {
+			serverState = "Offline";
+			prompt ("Server timeout, restarting client...");
+			if (idleThread != null) {
+				clearInterval (idleThread);
+				idleThread = null;
+				setTimeout (reload, 10000);
+				function reload () {
+					location.reload();
+				}
+			}
+		}
 	}
+	promptServer (serverState);
 }
 
 function serverRequest (theUrl)
@@ -818,7 +839,8 @@ function serverRequest (theUrl)
 	        	eventQueue.push (xhttp.responseText);
 	        }
 	        else if (this.status != 200 && this.status != 0) {
-	           	prompt ("Server Error! Status=" + this.status);
+	           	promptServer ("Server Error! Status=" + this.status);
+	           	location.reload();
 	        }
 	    };
 	    xhttp.open("GET", theUrl, true); 
@@ -907,7 +929,7 @@ function handleResponseText (text)
 	//=============================================================
 	//	END State Transition:
 	//=============================================================
-	setServerState ("ResponseReceived");
+	setServerState ("Connected");
 	prompt ("Game State:" + gameState + " Message:" + message );
 	
 	switch (event) {
@@ -944,7 +966,7 @@ function handleResponseText (text)
 		var reason = rule.getAttribute("reason");
 		var allowed = rule.getAttribute("allowed");
 		faceupReady (reason, allowed);
-		if (position == 0 && (session.code == "auto" || session.code == "test")) {
+		if (position == 0 && (session.code.toUpperCase() == "AUTO" || session.code.toUpperCase() == "TEST")) {
 			sendAutoPlayAction ();
 		}
 		break;
@@ -957,7 +979,7 @@ function handleResponseText (text)
 		var reason = rule.getAttribute("reason");
 		var allowed = rule.getAttribute("allowed");
 		playerReady (myRound, position, reason, allowed);
-		if (position == 0 && (session.code == "auto" || session.code == "test")) {
+		if (position == 0 && (session.code.toUpperCase() == "AUTO" || session.code.toUpperCase() == "TEST")) {
 			sendAutoPlayAction ();
 		}
 		break;
@@ -1012,15 +1034,15 @@ var testThreadInterval = 1000;
 var testUsers = ['Steve', 'Ying','Chris','Tiff'];
 var testState = "Test_Login";
 var testStage = 0;
-var testHand="3C,4C,5C,8C,7D,AD,5H,XH,JH,QH,KH,5S,9S";
-var testFaceups = ["XC,QS", 'AH',"JD"];
+var testHand="3C,4C,5C,8C,7D,AD,5H,XH,JH,QH,AH,5S,9S";
+var testFaceups = ["XC,QS", '',"JD"];
 var testGame = [
 	[2, '6D,XD,AD,2D', 0, ''],
 	[0, 'XH,6H,2H,7H', 0, '2H,6H,7H,XH'],
 	[0, '5H,4S,4H,9H', 3, '4H,5H,9H'],
 	[3, '2C,8C,9C,QC', 2, ''],
-	[2, '3H,4D,KH,8S', 0, '3H,KH'],
-	[0, 'QH,XC,AH,6S', 2, 'XC,QH,AH'],
+	[2, '3H,4D,AH,8S', 0, '3H,AH'],
+	[0, 'QH,XC,KH,6S', 2, 'XC,QH,KH'],
 	[2, '8H,7C,JH,QD', 0, '8H,JH'],
 	[0, '4C,6C,3D,AC', 3, ''],
 	[3, '2S,9S,XS,AS', 2, ''],

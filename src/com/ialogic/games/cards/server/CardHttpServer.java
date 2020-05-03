@@ -67,7 +67,7 @@ public class CardHttpServer implements CardUI {
 	}
 	private String createResponse(String query) {
 		String response = "<event name='CardEventLoginAck'><status>ERROR</status>" + 
-				"<message>Server Offline</message></event>";
+				"<message>Please Login</message></event>";
 		try {
 			HashMap<String, String>request = parseQuery(query);
 			String clz = "com.ialogic.games.cards.event." + request.get("CardEvent");
@@ -75,7 +75,7 @@ public class CardHttpServer implements CardUI {
 			
 			@SuppressWarnings("rawtypes")
 			Class[] paramType = {String.class};
-			CardEvent e = (CardEvent) Class.forName(clz).getConstructor(paramType).newInstance("Client Request");
+			CardEvent e = (CardEvent) Class.forName(clz).getConstructor(paramType).newInstance(clz);
 			if (!(e instanceof CardEventPlayerUpdate)) {
 				System.out.println(String.format("DEBUG: %s Event from player %s.", clz, player));
 			}
