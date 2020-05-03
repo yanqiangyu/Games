@@ -10,6 +10,7 @@ import com.ialogic.games.cards.event.CardEventEndRound;
 import com.ialogic.games.cards.event.CardEventFaceUpResponse;
 import com.ialogic.games.cards.event.CardEventPlayerAction;
 import com.ialogic.games.cards.event.CardEventPlayerRegister;
+import com.ialogic.games.cards.event.CardEventTurnToPlay;
 
 public class CardPlayerHttpClient extends CardPlayer {
 	CardUI server;
@@ -37,6 +38,10 @@ public class CardPlayerHttpClient extends CardPlayer {
 			}
 			else if (request instanceof CardEventEndRound) {
 				getPoints().addAll(((CardEventEndRound)request).getPoints());
+				ui.playerEvent(request);
+				events.add (request);
+			}
+			else if (request instanceof CardEventTurnToPlay) {
 				ui.playerEvent(request);
 				events.add (request);
 			}

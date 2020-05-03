@@ -107,8 +107,8 @@ public class Card implements Comparable<Card>{
 	public boolean isAceOfHearts() {
 		return rank == Ranks.ACE && suit == Suits.HEARTS; 
 	}
-	public boolean isTwoOfClubs () {
-		return rank == Ranks.TWO && suit == Suits.CLUBS; 
+	public boolean isStarterCard () {
+		return rank == Ranks.THREE && suit == Suits.SPADES; 
 	}
 	public static List<Card> sort (List<Card> list) {
 		if (!list.isEmpty()) {

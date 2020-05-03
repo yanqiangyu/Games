@@ -70,12 +70,13 @@ public class CardHttpServer implements CardUI {
 				"<message>Please Login</message></event>";
 		try {
 			HashMap<String, String>request = parseQuery(query);
-			String clz = "com.ialogic.games.cards.event." + request.get("CardEvent");
+			String eventName = request.get("CardEvent");
+			String clz = "com.ialogic.games.cards.event." + eventName;
 			String player = request.get("player");
 			
 			@SuppressWarnings("rawtypes")
 			Class[] paramType = {String.class};
-			CardEvent e = (CardEvent) Class.forName(clz).getConstructor(paramType).newInstance(clz);
+			CardEvent e = (CardEvent) Class.forName(clz).getConstructor(paramType).newInstance(eventName);
 			if (!(e instanceof CardEventPlayerUpdate)) {
 				System.out.println(String.format("DEBUG: %s Event from player %s.", clz, player));
 			}
@@ -83,7 +84,7 @@ public class CardHttpServer implements CardUI {
 				String status = "OK";
 				String m = "";
 				int pos = 0;
-				if (request.containsKey("code") && request.get("code").toUpperCase().contentEquals("NEW")) {
+				if (request.containsKey("code") && request.get("code").toUpperCase().contentEquals("NEW") || game == null) {
 					if (game != null) {
 						game.handleEvent(new CardEventGameOver());
 					}

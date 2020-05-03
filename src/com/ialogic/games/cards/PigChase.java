@@ -127,7 +127,7 @@ public class PigChase extends CardGame {
 				}
 				if (starter < 0) {
 					starter = findStarter();
-					banner = String.format("====================%-20s===================", "    Two of Clubs");
+					banner = String.format("====================%-20s===================", "    Three of Spades");
 					ui.showText(banner);
 				}
 				else {
@@ -236,7 +236,7 @@ public class PigChase extends CardGame {
 	private int findStarter() {
 		for (int i = 0; i < getPlayers().size(); ++i) {
 			for (Card c : getPlayers().get(i).getHand()) {
-				if (c.isTwoOfClubs()) {
+				if (c.isStarterCard()) {
 					return i;
 				}
 			}
