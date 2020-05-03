@@ -22,9 +22,9 @@ For a demo, use the following link.
 
 		http://www.ialogic.com/
 
-		Leave the player name blank and enter "test" to see the demo and check your browser compatibility. 
-		Latest versions of Chrome, Safari and Firefox should work fine on all devices. 
-		I personally don't like MS IE or MS edge. 
+	Leave the player name blank and enter "test" to see the demo and check your browser compatibility. 
+	Latest versions of Chrome, Safari and Firefox should work fine on all devices. 
+	I personally don't like MS IE or MS edge. 
 
 
 Development Log:
