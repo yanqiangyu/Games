@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1, user-scalable=0" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+	<link rel="icon" href="image/ialogic.jpg" type="image/jpeg">
+	<link rel="shortcut icon" href="image/ialogic.jpg" type="image/jpeg">
+    <link rel="apple-touch-icon" href="image/ialogic.jpg" type="image/jpeg">
+    
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+	
+	<script type="text/javascript">
+	function flipIt () {
+		var c = document.getElementById('card');
+		c.classList.toggle('is-flipped');
+	}
+	</script>
+</head>
+
+<body>
+<div class="card_scene" id="card_s" style="top: 10vh; left: 10vw; width:140px;height: 200px;" onClick="flipIt()">
+	<div class="card" id="card">
+		<div class="card__face card__face--front" 
+			style="background-size: 100% 100%;">
+		</div>
+		<div class="card__face card__face--back"
+			style="background-size: 100% 100%;">
+		</div>
+	</div>
+</div>
+<div class="logo" id="logo">
+</div>
+<div class="footnote" id="footnote">
+© 2020 IALogic
+</div>
+</body></html>
