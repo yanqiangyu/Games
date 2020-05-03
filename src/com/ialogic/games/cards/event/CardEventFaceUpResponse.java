@@ -22,7 +22,7 @@ public class CardEventFaceUpResponse extends CardEvent {
 	}
 	public void setFieldValues(HashMap<String, String> request) {
 		cards = request.get("cards");
-		if (cards.isEmpty() || cards.isBlank()) {
+		if (cards.isEmpty()) {
 			cards="NA";
 		}
 	}

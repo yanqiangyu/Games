@@ -25,6 +25,25 @@
 	display: none;
 }
 
+.server {
+    color: lightgreen;
+    background-color: lightgray;
+    background-image: url('../image/table.jpg');
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10px;
+    opacity: .75;
+    margin: auto;
+    left: 85vw;
+    top: 90vh;
+	padding: 10px 10px;
+	box-shadow: 5px 5px 5px black;
+	text-align: right;
+	position: absolute;
+	display: none;
+	opacity: .75;
+	z-Index: 200;
+}
+
 .score {
     color: red;
     background-color: lightgray;

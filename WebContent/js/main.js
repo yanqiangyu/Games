@@ -4,6 +4,8 @@
 var gameState = "Initial";
 var center={x:0, y:0,};
 var myPosition = 0;
+var myPlayers = ["","","",""];
+
 var carddeck=[
 	{img: "2C", x: 0, y: 0,},
 	{img: "2D", x: 0, y: 0,},	
@@ -297,7 +299,6 @@ function cleanup ()
 // Need to reset on a new hand
 //===============================================
 var myCards=[];
-var myPlayers = ["","","",""];
 var myRound = 0;
 var selectMask = [0,0,0,0,0,0,0,0,0,0,0,0,0];
 var selectedCards = [0,0,0,0,0,0,0,0,0,0,0,0,0];
@@ -330,6 +331,9 @@ function dealCards(hand)
 				selectedCards[i]=0;
 				faceupCards[i]=0;
 			}
+			discarded=[];
+			playerCards=[[],[],[],[]];
+			playerPoints=[[],[],[],[]];
 	  }
     }
 }
@@ -345,6 +349,7 @@ function dealCard (i, myCards) {
 	  else if (l.p == 1 || l.p == 3) {
 		  rotateCard(i);
 	  }
+	  raiseCard (i, 99)
 	  moveCardEffect (i, l.x, l.y, nextCard, 25, 5);
 	  function nextCard () {
 		  ++i;
@@ -784,7 +789,7 @@ function mainLoop ()
 		serverRequest ("/cardgame" +
 			 "?CardEvent=CardEventPlayerUpdate" + "&player="+ session.player+ "&code=" +
 				 session.code);
-		setServerState ("Polling...");
+		checkServerIdle ();
 	}
 }
 
@@ -830,24 +835,25 @@ function setServerState (s) {
 	if (serverState == "Connected") {
 		idleCount = 0;
 	}
-	else {
-		++idleCount;
-		if (idleCount > 5) {
-			serverState = "Offline";
-			if ((session.code.toUpperCase() != "AUTO" && session.code.toUpperCase() != "TEST")) {
-				prompt ("Server timeout, restarting client...");
-				if (idleThread != null) {
-					clearInterval (idleThread);
-					idleThread = null;
-						setTimeout (reload, 10000);
-				}
-				function reload () {
-					location.reload();
-				}
+	promptServer (serverState);
+}
+
+function checkServerIdle () {
+	++idleCount;
+	if (idleCount > 5) {
+		setServerState ("Offline");
+		if ((session.code.toUpperCase() != "AUTO" && session.code.toUpperCase() != "TEST")) {
+			prompt ("Server timeout, restarting client...");
+			if (idleThread != null) {
+				clearInterval (idleThread);
+				idleThread = null;
+					setTimeout (reload, 5000);
+			}
+			function reload () {
+				location.reload();
 			}
 		}
 	}
-	promptServer (serverState);
 }
 
 function serverRequest (theUrl)
@@ -1017,7 +1023,7 @@ function handleResponseText (text)
 		break;
 	case "CardEventScoreBoard":
 		var lines = response.getElementsByTagName("line");
-		var content="<H1>Score</H1>";
+		var content="<H1 align='center'>" + message + "</H1>";
 		if (lines) {
 			for (i = 0; i < lines.length; ++i) {
 				content += lines[i].childNodes[0].nodeValue + "<BR>";
@@ -1239,7 +1245,9 @@ function testLoop ()
 		testState = "Test_End";
 		break;
 	case "Test_End":
-		clearInterval(testThread);
+		prompt ("Restarting hand");
+		testStage = 5;
+		testState = "Test_Idle";
 		break;
 	default:;
 	}

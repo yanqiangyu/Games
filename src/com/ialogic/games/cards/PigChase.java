@@ -382,11 +382,11 @@ public class PigChase extends CardGame {
 		if (allHearts.size() == hearts.size()) {
 			points += 400 * scaleHearts;
 			shootTheMoon = "<H>";
-			if (!hasPig.isBlank() && !hasGoat.isBlank()) {
+			if (!hasPig.isEmpty() && !hasGoat.isEmpty()) {
 				score = "SHOOT THE MOON";
 			}
 		}
-		if (!hasMultiplier.isBlank() && hasPig.isBlank() && hasGoat.isBlank() && allHearts.size() == 0) {
+		if (!hasMultiplier.isEmpty() && hasPig.isEmpty() && hasGoat.isEmpty() && allHearts.size() == 0) {
 			points = singleM;
 		}
 		points *= multiplier;

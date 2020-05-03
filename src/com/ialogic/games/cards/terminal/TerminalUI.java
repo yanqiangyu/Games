@@ -33,7 +33,7 @@ public class TerminalUI implements CardUI {
 						sleep (100);
 					}
 					String in = reader.readLine();
-					if (!in.isBlank()) {
+					if (!in.isEmpty()) {
 						if (in.toUpperCase().contentEquals("QUIT")) {
 							addEvent (new CardEventGameOver());
 							break;

@@ -85,7 +85,7 @@ public abstract class CardPlayer {
 		}
 	}
 	public void faceupCards(String cs) {
-		if (!cs.isEmpty() || !cs.isBlank()) {
+		if (!cs.isEmpty()) {
 			String cards[] = cs.split(",");
 			for (Card c : getHand ()) {
 				for (String f : cards) {
