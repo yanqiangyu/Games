@@ -1,17 +1,9 @@
+//=============================
+// Global Settings
+//=============================
 var gameState = "Initial";
-var pollingInterval = 700;
-var myCards;
-var myPosition = 0;
-var myPlayers = ["","","",""];
-var myRound = 0;
-var selectMask = [0,0,0,0,0,0,0,0,0,0,0,0,0];
-var selectedCards = [0,0,0,0,0,0,0,0,0,0,0,0,0];
-var maskReason = "Not your turn yet";
 var center={x:0, y:0,};
-var discarded=[];
-var playerCards=[[],[],[],[]];
-var playerPoints=[[],[],[],[]];
-
+var myPosition = 0;
 var carddeck=[
 	{img: "2C", x: 0, y: 0,},
 	{img: "2D", x: 0, y: 0,},	
@@ -72,6 +64,7 @@ var carddeck=[
 // Changing the names requires change in index.html.
 // *******************************************************************************
 var idleThread;
+var pollingInterval = 500;
 function sendLogin()
 {
 	var player=document.getElementById("player").value;
@@ -300,6 +293,22 @@ function cleanup ()
     }
 }
 
+//===============================================
+// Need to reset on a new hand
+//===============================================
+var myCards=[];
+var myPlayers = ["","","",""];
+var myRound = 0;
+var selectMask = [0,0,0,0,0,0,0,0,0,0,0,0,0];
+var selectedCards = [0,0,0,0,0,0,0,0,0,0,0,0,0];
+var faceupCards = [0,0,0,0,0,0,0,0,0,0,0,0,0];
+var maskReason = "Not your turn yet";
+
+var discarded=[];
+var playerCards=[[],[],[],[]];
+var playerPoints=[[],[],[],[]];
+//===============================================
+//===============================================
 function dealCards(hand)
 {
     var id = setInterval (work, 100);
@@ -316,6 +325,11 @@ function dealCards(hand)
 			gameState = "DealCards";
 			myCards = hand.split(",");
 			dealCard (0, myCards);
+			for (i = 0; i < selectMask.length; ++i) {
+				selectMask[i]=0;
+				selectedCards[i]=0;
+				faceupCards[i]=0;
+			}
 	  }
     }
 }
@@ -433,6 +447,7 @@ function faceupMyCard (i)
 		var c=document.getElementById('scene'+i);
 		location.y -= 4;
     	c.style.top = location.y + 'vh';
+    	faceupCards[i] = 1;
 	}
 }
 
@@ -717,13 +732,16 @@ function toggleCardSelection (i)
 		var c=document.getElementById('scene'+i);
 	    var cy=parseFloat(c.style.top, 10);
 	    var idx=Math.floor(i/4);
-	    if (cy >= location.y - 0.1) {
-	    	c.style.top=cy - 2 + 'vh';
-	    	selectedCards[idx]=1;
+	    if (selectMask[idx] == 1) {
+		    selectedCards[idx] = 1-selectedCards[idx];
+	    	var dy = selectedCards[idx] == 1 ? -2 : 2;
+		    if (faceupCards[i] == 1) {
+		    	dy = selectedCards[idx] == 1 ? -2 : 4;
+		    }
+	    	c.style.top= (cy + dy) + 'vh';
 	    }
 	    else {
-	    	c.style.top=location.y + 'vh';
-	    	selectedCards[idx]=0;
+	    	alert ("Assertion failed: Invalid selection:" + idx);
 	    }
 	}
 }
@@ -816,11 +834,13 @@ function setServerState (s) {
 		++idleCount;
 		if (idleCount > 5) {
 			serverState = "Offline";
-			prompt ("Server timeout, restarting client...");
-			if (idleThread != null) {
-				clearInterval (idleThread);
-				idleThread = null;
-				setTimeout (reload, 10000);
+			if ((session.code.toUpperCase() != "AUTO" && session.code.toUpperCase() != "TEST")) {
+				prompt ("Server timeout, restarting client...");
+				if (idleThread != null) {
+					clearInterval (idleThread);
+					idleThread = null;
+						setTimeout (reload, 10000);
+				}
 				function reload () {
 					location.reload();
 				}
