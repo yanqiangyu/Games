@@ -316,6 +316,7 @@ function dealCards(hand)
     function work () {
 		// Wait for animation finishes
 	  if (gameState == "CleanupEnd") {
+			playerCards=[[],[],[],[]];
 			playerCards[0] = hand.split(",");
 			for (i = 1; i < 4; ++i) {
 				for (j = 0; j < 13; ++j) {
@@ -332,7 +333,6 @@ function dealCards(hand)
 				faceupCards[i]=0;
 			}
 			discarded=[];
-			playerCards=[[],[],[],[]];
 			playerPoints=[[],[],[],[]];
 	  }
     }
