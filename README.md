@@ -11,15 +11,15 @@ For human players, HTML5 + and server side java is done. User management and mul
 
 To run your own game server:
 
-	1. Serve WebContent (index.html, js, cs, image) in Apache or any simple HTTP server
+	1. Serve WebContent (index.html, js, cs, image) using Apache or any simple HTTP server
 	
-	2. Start java server listening on you server port 8001
+	2. Start java server listening on your server port 8001
 	
 		com.ialogic.games.cards.server.CardHttpServer
 	
-	3. Redirect relative url "/cardgame" to your appserverhost:8001
+	3. Redirect relative url "/cardgame" to your appserverhost:8001 (using Apache 2 Virtual host)
 
-For a demo, use the following link.
+For a live demo, use the following link.
 
 		http://www.ialogic.com/
 
