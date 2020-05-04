@@ -80,15 +80,10 @@ function sendLogin()
 }
 
 function clickLogo () {
-	if (gameState == "EndHand") {
-		location.reload();
-	}
-	else {
-		prompt ("Game State:" + gameState);
-		var c=document.getElementById("score");
-		c.style.display="block";
-		mainLoop ();
-	}
+	prompt ("Game State:" + gameState);
+	var c=document.getElementById("score");
+	c.style.display="block";
+	mainLoop ();
 }
 
 function clickPlayer (p)
@@ -786,9 +781,11 @@ function mainLoop ()
 		handleResponseText (eventQueue.shift());
 	}
 	else {
-		serverRequest ("/cardgame" +
-			 "?CardEvent=CardEventPlayerUpdate" + "&player="+ session.player+ "&code=" +
-				 session.code);
+		if (gameState != "Login") {
+			serverRequest ("/cardgame" +
+				 "?CardEvent=CardEventPlayerUpdate" + "&player="+ session.player+ "&code=" +
+					 session.code);
+		}
 		checkServerIdle ();
 	}
 }
@@ -843,16 +840,16 @@ function checkServerIdle () {
 	if (idleCount > 5) {
 		setServerState ("Offline");
 		if ((session.code.toUpperCase() != "AUTO" && session.code.toUpperCase() != "TEST")) {
-			prompt ("Server timeout, restarting client...");
-			if (idleThread != null) {
-				clearInterval (idleThread);
-				idleThread = null;
-					setTimeout (reload, 5000);
-			}
-			function reload () {
-				location.reload();
-			}
+			restartClient ("Server timeout, restarting client...");
 		}
+	}
+}
+
+function restartClient (message) {
+	prompt (message);
+	setTimeout (reload, 3000);
+	function reload () {
+		location.reload();
 	}
 }
 
@@ -886,6 +883,8 @@ function findPlayerPosition (player)
 	}
 	return 0;
 }
+
+
 function handleResponseText (text)
 {
 	var response = new DOMParser().parseFromString(text,"text/xml");
@@ -896,6 +895,9 @@ function handleResponseText (text)
 	//=============================================================
 	//	BEGIN State Transition:
 	//=============================================================
+	if (event == "CardEventServerReject") {
+		restartClient (message);
+	}
 	switch (gameState) {
 	case "Idle":
 		break;
@@ -949,7 +951,8 @@ function handleResponseText (text)
 		}
 	default:
 		eventQueue.unshift(text);
-		prompt ("State: " + gameState + " Pending:" + event);
+		// TODO Change to DEBUG
+		// prompt ("State: " + gameState + " Pending:" + event);
 		return;
 	}
 	//=============================================================
@@ -966,7 +969,7 @@ function handleResponseText (text)
 			startGame ();
 		}
 		else {
-			prompt (message);
+			restartClient (message);
 		}
 	case "CardEventPlayerRegister":
 		var players = response.getElementsByTagName("player");

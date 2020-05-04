@@ -2,7 +2,6 @@ package com.ialogic.games.cards.server;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
-import com.ialogic.games.cards.Card;
 import com.ialogic.games.cards.CardPlayer;
 import com.ialogic.games.cards.CardUI;
 import com.ialogic.games.cards.event.CardEvent;
@@ -13,16 +12,20 @@ import com.ialogic.games.cards.event.CardEventPlayerRegister;
 import com.ialogic.games.cards.event.CardEventTurnToPlay;
 
 public class CardPlayerHttpClient extends CardPlayer {
-	CardUI server;
+	String code;
 	LinkedBlockingQueue<CardEvent> events = new LinkedBlockingQueue<CardEvent>();
 	
-	public CardPlayerHttpClient (String name, CardUI svr) {
+	public CardPlayerHttpClient (String name, String code) {
 		setName (name);
-		server = svr;
+		this.code = code;
 	}
 	public void handleEvent(CardUI ui, CardEvent request) {
 		if (request.getPlayer() == this) {
-			if (request instanceof CardEventFaceUpResponse) {
+			if (request instanceof CardEventPlayerRegister) {
+				ui.playerEvent(request);
+				events.add (request);
+			}
+			else if (request instanceof CardEventFaceUpResponse) {
 				String cards = ((CardEventFaceUpResponse) request).getCards();
 				faceupCards (cards);
 				ui.playerEvent(request);
@@ -31,10 +34,6 @@ public class CardPlayerHttpClient extends CardPlayer {
 				String card = ((CardEventPlayerAction) request).getCardPlayed();
 				playCard (card);
 				ui.playerEvent(request);
-			}
-			else if (request instanceof CardEventPlayerRegister) {
-				ui.playerEvent(request);
-				events.add (request);
 			}
 			else if (request instanceof CardEventEndRound) {
 				getPoints().addAll(((CardEventEndRound)request).getPoints());
@@ -59,7 +58,7 @@ public class CardPlayerHttpClient extends CardPlayer {
 	public String getEventFromQueue() {
 		String response = 
 				"<event name='CardEventGameIdle'>" +
-				"<message>Please Wait</message>" +
+				"<message>Code:" + code +"</message>" +
 				"</event>";
 		if (!events.isEmpty()) {
 			CardEvent e= events.remove ();

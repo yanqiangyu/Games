@@ -22,6 +22,7 @@ import com.ialogic.games.cards.event.CardEventGameStart;
 import com.ialogic.games.cards.event.CardEventPlayerAction;
 import com.ialogic.games.cards.event.CardEventPlayerRegister;
 import com.ialogic.games.cards.event.CardEventPlayerUpdate;
+import com.ialogic.games.cards.event.CardEventWaitForPlayers;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
@@ -66,13 +67,14 @@ public class CardHttpServer implements CardUI {
 		  os.close();
 	}
 	private String createResponse(String query) {
-		String response = "<event name='CardEventLoginAck'><status>ERROR</status>" + 
-				"<message>Please Login</message></event>";
+		String response = "<event name='CardEventServerReject'><status>REJECT</status>" + 
+				"<message>Error</message></event>";
 		try {
 			HashMap<String, String>request = parseQuery(query);
 			String eventName = request.get("CardEvent");
 			String clz = "com.ialogic.games.cards.event." + eventName;
 			String player = request.get("player");
+			String clientCode = request.get("code").toUpperCase();
 			
 			@SuppressWarnings("rawtypes")
 			Class[] paramType = {String.class};
@@ -84,7 +86,8 @@ public class CardHttpServer implements CardUI {
 				String status = "OK";
 				String m = "";
 				int pos = 0;
-				if (request.containsKey("code") && request.get("code").toUpperCase().contentEquals("NEW") || game == null || game.isGameOver()) {
+				
+				if (clientCode.contentEquals("NEW") || game == null || game.isGameOver()) {
 					if (game != null) {
 						game.handleEvent(new CardEventGameOver());
 					}
@@ -97,33 +100,41 @@ public class CardHttpServer implements CardUI {
 							game.play();
 						}
 					}.start();
-					code = "4321"; // TODO, Randomize this code
+					synchronized (game) {
+						System.out.println ("DEBUG: Waiting for game to request player");
+						game.wait();
+					}
+					code = String.format("%04d", (int) (Math.random() * 10000));
 					m = String.format ("New Game Started, use code %s to join.", code);
 					System.out.println (m);
 				}
-				else if (game == null) {
-					m = game == null ? "Use 'new' to start game" : "Game is in progress";
+				else if (game != null && game.getPlayers().size() == 4) {
+					m = "Game in progress, please wait or use 'new' to interrupt.";
 					status = "REJECT";
 				}
-				if (sessions.containsKey(player)) {
-					CardPlayerHttpClient c = (CardPlayerHttpClient) sessions.get(player);
-					m = "Wecome back!";
-					pos = c.getPosition();
-					// TODO: Play back message log to catch up;
+				else if (clientCode.contentEquals(code)){
+					m = String.format ("Joining existing game with code:", code);
+					status = "OK";
 				}
 				else {
-					if (status.contentEquals("OK")) {
-						CardPlayerHttpClient c = new CardPlayerHttpClient (player, this);
+					m = "Invalid Request";
+					status = "REJECT";
+				}
+				if (status.contentEquals("OK")) {
+					CardPlayerHttpClient c = (CardPlayerHttpClient) sessions.get(player);
+					m = "Wecome back!";
+					if (c == null) {
+						c = new CardPlayerHttpClient (player, code);
 						synchronized (sessions) {
 							c.setPosition (sessions.size());
 							sessions.put(player, c);
 						}
-						((CardEventPlayerRegister)e).setAllPlayers (sessions.values());
-						e.setPlayer(c);
-						c.handleEvent(this, e);
-						m = "Wecome!";
-						pos = c.getPosition();
+						m = "Welcome!";
 					}
+					((CardEventPlayerRegister)e).setAllPlayers (sessions.values());
+					e.setPlayer(c);
+					c.handleEvent(this, e);
+					pos = c.getPosition();
 				}
 				response = String.format("<event name='CardEventLoginAck'><status>%s</status>" + 
 						"<player name='%s' position='%d'/>" +
@@ -183,6 +194,12 @@ public class CardHttpServer implements CardUI {
 	}
 
 	public void sendEvent(CardGame cardGame, CardEvent request) {
+		if (request instanceof CardEventWaitForPlayers) {
+			synchronized (game) {
+				game.notifyAll();
+			}
+			return;
+		}
 		if (request instanceof CardEventGameOver) {
 			addEvent(request);
 		}
