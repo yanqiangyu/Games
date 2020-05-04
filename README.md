@@ -38,7 +38,9 @@ Development Log:
 
 05/03/2020	Start new game with code "new" is supported.
 
+05/04/2020	Closed most of the issues and add build and run scripts
 
-Stay Calm and Have fun!
+
+Stay calm and have fun!
 
 Steve Yu
