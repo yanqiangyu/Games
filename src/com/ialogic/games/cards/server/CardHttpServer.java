@@ -84,11 +84,12 @@ public class CardHttpServer implements CardUI {
 				String status = "OK";
 				String m = "";
 				int pos = 0;
-				if (request.containsKey("code") && request.get("code").toUpperCase().contentEquals("NEW") || game == null) {
+				if (request.containsKey("code") && request.get("code").toUpperCase().contentEquals("NEW") || game == null || game.isGameOver()) {
 					if (game != null) {
 						game.handleEvent(new CardEventGameOver());
 					}
 					sessions.clear();
+					events.clear();
 					game = new PigChase ();
 					game.setUi(this);
 					new Thread () {
@@ -177,7 +178,6 @@ public class CardHttpServer implements CardUI {
 	}
 
 	public void close(CardGame cardGame) {
-		game = null;
 		showText ("Good bye!");
 		System.out.println(String.format ("Game %s Stopped.", cardGame.getName()));
 	}

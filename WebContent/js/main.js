@@ -107,9 +107,9 @@ function clickPlayer (p)
 				card = i;
 			}
 		}
-		if (card < 0 && gameState == "PlayerTurnResponse") {
-			// Can't end turn without select a card;
-			prompt ("Choose a card");
+		if ((card < 0 || cards.length > 2) && gameState == "PlayerTurnResponse") {
+			// Can't end turn without select single card;
+			prompt ("Choose a single card, please");
 		}
 		else if (gameState == "PlayerTurnResponse" || gameState == "FaceUpResponse") {
 			var event = "";
