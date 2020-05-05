@@ -31,7 +31,7 @@ public class CardEvent {
 		if (getPlayer() != null ) {
 			p = String.format("<player name='%s' position='%s'/>", getPlayer().getName(), getPlayer().getPosition());
 		}
-		String response = String.format("<event name='%s'><message>%s</message>%s<event>",
+		String response = String.format("<event name='%s'><message>%s</message>%s</event>",
 				this.getClass().getSimpleName(), getMessage(), p);
 		return response;
 	}

@@ -24,7 +24,7 @@ public class CardEventTurnToPlay extends CardEvent {
 					rule.getExplanation(), 
 					Card.showCSList(rule.getAllowed()));
 		}
-		String response = String.format("<event name='%s'><message>%s</message><player name='%s'/><rule %s/><event>",
+		String response = String.format("<event name='%s'><message>%s</message><player name='%s'/><rule %s/></event>",
 				this.getClass().getSimpleName(), getMessage(), getPlayer().getName(), r);
 		return response;
 	}
