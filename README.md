@@ -1,4 +1,4 @@
-This is the java source code for a Multiplayer Hearts-like card game called Pig-Chase. (中文：拱猪).
+This is a HTML5/js/Jave Server project for a Multiplayer Hearts-like card game called Pig-Chase. (中文：拱猪).
 
 The game URL:
 		http://www.ialogic.com/
@@ -12,7 +12,8 @@ The game URL:
 	
 	Stay calm and have fun!
 
-For developers, the multiplayer game rule engine has a dummy auto player interface that you can extend for more intelligent game play. To test this without the time consuming human UI, run this program.
+For developers, the multiplayer game rule engine has a dummy auto player interface that you can extend for more 
+intelligent game play. To test this without the time consuming human UI, run this program.
 
 		com.ialogic.games.cards.CardPlayTest
 
@@ -32,16 +33,16 @@ To run your own game server:
 
 Development Log:
 
-04/20/2020	I have the basic client HTML5 and JS framework and a basic java HTTP server proxy through Apache
-
-05/02/2020      Finally it is ready for multiplayer. Auto play is still glitch.
-
-05/02/2020      Test run with friends and updated READ ME for general public.
-
-05/03/2020	Start new game with code "new" is supported.
+05/05/2020	Got a new Dell PowerEdge server to host the game server and fixed bug for Firefox game play.
 
 05/04/2020	Closed most of the issues and add build and run scripts
 
-05/05/2020	Got a new Dell PowerEdge server to host the game server and fixed bug for Firefox game play.
+05/03/2020	Start new game with code "new" is supported.
+
+05/02/2020      Test run with friends and updated READ ME for general public.
+
+05/02/2020      Finally it is ready for multiplayer. Auto play is still glitch.
+
+04/20/2020	I have the basic client HTML5 and JS framework and a basic java HTTP server proxy through Apache
 
 Steve Yu
