@@ -193,11 +193,25 @@ function promptServer (text)
 	c.style.display="block";
 }
 
-function score (text)
+function score (lines)
 {
-	var c=document.getElementById("score");
-	c.innerHTML=text;
-	c.style.display="block";
+	if (lines && lines.length > 2) {
+		document.getElementById("score").style.display="block";
+		var names = lines[0].childNodes[0].nodeValue.split(",");
+		for (i = 0; i < 4; ++i) {
+			document.getElementById("name_" + i).innerHTML=names[i];
+		}
+		var scores = lines[1].childNodes[0].nodeValue.split(",");
+		for (i = 0; i < 4; ++i) {
+			document.getElementById("score_" + i).innerHTML=scores[i];
+		}
+		for (i = 0; i < lines.length-2; ++i) {
+			scores = lines[i+2].childNodes[0].nodeValue.split(",");
+			document.getElementById("hand_" + i).innerHTML=scores[0];
+			document.getElementById("score_0_" + i).innerHTML=scores[1];
+			document.getElementById("score_1_" + i).innerHTML=scores[2];
+		}
+	}
 }
 
 function startGame() 
@@ -1044,13 +1058,7 @@ function handleResponseText (text)
 		break;
 	case "CardEventScoreBoard":
 		var lines = response.getElementsByTagName("line");
-		var content="<H1 align='center'>" + message + "</H1>";
-		if (lines) {
-			for (i = 0; i < lines.length; ++i) {
-				content += lines[i].childNodes[0].nodeValue + "<BR>";
-			}
-		}
-		score (content);
+		score (lines);
 		break;
 	default:
 		prompt ("TEST:" + message);
@@ -1105,12 +1113,11 @@ var testGame = [
 	[3, 'JD,5C,JC,JS', 3, 'JD'],
 ];
 var testScore = [
-    "1:  (     0,     0)",
-    "2:  (  -160,   160)",
-    "3:  (  -960,  -960)",
-    "4:  (  -100,  -100)",
-    "(1 3):  Team Score -960",
-    "(2 4):  Team Score  -60"
+	"Steve,Ying,Chris,Tiff",
+	"-780,0,90,0",
+	"1,-440,-600",
+	"2,-390,-750",
+	"3,-1080,-750"
 ]
 
 function testLoop () 
@@ -1201,7 +1208,7 @@ function testLoop ()
 		}
 		break;
 	case "Test_PlayerReady":
-		if (testStage > 103) {
+		if (testStage > 6) {
 			testState="Test_EndHand";
 		}
 		else {

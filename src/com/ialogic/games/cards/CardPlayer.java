@@ -9,6 +9,7 @@ import com.ialogic.games.cards.event.CardEvent;
 public abstract class CardPlayer {
 	String name;
 	int score;
+	int curScore;
 	List<Card>hand = Collections.synchronizedList(new ArrayList<Card>());
 	List<Card>faceup =  Collections.synchronizedList(new ArrayList<Card>());
 	List<Card>points =  Collections.synchronizedList(new ArrayList<Card>());
@@ -69,6 +70,12 @@ public abstract class CardPlayer {
 	}
 	public int getPosition() {
 		return this.position;
+	}
+	public int getCurScore() {
+		return curScore;
+	}
+	public void setCurScore(int curScore) {
+		this.curScore = curScore;
 	}
 	public void playCard(String cs) {
 		Card played = null;

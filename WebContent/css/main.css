@@ -50,8 +50,7 @@
     background-image: url('../image/score.jpg');
     background-size: 100% 100%;
     font-family: 'Caveat', cursive;;
-    font-size: 18px;
-    opacity: .75;
+    font-size: 24px;
     margin: auto;
     left: 20vw;
     top: 10vh;
@@ -117,6 +116,11 @@
 	display: block;
 	opacity: 0.75;
 	cursor: pointer;
+	z-Index: 300;
+}
+
+.auto_on{
+	animation: ticking 2000ms infinite;
 }
 
 .exit {
@@ -131,12 +135,8 @@
 	display: block;
 	opacity: .5;
 	cursor: pointer;
+	z-Index: 300;
 }
-
-.auto_on{
-	animation: ticking 2000ms infinite;
-}
-
 
 .footnote {
 	position: absolute;

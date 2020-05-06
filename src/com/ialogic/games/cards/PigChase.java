@@ -26,6 +26,7 @@ public class PigChase extends CardGame {
 	List<CardPlayer>players=new ArrayList<CardPlayer>();
 	CardDeck deck = new CardDeck (52);
 	ConcurrentHashMap<CardPlayer, List<Card>>faceUps = new ConcurrentHashMap<CardPlayer, List<Card>>();
+	ArrayList<String>teamScores = new ArrayList<String>();
 	private final Object playerReady = new Object();
 	
 	Thread runThread = new Thread () {
@@ -176,12 +177,10 @@ public class PigChase extends CardGame {
 					starter = newStarter;
 				}
 				banner = String.format("==================== Score For Hand %-4d===================", hand);
-				CardEventScoreBoard scoreHand = new CardEventScoreBoard (String.format("Score for hand %d", hand));
 				ui.showText(banner);
 				for (CardPlayer p : getPlayers ()) {
 					String ps = updateScore (p);
 					ui.showText(ps);
-					scoreHand.addLine (ps.substring(0,30).trim());
 				}
 				ui.showText("...........................................................");
 				for (CardPlayerTeam team : teams) {
@@ -195,15 +194,31 @@ public class PigChase extends CardGame {
 						setGameOver(true);
 					}
 					team.setTeamScore(total);
-					scoreHand.addLine (score);
 				}
 				ui.showText("===========================================================");
+				CardEventScoreBoard scoreHand = new CardEventScoreBoard (String.format("Score for hand %d", hand));
+				String line1 = ""; 
+				String line2 = ""; 
+				String sep = "";
+				for (CardPlayer p : getPlayers ()) {
+					line1 += sep + p.getName();
+					line2 += sep + p.getCurScore();
+					sep = ",";
+				}
+				scoreHand.addLine(line1);
+				scoreHand.addLine(line2);
+				String line = hand + "," + teams[0].getTeamScore() + "," + teams[1].getTeamScore();
+				teamScores.add(line);
+				for (String s : teamScores) {
+					scoreHand.addLine(s);
+				}
 				ui.sendEvent(this, scoreHand);
 				while (!testCases.isEmpty()) {
 					String t = testCases.remove(0);
 					System.out.println(t);
 				}
 				starter = findLastPig();
+				ui.showText(scoreHand.getXMLString());
 				ui.showText("===========================================================");
 			}
 			ui.showText("=======================Game Over!==========================");
@@ -390,6 +405,7 @@ public class PigChase extends CardGame {
 			points = singleM;
 		}
 		points *= multiplier;
+		
 		int total = p.getScore() + points;
 		score = String.format("%12s (%6d,%6d) %-70s - %s%s%s%s",
 				p.displayString(),
@@ -401,6 +417,7 @@ public class PigChase extends CardGame {
 				shootTheMoon, 
 				hasMultiplier);
 		p.setScore(total);
+		p.setCurScore (points);
 		
 		return score;
 	}
