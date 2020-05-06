@@ -1,13 +1,23 @@
-This is the java source code for a Hearts-like card game called Pig-Chase. (中文：拱猪)
+This is the java source code for a Multiplayer Hearts-like card game called Pig-Chase. (中文：拱猪).
 
-The multiplayer game rule engine has a dummy auto player interface that you can extend for more intelligent game play. To test this without the time consuming human UI, run this program.
+The game URL:
+		http://www.ialogic.com/
+
+	Enter you name and code "new" to start a new game and share the 4 digit code on screen with your
+	friends over video chat or conference call.
+	
+	Leave the player name blank and enter "test" to see the demo and check your browser compatibility. 
+	Latest versions of Chrome, Safari and Firefox should work fine on all devices. 
+	I personally don't like MS IE or MS edge. 
+	
+	Stay calm and have fun!
+
+For developers, the multiplayer game rule engine has a dummy auto player interface that you can extend for more intelligent game play. To test this without the time consuming human UI, run this program.
 
 		com.ialogic.games.cards.CardPlayTest
 
 	Input 4 player names and the test program will take them through a team game up to 100 rounds 
 	or when either team's score is over +/-1000 in a second.
-
-For human players, HTML5 + and server side java is done. User management and multiple room game play is underway. I just created a issues list to keep track of things to do.
 
 To run your own game server:
 
@@ -18,14 +28,6 @@ To run your own game server:
 		com.ialogic.games.cards.server.CardHttpServer
 	
 	3. Redirect relative url "/cardgame" to your appserverhost:8001 (using Apache 2 Virtual host)
-
-For a live demo, use the following link.
-
-		http://www.ialogic.com/
-
-	Leave the player name blank and enter "test" to see the demo and check your browser compatibility. 
-	Latest versions of Chrome, Safari and Firefox should work fine on all devices. 
-	I personally don't like MS IE or MS edge. 
 
 
 Development Log:
@@ -40,7 +42,6 @@ Development Log:
 
 05/04/2020	Closed most of the issues and add build and run scripts
 
-
-Stay calm and have fun!
+05/05/2020	Got a new Dell PowerEdge server to host the game server and fixed bug for Firefox game play.
 
 Steve Yu
