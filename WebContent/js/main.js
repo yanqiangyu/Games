@@ -1,11 +1,6 @@
-//=============================
-// Global Settings
-//=============================
-var gameState = "Initial";
-var center={x:0, y:0,};
-var myPosition = 0;
-var myPlayers = ["","","",""];
-
+//===============================================
+// Card image and location
+//===============================================
 var carddeck=[
 	{img: "2C", x: 0, y: 0,},
 	{img: "2D", x: 0, y: 0,},	
@@ -61,8 +56,8 @@ var carddeck=[
 	{img: "AS", x: 0, y: 0,},	
 ];
 // *******************************************************************************
-// Control Functions:
-// These functions are called by the HTML objects.
+// UI Control Functions:
+// These functions are called by the Browser objects.
 // Changing the names requires change in index.html.
 // *******************************************************************************
 var idleThread;
@@ -158,6 +153,21 @@ function enableLogin ()
 {
 	var c=document.getElementById("login");
 	c.style.display="block";
+}
+
+var autoPlayGame = false;
+function toggleAutoPlay () {
+	switch (gameState) {
+	case "Initial":
+	case "Idle":
+	case "Login":
+		prompt ("Auto play not available");
+		break;
+	default:
+		autoPlayGame = !autoPlayGame;
+	}
+	var c=document.getElementById("auto");
+	c.classList.toggle ("auto_on", autoPlayGame);
 }
 
 // *******************************************************************************
@@ -290,9 +300,14 @@ function cleanup ()
     }
 }
 
-//===============================================
-// Need to reset on a new hand
-//===============================================
+//=============================
+//Global Settings
+//=============================
+var gameState = "Initial";
+var center={x:0, y:0,};
+var myPosition = 0;
+var myPlayers = ["","","",""];
+
 var myCards=[];
 var myRound = 0;
 var selectMask = [0,0,0,0,0,0,0,0,0,0,0,0,0];
@@ -839,14 +854,16 @@ function checkServerIdle () {
 	++idleCount;
 	if (idleCount > 5) {
 		setServerState ("Offline");
-		if ((session.code.toUpperCase() != "AUTO" && session.code.toUpperCase() != "TEST")) {
+		if (!autoPlayGame) {
 			restartClient ("Server timeout, restarting client...");
 		}
 	}
 }
 
 function restartClient (message) {
-	prompt (message);
+	if (message != "") {
+		prompt (message);
+	}
 	setTimeout (reload, 3000);
 	function reload () {
 		location.reload();
@@ -959,7 +976,7 @@ function handleResponseText (text)
 	//	END State Transition:
 	//=============================================================
 	setServerState ("Connected");
-	prompt ("Game State:" + gameState + " Message:" + message );
+	prompt (message );
 	
 	switch (event) {
 	case "CardEventLoginAck":
@@ -995,12 +1012,13 @@ function handleResponseText (text)
 		var reason = rule.getAttribute("reason");
 		var allowed = rule.getAttribute("allowed");
 		faceupReady (reason, allowed);
-		if (position == 0 && (session.code.toUpperCase() == "AUTO" || session.code.toUpperCase() == "TEST")) {
+		if (position == 0 && autoPlayGame) {
 			sendAutoPlayAction ();
 		}
 		break;
 	case "CardEventFaceUpResponse":
-		var cards = response.getElementsByTagName("faceup")[0].childNodes[0].nodeValue;
+		var played = response.getElementsByTagName("faceup")[0].childNodes[0];
+		var cards = played == null ? "NA" : played.nodeValue;
 		showFaceup (position, cards);
 		break;
 	case "CardEventTurnToPlay":
@@ -1008,7 +1026,7 @@ function handleResponseText (text)
 		var reason = rule.getAttribute("reason");
 		var allowed = rule.getAttribute("allowed");
 		playerReady (myRound, position, reason, allowed);
-		if (position == 0 && (session.code.toUpperCase() == "AUTO" || session.code.toUpperCase() == "TEST")) {
+		if (position == 0 && autoPlayGame) {
 			sendAutoPlayAction ();
 		}
 		break;
@@ -1035,7 +1053,7 @@ function handleResponseText (text)
 		score (content);
 		break;
 	default:
-		prompt ("Event Name:" + event + ", Message:" + Message);
+		prompt ("TEST:" + message);
 	}
 } 
 function sendAutoPlayAction () {
@@ -1048,6 +1066,12 @@ function sendAutoPlayAction () {
 	function send () {
 		eventQueue.unshift (response);
 	}
+}
+
+function shutdown () {
+	var splash = document.getElementById("splash");
+	splash.style.backgroundImage = "url('image/shutdown.gif')";
+	restartClient ("");
 }
 
 //*******************************************************************************
