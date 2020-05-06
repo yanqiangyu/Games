@@ -159,6 +159,11 @@ var autoPlayGame = false;
 function toggleAutoPlay () {
 	switch (gameState) {
 	case "Initial":
+		document.getElementById("player").value="";
+		document.getElementById("code").value="test";
+		autoPlayGame=true;
+		setTimeout (sendLogin, 0);
+		break;
 	case "Idle":
 	case "Login":
 		prompt ("Auto play not available");
@@ -168,6 +173,18 @@ function toggleAutoPlay () {
 	}
 	var c=document.getElementById("auto");
 	c.classList.toggle ("auto_on", autoPlayGame);
+}
+
+function shutdown () {
+	if (gameState != "Initial") {
+		var splash = document.getElementById("splash");
+		splash.style.backgroundImage = "url('image/shutdown.gif')";
+		restartClient ("");
+	}
+	else {
+		location.reload();
+	}
+	
 }
 
 // *******************************************************************************
@@ -1061,7 +1078,7 @@ function handleResponseText (text)
 		score (lines);
 		break;
 	default:
-		prompt ("TEST:" + message);
+		prompt (message);
 	}
 } 
 function sendAutoPlayAction () {
@@ -1074,12 +1091,6 @@ function sendAutoPlayAction () {
 	function send () {
 		eventQueue.unshift (response);
 	}
-}
-
-function shutdown () {
-	var splash = document.getElementById("splash");
-	splash.style.backgroundImage = "url('image/shutdown.gif')";
-	restartClient ("");
 }
 
 //*******************************************************************************
@@ -1208,7 +1219,7 @@ function testLoop ()
 		}
 		break;
 	case "Test_PlayerReady":
-		if (testStage > 6) {
+		if (testStage > 103) {
 			testState="Test_EndHand";
 		}
 		else {
