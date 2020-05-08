@@ -20,6 +20,7 @@ import com.ialogic.games.cards.event.CardEventFaceUpResponse;
 import com.ialogic.games.cards.event.CardEventGameOver;
 import com.ialogic.games.cards.event.CardEventGameStart;
 import com.ialogic.games.cards.event.CardEventPlayerAction;
+import com.ialogic.games.cards.event.CardEventPlayerReconnect;
 import com.ialogic.games.cards.event.CardEventPlayerRegister;
 import com.ialogic.games.cards.event.CardEventPlayerUpdate;
 import com.ialogic.games.cards.event.CardEventWaitForPlayers;
@@ -108,13 +109,17 @@ public class CardHttpServer implements CardUI {
 					m = String.format ("New Game Started, use code %s to join.", code);
 					System.out.println (m);
 				}
+				else if (clientCode.contentEquals(code) && game != null && game.getPlayers().size() < 4 ){
+					m = String.format ("Joining with code:", code);
+					status = "OK";
+				}
+				else if (clientCode.contentEquals(code) && sessions.containsKey(player)){
+					m = String.format ("Rejoining with code:", code);
+					status = "OK";
+				}
 				else if (game != null && game.getPlayers().size() == 4) {
 					m = "Game in progress, please wait or use 'new' to interrupt.";
 					status = "REJECT";
-				}
-				else if (clientCode.contentEquals(code)){
-					m = String.format ("Joining existing game with code:", code);
-					status = "OK";
 				}
 				else {
 					m = "Invalid Request";
@@ -130,6 +135,11 @@ public class CardHttpServer implements CardUI {
 							sessions.put(player, c);
 						}
 						m = "Welcome!";
+						e.setMessage(m);
+					}
+					else {
+						m = "Welcome back!";
+						e = new CardEventPlayerReconnect (m);
 					}
 					((CardEventPlayerRegister)e).setAllPlayers (sessions.values());
 					e.setPlayer(c);
@@ -139,7 +149,7 @@ public class CardHttpServer implements CardUI {
 				response = String.format("<event name='CardEventLoginAck'><status>%s</status>" + 
 						"<player name='%s' position='%d'/>" +
 						"<message>%s, %s!</message></event>", status, player, pos, player, m);
-				System.out.println(response);
+				System.out.println("DEBUG:" + response);
 			}
 			else if (sessions.containsKey(player)) {
 				CardPlayer c = sessions.get(player);

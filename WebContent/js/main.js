@@ -61,7 +61,7 @@ var carddeck=[
 // Changing the names requires change in index.html.
 // *******************************************************************************
 var idleThread;
-var pollingInterval = 500;
+var pollingInterval = 1000;
 function sendLogin()
 {
 	var player=document.getElementById("player").value;
@@ -104,7 +104,7 @@ function clickPlayer (p)
 		else if (gameState == "PlayerTurnResponse" || gameState == "FaceUpResponse") {
 			var event = "";
 			if (gameState == "PlayerTurnResponse") {
-				playCard (0, card, myCards[card]);
+				playCard (0, myCards[card]);
 				event="CardEventPlayerAction";
 			}
 			else {
@@ -340,7 +340,6 @@ var myPosition = 0;
 var myPlayers = ["","","",""];
 
 var myCards=[];
-var myRound = 0;
 var selectMask = [0,0,0,0,0,0,0,0,0,0,0,0,0];
 var selectedCards = [0,0,0,0,0,0,0,0,0,0,0,0,0];
 var faceupCards = [0,0,0,0,0,0,0,0,0,0,0,0,0];
@@ -445,7 +444,7 @@ function showFaceup (p, c)
     }
 }
 
-function playerReady (r, position, reason, allowed)
+function playerReady (position, reason, allowed)
 {
     var id = setInterval (work, 100);
     function work () {
@@ -458,8 +457,7 @@ function playerReady (r, position, reason, allowed)
 						enableCards (reason, allowed);
 					}
 					else {
-						enableCards (reason, myCards[r]);
-						toggleCardSelection (r*4);
+						prompt ("Unexpected rule exception");
 					}
 					gameState = "PlayerTurnResponse";
 				}
@@ -497,22 +495,21 @@ function faceupMyCard (i)
 	}
 }
 
-function playCard (position, round, card) {
+function playCard (position, card) {
     var id = setInterval (work, 100);
     function work () {
     	if (gameState == "PlayerReady") {
    		  	clearInterval (id);
-			var i = round * 4 + position;
 			var cards = playerCards[position];
 			var l = getPlayerLocation (position);
 			flashPlayer (position, false);
-			
-			var found = false;
-			for (c = cards.length; !found && c >= 0; --c) {
-				found = (cards[c] == "NA" || cards[c] == card);
-				if (found) {
+
+			var i = position;
+			for (c = cards.length; c >= 0; --c) {
+				if (cards[c] == "NA" || cards[c] == card) {
 					cards[c]="XX";
 					i = c * 4 + position;
+					break;
 				}
 			}
 			faceUpCard (i);
@@ -557,6 +554,100 @@ function discardCards (p, points) {
 			moveCardEffect (i,  center.x, center.y);
 		}
 	}
+}
+
+function setPlayerDisplay (p, players) {
+    var id = setInterval (work, 100);
+    function work () {
+		// Wait for animation finishes
+	  if (gameState == "CleanupEnd") {
+	  		clearInterval (id);
+	  		for (k = 0; k < players.length; ++k) {
+				var player = players[k];
+				var p = (parseInt(player.getAttribute("position")) - myPosition + 4) % 4;
+				var cards = player.getElementsByTagName("hand")[0].childNodes[0].nodeValue.split(",");
+				
+				setPlayer (p, player.getAttribute("name"));
+				for (i = cards.length; i < 13; ++i) {
+					cards.unshift ("XX");
+				}
+				playerCards[p] = cards; 
+				if (p == 0) {
+					myCards=cards;
+			  	}
+				for (i = 0; i < cards.length; ++i) {
+					var idx = i*4 + p;
+					var l=getCardLocation (idx);		
+					var c=document.getElementById('scene'+idx);
+					raiseCard (idx, 99);
+					if (cards[i] != "XX") {
+						c.style.left = l.x + "vw";
+						c.style.top = l.y + "vh";
+						if (p == 0) {
+							setCardFace (idx, myCards[i]);
+							flipCard(idx);
+						}
+						else if (p == 1 || p == 3) {
+							rotateCard(idx);
+						}
+					} 
+					else {
+						c.style.left = center.x + "vw";
+						c.style.top = center.y + "vh";
+						rotateCard(idx);
+					}
+				}
+				var faceup = player.getElementsByTagName("faceup")[0].childNodes[0];
+				var c = faceup ? faceup.nodeValue : "NA";
+				if (c != ""  && c != "NA") {
+					var cards=c.split(",");
+					var count = cards.length;
+					for (i = 0; i < cards.length; ++i) {
+						var idx = p - i*4 + 48;
+						if (p == 0) {
+							for (j =0; j < myCards.length; ++j) {
+								if (myCards[j] == c) {
+									idx = j * 4;
+									break;
+								}
+							}
+						}
+						var pos = getCardLocation (idx);
+						setCardFace (idx, cards[i]);
+						switch (p) {
+							case 0: pos.y -= 4; break;
+							case 1: pos.x -= 4; break;
+							case 2: pos.y += 4; break;
+							case 3: pos.x += 4; break;
+						}
+						if (p != 0) {
+							flipCard (idx);
+						} 
+						var f=document.getElementById('scene'+idx);
+						f.style.left = pos.x + "vw";
+						f.style.top = pos.y + "vh";
+						playerCards[p][12-i] = cards[i]; 
+					}
+				}
+				var played = player.getElementsByTagName("cardPlayed")[0].getAttribute("card");
+				if (played != "NA") {
+						var l = getPlayerLocation (p);
+						cards = playerCards[p];
+						for (i = 0; i < cards.length; ++i) {
+							if (cards[i] == "XX") {
+								idx = i * 4 + p;
+								break;
+							}
+						}
+						faceUpCard (idx);
+						setCardFace (idx, played);
+						moveCardEffect (idx, l.x+1, l.y+2.5);
+						discarded.push(idx);
+				}
+			}
+			gameState = "PlayerReady";
+		}
+ 	}
 }
 
 // *******************************************************************************
@@ -846,20 +937,21 @@ function login (player, code) {
 		session.player=player;
 		session.code=code;
 		setServerState ("LoginWait");
-		var timeout = setInterval(checkLogin, 2000);
+		var timeout = setInterval(checkLogin, 1000);
+		var count = 0;
 		function checkLogin () {
 			if (serverState == "LoginWait") {
 				prompt ("Please wait..");
 				setServerState ("Connecting");
 			}
-			else if (serverState == "Connecting") {
+			else if (serverState == "Connecting" && count > 10) {
 				prompt ("Timeout,  try again...");
-				dismissPrompt ();
 				clearInterval (timeout);
 				clearInterval (idleThread);
 				setServerState ("Offline");
 				enableLogin ();
 			}
+			++count;
 		}
 		return "Waiting for server response";
 	}
@@ -883,7 +975,7 @@ function setServerState (s) {
 
 function checkServerIdle () {
 	++idleCount;
-	if (idleCount > 5) {
+	if (idleCount > 30) {
 		setServerState ("Offline");
 		if (!autoPlayGame) {
 			restartClient ("Server timeout, restarting client...");
@@ -895,6 +987,8 @@ function restartClient (message) {
 	if (message != "") {
 		prompt (message);
 	}
+	gameState = "Error";
+	clearInterval (idleThread);
 	setTimeout (reload, 3000);
 	function reload () {
 		location.reload();
@@ -959,7 +1053,6 @@ function handleResponseText (text)
 		}
 	case "CleanupEnd":
 		if (event == "CardEventDealCards") {
-			myRound = 0;
 			break;
 		}
 	case "PlayerReady":
@@ -971,6 +1064,7 @@ function handleResponseText (text)
 		}
 		if (event == "CardEventFaceUp" || 
 			event == "CardEventGamePlayStart" ||
+			event == "CardEventShuffleEffect" ||
 			event == "CardEventPlayerAction" ||
 			event == "CardEventGameIdle" ||
 			event == "CardEventPlayerAck" ||
@@ -990,7 +1084,6 @@ function handleResponseText (text)
 		}
 	case "EndRound":
 		if (event == "CardEventEndRound") {
-			++myRound;
 			break;
 		}
 		if (event == "CardEventScoreBoard") {
@@ -1056,14 +1149,14 @@ function handleResponseText (text)
 		var rule = response.getElementsByTagName("rule")[0];
 		var reason = rule.getAttribute("reason");
 		var allowed = rule.getAttribute("allowed");
-		playerReady (myRound, position, reason, allowed);
+		playerReady (position, reason, allowed);
 		if (position == 0 && autoPlayGame) {
 			sendAutoPlayAction ();
 		}
 		break;
 	case "CardEventPlayerAction":
 		var card = response.getElementsByTagName("cardPlayed")[0].getAttribute("card");
-		playCard (position, myRound, card);
+		playCard (position, card);
 		break;
 	case "CardEventPlayerAutoAction":
 		autoPlayCard ();
@@ -1076,6 +1169,15 @@ function handleResponseText (text)
 	case "CardEventScoreBoard":
 		var lines = response.getElementsByTagName("line");
 		score (lines);
+		break;
+	case "CardEventPlayerReconnect":
+		gameState = "Reconnect";
+		prompt (message);
+		cleanup ();
+		var players = response.getElementsByTagName("player");
+		if (players) {
+			setPlayerDisplay (p, players);
+		}
 		break;
 	default:
 		prompt (message);
@@ -1146,7 +1248,23 @@ function testLoop ()
 			"<player name='" + testUsers[0] + "' position='2'/>" +
 			"<status>OK</status>" +
 			"</event>";
-		testState = "Test_Idle";
+		testState = "Test_Reconnect";
+		break;
+	case "Test_Reconnect":
+		if (testStage == 0) {
+			testResponse = 
+				"<event name='CardEventPlayerReconnect'><message>Welcome back!</message>" +
+					"<player name='" + testUsers[0] + "' position='2' points=''><hand>XC,4D,5D,6D,7D,5H,XH,QS,4S</hand><faceup>XC</faceup><cardPlayed card='NA'/></player>" +
+					"<player name='" + testUsers[1] + "' position='3' points=''><hand>NA,NA,NA,NA,NA,NA,NA,NA</hand><faceup>JD</faceup><cardPlayed card='4C'/></player>" + 
+					"<player name='" + testUsers[2] + "' position='0' points=''><hand>NA,NA,NA,NA,NA,NA,NA,NA</hand><faceup>AH</faceup><cardPlayed card='2C'/></player>" +
+					"<player name='" + testUsers[3] + "' position='1' points=''><hand>NA,NA,NA,NA,NA,NA,NA,NA</hand><faceup></faceup><cardPlayed card='3C'/></player>";
+			testResponse = testResponse + "</event>";
+		}
+		else if (testStage > 3) {
+			testState = "Test_Idle";
+			testStage = 5;
+		}
+		++testStage;
 		break;
 	case "Test_Idle":
 		++testStage;

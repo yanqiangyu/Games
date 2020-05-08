@@ -16,9 +16,9 @@ public class CardEventPlayerRegister extends CardEvent {
 		return allPlayers;
 	}
 	public String getXMLString() {
-		String  p = "";
+		String  p = "\n";
 		for (CardPlayer player  : allPlayers) {
-			p += String.format("<player name='%s' position='%s'/>", player.getName(), player.getPosition());
+			p += String.format("<player name='%s' position='%s'/>\n", player.getName(), player.getPosition());
 		}
 		String response = String.format("<event name='%s'><message>%s</message>%s</event>",
 				this.getClass().getSimpleName(), getMessage(), p);
