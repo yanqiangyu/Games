@@ -87,13 +87,10 @@ function clickPlayer (p)
 		var card = -1;
 		var cards = "";
 		var sep = "";
-		for (i = 0; i < myCards.length; ++ i) {
+		for (i = 0; i < playerCards[0].length; ++ i) {
 			if (selectedCards[i] != 0) {
-				cards += sep + myCards[i];
+				cards += sep + playerCards[0][i];
 				sep = ",";
-				if (gameState == "FaceUpResponse") {
-					faceupMyCard (i*4);
-				}
 				card = i;
 			}
 		}
@@ -104,24 +101,19 @@ function clickPlayer (p)
 		else if (gameState == "PlayerTurnResponse" || gameState == "FaceUpResponse") {
 			var event = "";
 			if (gameState == "PlayerTurnResponse") {
-				playCard (0, myCards[card]);
+				setPlayerDisplayPlayed (0, cards, true);
 				event="CardEventPlayerAction";
 			}
 			else {
+				setPlayerDisplayFaceup (0, cards);
 				event="CardEventFaceUpResponse";
 			}
-			for (i = 0; i < myCards.length; ++ i) {
+			for (i = 0; i < playerCards[0].length; ++ i) {
 				selectedCards[i] = 0;
 			}
 			enableCards ("Turn Over", "");
 			flashPlayer (0, false);
-
-			request = "/cardgame" + 
-				"?CardEvent=" + event + 
-				"&player="+ session.player + 
-				"&code=" + session.code +
-				"&cards=" + cards;
-			serverRequest (request);
+			serverRequest (event, cards);
 			gameState="PlayerReady";
 		}
 	}
@@ -338,8 +330,6 @@ var gameState = "Initial";
 var center={x:0, y:0,};
 var myPosition = 0;
 var myPlayers = ["","","",""];
-
-var myCards=[];
 var selectMask = [0,0,0,0,0,0,0,0,0,0,0,0,0];
 var selectedCards = [0,0,0,0,0,0,0,0,0,0,0,0,0];
 var faceupCards = [0,0,0,0,0,0,0,0,0,0,0,0,0];
@@ -358,6 +348,7 @@ function dealCards(hand)
 	  if (gameState == "CleanupEnd") {
 			playerCards=[[],[],[],[]];
 			playerCards[0] = hand.split(",");
+
 			for (i = 1; i < 4; ++i) {
 				for (j = 0; j < 13; ++j) {
 					playerCards[i].push ("NA");
@@ -365,8 +356,7 @@ function dealCards(hand)
 			}
 			clearInterval (id);
 			gameState = "DealCards";
-			myCards = hand.split(",");
-			dealCard (0, myCards);
+			dealCard (0, playerCards[0]);
 			for (i = 0; i < selectMask.length; ++i) {
 				selectMask[i]=0;
 				selectedCards[i]=0;
@@ -386,8 +376,8 @@ function dealCard (i, myCards) {
 		  setCardFace (i, myCards[m]);
 		  flipCard(i);
 	  }
-	  else if (l.p == 1 || l.p == 3) {
-		  rotateCard(i);
+	  else {
+		  rotateCard(i, ((l.p % 2) == 1));
 	  }
 	  raiseCard (i, 99)
 	  moveCardEffect (i, l.x, l.y, nextCard, 25, 5);
@@ -423,22 +413,8 @@ function showFaceup (p, c)
     	if (gameState == "FaceUpResponse" || gameState == "PlayerReady") {
    		  	clearInterval (id);
 			flashPlayer (p, false);
-			if (c != ""  && c != "NA" && p != 0) {
-				var cards=c.split(",");
-				var count = cards.length;
-				for (i = 0; i < cards.length; ++i) {
-					var idx = p - i*4 + 48;
-					var pos = getCardLocation (idx);
-					setCardFace (idx, cards[i]);
-					switch (p){
-						case 1: pos.x -= 4; break;
-						case 2: pos.y += 4; break;
-						case 3: pos.x += 4; break;
-					}
-					flipCard (idx);
-					moveCardEffect (idx, pos.x, pos.y);
-					playerCards[p][12-i] = cards[i]; 
-				}
+			if (p != 0) {
+				setPlayerDisplayFaceup (p, c);
 			}
     	}
     }
@@ -484,38 +460,13 @@ function autoPlayCard ()
     }
 }
 
-function faceupMyCard (i) 
-{
-	var location=getCardLocation (i);
-	if (location.p == 0 ) {
-		var c=document.getElementById('scene'+i);
-		location.y -= 4;
-    	c.style.top = location.y + 'vh';
-    	faceupCards[i] = 1;
-	}
-}
-
 function playCard (position, card) {
     var id = setInterval (work, 100);
     function work () {
     	if (gameState == "PlayerReady") {
    		  	clearInterval (id);
-			var cards = playerCards[position];
-			var l = getPlayerLocation (position);
 			flashPlayer (position, false);
-
-			var i = position;
-			for (c = cards.length; c >= 0; --c) {
-				if (cards[c] == "NA" || cards[c] == card) {
-					cards[c]="XX";
-					i = c * 4 + position;
-					break;
-				}
-			}
-			faceUpCard (i);
-			setCardFace (i, card);
-			moveCardEffect (i, l.x+1, l.y+2.5);
-			discarded.push(i);
+   		  	setPlayerDisplayPlayed (position, card, true);
     	}
     }
 }
@@ -530,121 +481,173 @@ function discardCards (p, points) {
 		var card = getCardFace (i);
 
 		cleanCard (i);
-		lowerCard (i)
+		lowerCard (i);
 		for (j = 0; !found && j < cards.length; ++j) {
 			found = (card == cards[j]);
 		}
 		if (found) {
-			playerPoints[p].push (i);
-			faceUpCard (i);
-			
-			if (p == 1 || p == 3) {
-				rotateCard (i);
-			}
-			var d = ((playerPoints[p].length - 1) % 13) * 4 + p;
-			var m = (playerPoints[p].length < 14 ? 1 : 2);
-			var dx = (p == 0 || p == 2) ? 0 : ((p == 1) ? 2 : -2);
-			var dy = (p == 1 || p == 3) ? 0 : ((p == 0) ? 5 : -4);
-			var l = getCardLocation (d);
-			raiseCard (i, 100 + d);
-			moveCardEffect (i,  l.x + dx * m, l.y + dy * m);
+			setPlayerDisplayPoints(p, card, i);
 		}
 		else {
-			rotateCard (i);
+			rotateCard (i, true);
 			moveCardEffect (i,  center.x, center.y);
 		}
 	}
 }
 
-function setPlayerDisplay (p, players) {
+function setPlayerDisplayCards (p, cards) {
+	for (i = 0; i < cards.length; ++i) {
+		var idx = i*4 + p;
+		var l=getCardLocation (idx);		
+		var c=document.getElementById('scene'+idx);
+		raiseCard (idx, 99);
+		if (cards[i] != "XX") {
+			c.style.left = l.x + "vw";
+			c.style.top = l.y + "vh";
+			if (p == 0) {
+				setCardFace (idx, playerCards[0][i]);
+				flipCard(idx);
+			}
+			else  {
+				  rotateCard(idx, ((p % 2) == 1));			
+			}
+		} 
+		else {
+			c.style.left = center.x + "vw";
+			c.style.top = center.y + "vh";
+			rotateCard(idx, true);
+		}
+	}
+}
+
+function setPlayerDisplayFaceup (p, c) {
+	if (c != ""  && c != "NA") {
+		var cards=c.split(",");
+		var count = cards.length;
+		for (i = 0; i < cards.length; ++i) {
+			var idx = p - i*4 + 48;
+			if (p == 0) {
+				for (j =0; j < playerCards[0].length; ++j) {
+					if (playerCards[0][j] == c) {
+						idx = j * 4;
+						break;
+					}
+				}
+			}
+			var pos = getCardLocation (idx);
+			setCardFace (idx, cards[i]);
+			switch (p) {
+				case 0: pos.y -= 4; break;
+				case 1: pos.x -= 4; break;
+				case 2: pos.y += 4; break;
+				case 3: pos.x += 4; break;
+			}
+			if (p != 0) {
+				flipCard (idx);
+			} 
+			moveCardEffect (idx, pos.x, pos.y)
+			if (p != 0) {
+				playerCards[p][12-i] = cards[i];
+			}
+		}
+	}
+}
+
+function setPlayerDisplayPlayed (p, played, normal) {
+	if (played != "NA") {
+		var l = getPlayerLocation (p);
+		cards = playerCards[p];
+		var i = 0;
+		if (normal) {
+			// Normal play from hand
+			for (i = cards.length - 1; i >=0;  --i) {
+				if (cards[i] == "NA" || cards[i] == played) {
+					idx = i * 4 + p;
+					playerCards[p][i] = "XD";
+					break;
+				}
+			}
+		}
+		else {
+			// Recovery from discarded
+			for (i = 0; i < cards.length; ++i) {
+				if (cards[i] == "XX") {
+					idx = i * 4 + p;
+					playerCards[p][i] = "XD";
+					break;
+				}
+			}
+		}
+		faceUpCard (idx);
+		rotateCard(idx, ((p % 2) == 1));			
+		setCardFace (idx, played);
+		moveCardEffect (idx, l.x+1, l.y+2.5);
+		discarded.push(idx);
+	}
+}
+
+function setPlayerDisplayPoints (p, points, discard) {
+	if (points != "") {
+		var cards = points.split(",");
+		for (i = 0; i < cards.length; ++i) {
+			if (discard < 0) {
+				for (idx = 0; idx < 52; ++idx) {
+					var pp = idx % 4;
+					var pc = Math.floor(idx / 4);
+					if (playerCards[pp][pc] == "XX") {
+						playerCards[pp][pc] = "XD";
+						break;
+					}
+				}
+			}
+			else {
+				idx = discard;
+			}
+			playerPoints[p].push (idx);
+			setCardFace (idx, cards[i]);
+			faceUpCard (idx);
+			rotateCard(idx, (p%2==1));
+			var d = ((playerPoints[p].length - 1) % 13) * 4 + p;
+			var m = (playerPoints[p].length < 14 ? 1 : 2);
+			var dx = (p == 0 || p == 2) ? (p == 0 ? -2 : 0)  : ((p == 1) ? 2 : -2);
+			var dy = (p == 1 || p == 3) ? 0 : ((p == 0) ? 6 : -5);
+			var l = getCardLocation (d);
+			raiseCard (idx, 100 + d);
+			moveCardEffect (idx,  l.x + dx * m, l.y + dy * m);
+		} 
+	}
+}
+
+function setPlayerDisplay (players) {
     var id = setInterval (work, 100);
     function work () {
-		// Wait for animation finishes
+	// Wait for animation finishes
 	  if (gameState == "CleanupEnd") {
 	  		clearInterval (id);
 	  		for (k = 0; k < players.length; ++k) {
 				var player = players[k];
 				var p = (parseInt(player.getAttribute("position")) - myPosition + 4) % 4;
-				var cards = player.getElementsByTagName("hand")[0].childNodes[0].nodeValue.split(",");
-				
-				setPlayer (p, player.getAttribute("name"));
+				var cards = player.getElementsByTagName("hand")[0].childNodes[0].nodeValue.split(",");				
+				// Fill discarded cards
 				for (i = cards.length; i < 13; ++i) {
 					cards.unshift ("XX");
 				}
-				playerCards[p] = cards; 
-				if (p == 0) {
-					myCards=cards;
-			  	}
-				for (i = 0; i < cards.length; ++i) {
-					var idx = i*4 + p;
-					var l=getCardLocation (idx);		
-					var c=document.getElementById('scene'+idx);
-					raiseCard (idx, 99);
-					if (cards[i] != "XX") {
-						c.style.left = l.x + "vw";
-						c.style.top = l.y + "vh";
-						if (p == 0) {
-							setCardFace (idx, myCards[i]);
-							flipCard(idx);
-						}
-						else if (p == 1 || p == 3) {
-							rotateCard(idx);
-						}
-					} 
-					else {
-						c.style.left = center.x + "vw";
-						c.style.top = center.y + "vh";
-						rotateCard(idx);
-					}
-				}
+				playerCards[p] = cards;
+				setPlayer (p, player.getAttribute("name"));
+				setPlayerDisplayCards (p, cards);
 				var faceup = player.getElementsByTagName("faceup")[0].childNodes[0];
 				var c = faceup ? faceup.nodeValue : "NA";
-				if (c != ""  && c != "NA") {
-					var cards=c.split(",");
-					var count = cards.length;
-					for (i = 0; i < cards.length; ++i) {
-						var idx = p - i*4 + 48;
-						if (p == 0) {
-							for (j =0; j < myCards.length; ++j) {
-								if (myCards[j] == c) {
-									idx = j * 4;
-									break;
-								}
-							}
-						}
-						var pos = getCardLocation (idx);
-						setCardFace (idx, cards[i]);
-						switch (p) {
-							case 0: pos.y -= 4; break;
-							case 1: pos.x -= 4; break;
-							case 2: pos.y += 4; break;
-							case 3: pos.x += 4; break;
-						}
-						if (p != 0) {
-							flipCard (idx);
-						} 
-						var f=document.getElementById('scene'+idx);
-						f.style.left = pos.x + "vw";
-						f.style.top = pos.y + "vh";
-						playerCards[p][12-i] = cards[i]; 
-					}
-				}
+				setPlayerDisplayFaceup (p, c);
 				var played = player.getElementsByTagName("cardPlayed")[0].getAttribute("card");
-				if (played != "NA") {
-						var l = getPlayerLocation (p);
-						cards = playerCards[p];
-						for (i = 0; i < cards.length; ++i) {
-							if (cards[i] == "XX") {
-								idx = i * 4 + p;
-								break;
-							}
-						}
-						faceUpCard (idx);
-						setCardFace (idx, played);
-						moveCardEffect (idx, l.x+1, l.y+2.5);
-						discarded.push(idx);
-				}
-			}
+				setPlayerDisplayPlayed (p, played, false);
+	  		}
+	  		// We don't know where the points are from, so we need to do it after showing the played cards
+	  		for (k = 0; k < players.length; ++k) {
+				var player = players[k];
+				var p = (parseInt(player.getAttribute("position")) - myPosition + 4) % 4;
+				var points = player.getAttribute("points");
+				setPlayerDisplayPoints (p, points, -1);
+	  		}
 			gameState = "PlayerReady";
 		}
  	}
@@ -809,10 +812,10 @@ function raiseCard(i, index)
 	c.style.zIndex = index; 
 }
 
-function rotateCard(i)
+function rotateCard(i, is_rotated)
 {
 	var c = document.getElementById('scene'+i);
-	c.classList.add('rotated');
+	c.classList.toggle ('rotated', is_rotated);
 }
 
 function cleanCard (i) {
@@ -840,10 +843,10 @@ function enableCards (reason, allowed)
 	var cards=allowed.split(",");
 	
 	maskReason = reason;
-	for (i = 0; i < myCards.length; ++i) {
+	for (i = 0; i < playerCards[0].length; ++i) {
 		allowCard (i, false);
 		for (j = 0; j < cards.length; ++j) {
-			if (myCards[i] == cards[j]) {
+			if (playerCards[0][i] == cards[j]) {
 				allowCard(i, true);
 				break;
 			}
@@ -919,9 +922,7 @@ function mainLoop ()
 	}
 	else {
 		if (gameState != "Login") {
-			serverRequest ("/cardgame" +
-				 "?CardEvent=CardEventPlayerUpdate" + "&player="+ session.player+ "&code=" +
-					 session.code);
+			serverRequest ("CardEventPlayerUpdate", null);
 		}
 		checkServerIdle ();
 	}
@@ -930,12 +931,9 @@ function mainLoop ()
 function login (player, code) {
 	if (player != "" && code != "") {
 		disableLogin ()
-		serverRequest ("/cardgame" + 
-			"?CardEvent=CardEventPlayerRegister" +
-			"&player="+ player+
-			"&code=" + code);
 		session.player=player;
 		session.code=code;
+		serverRequest ("CardEventPlayerRegister", null);
 		setServerState ("LoginWait");
 		var timeout = setInterval(checkLogin, 1000);
 		var count = 0;
@@ -995,8 +993,14 @@ function restartClient (message) {
 	}
 }
 
-function serverRequest (theUrl)
+function serverRequest (event, cards)
 {
+	var theUrl = "/cardgame?" +
+		"CardEvent=" + event + 
+		"&player="+ session.player +
+		"&code=" +  session.code + 
+		(cards == null ? "" : ("&cards=" + cards));
+		
 	if (testThread == null) {
 	    var xhttp = new XMLHttpRequest();
 	    xhttp.onreadystatechange = function() {
@@ -1176,7 +1180,7 @@ function handleResponseText (text)
 		cleanup ();
 		var players = response.getElementsByTagName("player");
 		if (players) {
-			setPlayerDisplay (p, players);
+			setPlayerDisplay (players);
 		}
 		break;
 	default:
@@ -1254,15 +1258,14 @@ function testLoop ()
 		if (testStage == 0) {
 			testResponse = 
 				"<event name='CardEventPlayerReconnect'><message>Welcome back!</message>" +
-					"<player name='" + testUsers[0] + "' position='2' points=''><hand>XC,4D,5D,6D,7D,5H,XH,QS,4S</hand><faceup>XC</faceup><cardPlayed card='NA'/></player>" +
-					"<player name='" + testUsers[1] + "' position='3' points=''><hand>NA,NA,NA,NA,NA,NA,NA,NA</hand><faceup>JD</faceup><cardPlayed card='4C'/></player>" + 
-					"<player name='" + testUsers[2] + "' position='0' points=''><hand>NA,NA,NA,NA,NA,NA,NA,NA</hand><faceup>AH</faceup><cardPlayed card='2C'/></player>" +
+					"<player name='" + testUsers[0] + "' position='2' points='4H'><hand>XC,4D,5D,6D,7D,5H,XH,QS,4S</hand><faceup>XC</faceup><cardPlayed card='NA'/></player>" +
+					"<player name='" + testUsers[1] + "' position='3' points='9H'><hand>NA,NA,NA,NA,NA,NA,NA,NA</hand><faceup>JD</faceup><cardPlayed card='4C'/></player>" + 
+					"<player name='" + testUsers[2] + "' position='0' points='3H,5H'><hand>NA,NA,NA,NA,NA,NA,NA,NA</hand><faceup>AH</faceup><cardPlayed card='2C'/></player>" +
 					"<player name='" + testUsers[3] + "' position='1' points=''><hand>NA,NA,NA,NA,NA,NA,NA,NA</hand><faceup></faceup><cardPlayed card='3C'/></player>";
 			testResponse = testResponse + "</event>";
 		}
 		else if (testStage > 3) {
-			testState = "Test_Idle";
-			testStage = 5;
+			testState = "Test_EndHand";
 		}
 		++testStage;
 		break;
