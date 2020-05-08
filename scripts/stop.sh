@@ -1,6 +1,6 @@
 #!/bin/bash
 
-proc=`ps -aux | grep java | grep com.ialogic.games.cards.server.CardHttpServer|awk '{print $2}'`
+proc=`ps -aux | grep java | grep com.ialogic.games.cards.server.CardHttpServer| grep -v grep |  awk '{print $2}'`
 if [ "$proc" != "" ]
 then
 	echo "Killing process $proc"
