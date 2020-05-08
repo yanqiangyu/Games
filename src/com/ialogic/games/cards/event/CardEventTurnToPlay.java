@@ -6,7 +6,9 @@ import com.ialogic.games.cards.CardPlayer;
 
 public class CardEventTurnToPlay extends CardEvent {
 	CardGameRule rule;
-	
+	public CardEventTurnToPlay(String m) {
+		super(m);
+	}
 	public CardEventTurnToPlay(CardPlayer p) {
 		super("Turn to play");
 		setPlayer (p);

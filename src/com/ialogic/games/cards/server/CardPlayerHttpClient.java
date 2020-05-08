@@ -16,7 +16,7 @@ import com.ialogic.games.cards.event.CardEventTurnToPlay;
 public class CardPlayerHttpClient extends CardPlayer {
 	String code;
 	LinkedBlockingQueue<CardEvent> events = new LinkedBlockingQueue<CardEvent>();
-	CardEvent pendingInput = null;
+	private CardEvent pendingInput = null;
 	
 	public CardPlayerHttpClient (String name, String code) {
 		setName (name);
@@ -27,7 +27,8 @@ public class CardPlayerHttpClient extends CardPlayer {
 			if (request instanceof CardEventPlayerReconnect) {
 				events.clear();
 				addRequest (request);
-				if (pendingInput != null) {
+				CardEvent p = getPendingInput ();
+				if (p != null) {
 					addRequest (pendingInput);
 				}
 			}
@@ -36,13 +37,13 @@ public class CardPlayerHttpClient extends CardPlayer {
 				addRequest (request);
 			}
 			else if (request instanceof CardEventFaceUpResponse) {
-				pendingInput = null;
+				setPendingInput (null);
 				String cards = ((CardEventFaceUpResponse) request).getCards();
 				faceupCards (cards);
 				ui.playerEvent(request);
 			}
 			else if (request instanceof CardEventPlayerAction) {
-				pendingInput = null;
+				setPendingInput (null);
 				String card = ((CardEventPlayerAction) request).getCardPlayed();
 				playCard (card);
 				ui.playerEvent(request);
@@ -53,8 +54,9 @@ public class CardPlayerHttpClient extends CardPlayer {
 				addRequest (request);
 			}
 			else if (request instanceof CardEventTurnToPlay) {
-				ui.playerEvent(request);
-				pendingInput = request;
+				CardEventTurnToPlay masked = new CardEventTurnToPlay (request.getPlayer());
+				ui.playerEvent(masked);
+				setPendingInput (request);
 				addRequest (request);
 			}
 			else {
@@ -63,13 +65,19 @@ public class CardPlayerHttpClient extends CardPlayer {
 		}
 		else {
 			if (request instanceof CardEventFaceUp) {
-				pendingInput = request;
+				setPendingInput (request);
 			}
 			addRequest (request);
 		}
 	}
 	private void addRequest(CardEvent request) {
 		events.add(request);
+	}
+	private synchronized void setPendingInput (CardEvent e) {
+		pendingInput = e;
+	}
+	private synchronized CardEvent getPendingInput () {
+		return pendingInput;
 	}
 	public String getEventFromQueue() {
 		String response = 
