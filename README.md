@@ -1,4 +1,4 @@
-This is a HTML5/js/Jave Server project for a Multiplayer Hearts-like card game called Pig-Chase. (中文：拱猪).
+This is a HTML5/js/Java Server project for a multiplayer Hearts-like card game called Pig-Chase. (中文：拱猪).
 
 The game URL:
 		http://www.ialogic.com/
