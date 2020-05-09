@@ -76,13 +76,25 @@ td {
 	font-weight: bold;
 }
 
+.score_headline {
+	font-weight: bold;
+	font-size: 24px;
+	text-align: center;
+	padding: 20px;
+}
+
+.score_faceups {
+	width: 20px;
+	height: 28px;
+}
+
 .score_cards {
     color: red;
 	font-weight: bold;
-	width: 80px;
+	width: 50px;
 }
 
-.points {
+.score_points {
 	width: 20px;
 	height: 28px;
 }

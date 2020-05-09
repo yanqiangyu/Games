@@ -202,7 +202,7 @@ function promptServer (text)
 	c.style.display="block";
 }
 
-function score (players, lines)
+function score (players, lines, faceups)
 {
 	if (players && players.length > 0) {
 		for (i = 0; i < players.length; ++i) {
@@ -213,10 +213,10 @@ function score (players, lines)
 				var hearts = "";
 				for (c = 0; c < cards.length; ++c) {
 					if (cards[c].substring(1,2) != "H" || cards[c].substring(0,1) == "A") {
-						text += "<img class='points' src='image/cards/" + cards[c] + ".jpg'>";
+						text += "<img class='score_points' src='image/cards/" + cards[c] + ".jpg'>";
 					}
 					else {
-						hearts += cards[c].substring(0,1) + "&nbsp;";
+						hearts += cards[c].substring(0,1) + " ";
 					}
 				}
 				text += "<BR>" + hearts;
@@ -245,6 +245,15 @@ function score (players, lines)
 			document.getElementById("score_0_" + i).innerHTML=scores[1];
 			document.getElementById("score_1_" + i).innerHTML=scores[2];
 		}
+		document.getElementById("headline").innerHTML="Score Board - Hand " + (lines.length - 2);
+		var f = "";
+		if (faceups) {
+			var cards = faceups[0].childNodes[0].nodeValue.split(",");
+			for (i = 0; i < cards.length; ++i) {
+				f += "<img class='score_faceups' src='image/cards/" + cards[i] + ".jpg'>";
+			}
+		}
+		document.getElementById("faceups").innerHTML=f+"<BR>x&nbsp;2";
 	}
 }
 
@@ -1230,7 +1239,8 @@ function handleResponseText (text)
 	case "CardEventScoreBoard":
 		var players = response.getElementsByTagName("player");
 		var lines = response.getElementsByTagName("line");
-		score (players, lines);
+		var faceups = response.getElementsByTagName("faceup");
+		score (players, lines, faceups);
 		break;
 	case "CardEventPlayerReconnect":
 		gameState = "Reconnect";
@@ -1476,6 +1486,15 @@ function testLoop ()
 			for (i = 0; i < testScore.length; ++i) {
 				testResponse += "<line>" + testScore[i] + "</line>\n";
 			}
+			testResponse += "<faceup>";
+			var sep = ""
+			for (i = 0; i < testFaceups.length; ++i) {
+				if (testFaceups[i] != "") {
+					testResponse += sep + testFaceups[i];
+					sep = ",";
+				}
+			}
+			testResponse += "</faceup>";
 		testResponse = testResponse + "</event>";
 		testState = "Test_End";
 		break;
