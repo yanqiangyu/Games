@@ -116,7 +116,7 @@ public class PigChase extends CardGame {
 				deck.shuffle ();
 				ui.sendEvent (this, new CardEventShuffleEffect());
 				deck.deal (players);
-				testCases.add (Card.showCSList (Card.sort(players.get(0).getHand())));
+				testCases.add ("testHand = \"" + Card.showCSList (Card.sort(players.get(0).getHand())) + "\"");
 				for (CardPlayer p : getPlayers()) {
 					ui.sendEvent (this, new CardEventDealCards (p));
 				}
@@ -212,6 +212,8 @@ public class PigChase extends CardGame {
 				for (String s : teamScores) {
 					scoreHand.addLine(s);
 				}
+				scoreHand.setPoints (getPlayers());
+				scoreHand.setFaceups (faceUps);
 				ui.sendEvent(this, scoreHand);
 				while (!testCases.isEmpty()) {
 					String t = testCases.remove(0);
