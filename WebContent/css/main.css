@@ -34,7 +34,7 @@
     opacity: .75;
     margin: auto;
     right: 5vw;
-    bottom: 5vh;
+    bottom: 2vh;
 	padding: 10px 10px;
 	box-shadow: 5px 5px 5px black;
 	text-align: right;
@@ -62,6 +62,27 @@
 	position: absolute;
 	display: none;
 	opacity: .85;
+	z-Index: 200;
+}
+
+.help {
+    color: darkblue;
+    background-color: lightgray;
+    background-image: url('../image/score.jpg');
+    background-size: 100% 100%;
+    font-family: 'Caveat', cursive;;
+    font-size: 14px;
+    margin: auto;
+    left: 10vw;
+    top: 5vh;
+    width:  80vw;
+	height: 90vh;
+	padding: 100px, 10px;
+	box-shadow: 5px 5px 5px black;
+	text-align: left;
+	position: absolute;
+	display: none;
+	opacity: 1;
 	z-Index: 200;
 }
 
@@ -129,7 +150,22 @@
 	background-size: cover;
 	position: absolute;
 	left: 5vw;
-	bottom: 5vh;
+	bottom: 2vh;
+	width:  32px;
+	height: 32px;
+	display: block;
+	opacity: 1;
+	cursor: pointer;
+	z-Index: 300;
+}
+
+.info {
+	background-image: url('../image/help.png');
+	background-repeat: no-repeat;
+	background-size: cover;
+	position: absolute;
+	right: 5vw;
+	top: 10vh;
 	width:  32px;
 	height: 32px;
 	display: block;
