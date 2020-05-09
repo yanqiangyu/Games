@@ -448,16 +448,49 @@ function autoPlayCard ()
     function work () {
     	if (gameState == "PlayerTurnResponse" || gameState == "FaceUpResponse") {
    		  	clearInterval (id);
-		 	for (i = 0; i < selectMask.length; ++i) {
-				if (selectMask[i] == 1) {
-					toggleCardSelection (i*4);
-					break;
-				}
-			}
+   		  	if (gameState == "FaceUpResponse") {
+   		  		autoPlayerFaceup ();
+   		  	}
+   		  	else {
+   		  		autoPlayerTurn ();
+   		  	}
 			clickPlayer (0);
 			gameState = "PlayerReady";
     	}
     }
+}
+
+function autoPlayerTurn () {
+	var n = 0;
+	for (i = 0; i < selectMask.length; ++i) {
+		n += selectMask[i];
+	}
+	n = Math.floor (Math.random () * n);
+	for (i = 0; i < selectMask.length; ++i) {
+		n -= selectMask[i];
+		if (n < 0) {
+			break;
+		}
+	}
+	toggleCardSelection (i*4);
+}
+
+function autoPlayerFaceup () {
+	for (i = 0; i < selectMask.length; ++i) {
+		if (selectMask[i] == 1) {
+			var card = playerCards[0][i];
+			var suit = card.substring(1,2);
+			var n = 0;
+			for (j = 0; j < playerCards[0].length; ++j) {
+				if (playerCards[0][j].substring(1,2) == suit) {
+					++n;
+				}
+			}
+			if (n > 3) {
+				toggleCardSelection (i*4);
+			}
+		}
+	}
 }
 
 function playCard (position, card) {
@@ -544,11 +577,9 @@ function setPlayerDisplayFaceup (p, c) {
 			}
 			if (p != 0) {
 				flipCard (idx);
+				playerCards[p][12-i] = cards[i];
 			} 
 			moveCardEffect (idx, pos.x, pos.y)
-			if (p != 0) {
-				playerCards[p][12-i] = cards[i];
-			}
 		}
 	}
 }
