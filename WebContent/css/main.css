@@ -65,6 +65,28 @@
 	z-Index: 200;
 }
 
+table{
+	margin-left: 5%; 
+    width: 90%;
+	border-collapse: collapse; /* Remove cell spacing */
+}
+
+td {
+	padding: 0;
+	font-weight: bold;
+}
+
+.score_cards {
+    color: red;
+	font-weight: bold;
+	width: 80px;
+}
+
+.points {
+	width: 20px;
+	height: 28px;
+}
+
 .help {
     color: darkblue;
     background-color: lightgray;
@@ -280,7 +302,6 @@ input[type=text], select {
 
 input[type=button] {
   width: 100%;
-  padding: 20px 20px;
   margin: 8px 0;
   display: inline-block;
   border: 1px solid #ccc;
@@ -304,6 +325,7 @@ input[type=button]:hover {
     background-color: #00B200; box-shadow: 0 0 3px #00B200;
 	animation: glowing 1500ms 1;
 }
+
 
 @keyframes ticking {
   0% { box-shadow: 0 0 1px #00B200; }

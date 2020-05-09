@@ -202,8 +202,31 @@ function promptServer (text)
 	c.style.display="block";
 }
 
-function score (lines)
+function score (players, lines)
 {
+	if (players && players.length > 0) {
+		for (i = 0; i < players.length; ++i) {
+			var points = players[i].getAttribute("points");
+			if (points && points != "") {
+				var cards = points.split(",");
+				var text = "";
+				var hearts = "";
+				for (c = 0; c < cards.length; ++c) {
+					if (cards[c].substring(1,2) != "H" || cards[c].substring(0,1) == "A") {
+						text += "<img class='points' src='image/cards/" + cards[c] + ".jpg'>";
+					}
+					else {
+						hearts += cards[c].substring(0,1) + "&nbsp;";
+					}
+				}
+				text += "<BR>" + hearts;
+				document.getElementById("cards_" + i).innerHTML=text;
+			}
+			else {
+				document.getElementById("cards_" + i).innerHTML="&nbsp;";			
+			}
+		}
+	}
 	if (lines && lines.length > 2) {
 		document.getElementById("score").style.display="block";
 		var names = lines[0].childNodes[0].nodeValue.split(",");
@@ -215,8 +238,8 @@ function score (lines)
 			document.getElementById("score_" + i).innerHTML=scores[i];
 		}
 		// We only have 10 line display
-		var start = lines.length > 12 ? lines.length - 10 : 2;
-		for (i = 0; i < lines.length-2; ++i) {
+		var start = lines.length > 17 ? lines.length - 15 : 2;
+		for (i = 0; i < lines.length - start; ++i) {
 			scores = lines[i + start].childNodes[0].nodeValue.split(",");
 			document.getElementById("hand_" + i).innerHTML=scores[0];
 			document.getElementById("score_0_" + i).innerHTML=scores[1];
@@ -596,7 +619,7 @@ function setPlayerDisplayPlayed (p, played, normal) {
 			for (i = cards.length - 1; i >=0;  --i) {
 				if (cards[i] == "NA" || cards[i] == played) {
 					idx = i * 4 + p;
-					playerCards[p][i] = "XD";
+					playerCards[p][i] = "XX";
 					break;
 				}
 			}
@@ -606,7 +629,7 @@ function setPlayerDisplayPlayed (p, played, normal) {
 			for (i = 0; i < cards.length; ++i) {
 				if (cards[i] == "XX") {
 					idx = i * 4 + p;
-					playerCards[p][i] = "XD";
+					playerCards[p][i] = "XK";
 					break;
 				}
 			}
@@ -624,11 +647,12 @@ function setPlayerDisplayPoints (p, points, discard) {
 		var cards = points.split(",");
 		for (i = 0; i < cards.length; ++i) {
 			if (discard < 0) {
+				// Recovery from discarded
 				for (idx = 0; idx < 52; ++idx) {
 					var pp = idx % 4;
 					var pc = Math.floor(idx / 4);
 					if (playerCards[pp][pc] == "XX") {
-						playerCards[pp][pc] = "XD";
+						playerCards[pp][pc] = "XK";
 						break;
 					}
 				}
@@ -1204,8 +1228,9 @@ function handleResponseText (text)
 		gameState = "PlayerReady";
 		break;
 	case "CardEventScoreBoard":
+		var players = response.getElementsByTagName("player");
 		var lines = response.getElementsByTagName("line");
-		score (lines);
+		score (players, lines);
 		break;
 	case "CardEventPlayerReconnect":
 		gameState = "Reconnect";
@@ -1264,10 +1289,17 @@ var testGame = [
 ];
 var testScore = [
 	"Steve,Ying,Chris,Tiff",
-	"-780,0,90,0",
-	"1,-440,-600",
-	"2,-390,-750",
-	"3,-1080,-750"
+	"180,0,-1120,0",
+	"1,-480,-160",
+	"2,-840,-380",
+	"3,-1780,-380"
+]
+
+var testPoints = [
+	"2H,3H,9H,XH,JD,4H",
+	"",
+	"QS,KH,8H,XC,AH,5H,6H,7H,QH,JH",
+	""
 ]
 
 function testLoop () 
@@ -1436,9 +1468,13 @@ function testLoop ()
 		testStage = 0;
 		testResponse=
 			"<event name='CardEventScoreBoard'>" +
-			"<message>Score for Test Hand</message>";
+			"<message>Score for Test Hand</message>\n";
+			for (i = 0; i < testPoints.length; ++i) {
+				testResponse += "<player name='" + testUsers[i] + 
+					"' points='" + testPoints[i] + "' />\n";
+			}
 			for (i = 0; i < testScore.length; ++i) {
-				testResponse += "<line>" + testScore[i] + "</line>";
+				testResponse += "<line>" + testScore[i] + "</line>\n";
 			}
 		testResponse = testResponse + "</event>";
 		testState = "Test_End";
