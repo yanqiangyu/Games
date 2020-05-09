@@ -12,10 +12,10 @@ public class CardEventScoreBoard extends CardEvent {
 		text.add(ps);
 	}
 	public String getXMLString() {
-		String response = String.format("<event name='%s'><message>%s</message>",
+		String response = String.format("<event name='%s'><message>%s</message>\n",
 				this.getClass().getSimpleName(), getMessage());
 		for (String line : text) {
-			response +=String.format ("<line>%s</line>", line);
+			response +=String.format ("<line>%s</line>\n", line);
 		}
 		response += "</event>";
 		return response;

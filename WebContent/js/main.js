@@ -214,8 +214,10 @@ function score (lines)
 		for (i = 0; i < 4; ++i) {
 			document.getElementById("score_" + i).innerHTML=scores[i];
 		}
+		// We only have 10 line display
+		var start = lines.length > 12 ? lines.length - 10 : 2;
 		for (i = 0; i < lines.length-2; ++i) {
-			scores = lines[i+2].childNodes[0].nodeValue.split(",");
+			scores = lines[i + start].childNodes[0].nodeValue.split(",");
 			document.getElementById("hand_" + i).innerHTML=scores[0];
 			document.getElementById("score_0_" + i).innerHTML=scores[1];
 			document.getElementById("score_1_" + i).innerHTML=scores[2];
@@ -561,7 +563,7 @@ function setPlayerDisplayFaceup (p, c) {
 			var idx = p - i*4 + 48;
 			if (p == 0) {
 				for (j =0; j < playerCards[0].length; ++j) {
-					if (playerCards[0][j] == c) {
+					if (playerCards[0][j] == cards[i]) {
 						idx = j * 4;
 						break;
 					}
