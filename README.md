@@ -3,12 +3,12 @@ This is a HTML5/js/Java Server project for a multiplayer Hearts-like card game c
 The game URL:
 		http://www.ialogic.com/
 
-	Enter you name and code "new" to start a new game and share the 4 digit code on screen with your
-	friends over video chat or conference call.
+	Enter your name and the code "new" to start a new game and share the 4 digit code on screen with 
+	your friends over video chat or conference call.
 	
 	Click on the blue automplay icon to see an interactive demo and check your browser compatibility. 
-	Latest versions of Chrome, Safari and Firefox should work fine on all devices. 
-	I personally don't like MS IE or MS edge. 
+	Latest versions of Chrome, Safari and Firefox should work fine on all devices. I personally don't 
+	like MS IE or MS edge, but I did test edge and it works fine.
 	
 	Stay calm and have fun!
 
@@ -32,6 +32,8 @@ To run your own game server:
 
 
 Development Log:
+
+05/08/2020	Reorganized the code and added a help screen. Multi-room next.
 
 05/07/2020      Allow state recovery for disconnected players. Clean up client side code.
 
