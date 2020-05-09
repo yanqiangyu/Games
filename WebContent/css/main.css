@@ -25,21 +25,27 @@
 }
 
 .server {
-    color: lightgreen;
-    background-color: lightgray;
-    background-image: url('../image/table.jpg');
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 10px;
-    margin: auto;
-	padding: 10px 10px;
-	text-align: right;
+    background-image: url('../image/amber.png');
+	background-repeat: no-repeat;
+    background-size: 100% 100%;
 	position: absolute;
+	width: 32px;
+	height: 32px;
     right: 32px;
     bottom: 16px;
 	display: none;
 	opacity: .75;
 	z-Index: 200;
 }
+
+.server_connected {
+    background-image: url('../image/green.png');
+}
+
+.server_offline {
+    background-image: url('../image/red.png');
+}
+
 
 .score {
     color: darkblue;

@@ -198,8 +198,9 @@ function prompt (text)
 function promptServer (text)
 {
 	var c=document.getElementById("server");
-	c.innerHTML=text;
 	c.style.display="block";
+	c.classList.toggle ("server_connected", text == "Connected");
+	c.classList.toggle ("server_offline", text == "Offline");
 }
 
 function score (players, lines, faceups)
@@ -974,7 +975,7 @@ function flashPlayer (p, on)
 // JASON and other POJO protocols can be easily adapted to
 // *******************************************************************************
 var session = {player: "", code: "",};
-var serverState="Disconnected";
+var serverState="Offline";
 var eventQueue=[];
 
 function serverDebug (s) {
