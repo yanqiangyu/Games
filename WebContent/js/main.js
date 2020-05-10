@@ -61,7 +61,7 @@ var carddeck=[
 // Changing the names requires change in index.html.
 // *******************************************************************************
 var idleThread;
-var pollingInterval = 1000;
+var pollingInterval = 500;
 function sendLogin()
 {
 	var player=document.getElementById("player").value;
@@ -248,7 +248,7 @@ function score (players, lines, faceups)
 		}
 		document.getElementById("headline").innerHTML="Score Board - Hand " + (lines.length - 2);
 		var f = "";
-		if (faceups) {
+		if (faceups && faceups[0].childNodes[0]) {
 			var cards = faceups[0].childNodes[0].nodeValue.split(",");
 			for (i = 0; i < cards.length; ++i) {
 				f += "<img class='score_faceups' src='image/cards/" + cards[i] + ".jpg'>";
@@ -674,13 +674,9 @@ function setPlayerDisplayPoints (p, points, discard) {
 			setCardFace (idx, cards[i]);
 			faceUpCard (idx);
 			rotateCard(idx, (p%2==1));
-			var d = ((playerPoints[p].length - 1) % 13) * 4 + p;
-			var m = (playerPoints[p].length < 14 ? 1 : 2);
-			var dx = (p == 0 || p == 2) ? (p == 0 ? -2 : 0)  : ((p == 1) ? 2 : -2);
-			var dy = (p == 1 || p == 3) ? 0 : ((p == 0) ? 6 : -5);
-			var l = getCardLocation (d);
-			raiseCard (idx, 100 + d);
-			moveCardEffect (idx,  l.x + dx * m, l.y + dy * m);
+			raiseCard (idx, 100+playerPoints[p].length);
+			l = getPointCardLocation (idx, p);
+			moveCardEffect (idx, l.x, l.y);
 		} 
 	}
 }
@@ -721,59 +717,48 @@ function setPlayerDisplay (players) {
 }
 
 // *******************************************************************************
-// Animation Module based on CSS
+// Location calculations
+// Player, Card, Point Cards after a round
 // *******************************************************************************
-function getPlayerLocation (player) {
+function getPlayerLocation (p) {
   // Center card position for each player;
   var l = {x: 0, y: 0,};
+    var dx = (p == 0 || p == 2) ? 0  : ((p == 1) ? 15 : -15);
+  var dy = (p == 1 || p == 3) ? 0  : ((p == 0) ? 15 : -15);
+
+  l.x = center.x + dx - 1;
+  l.y = center.y + dy;
   
-  if (player == 0) {
-	  l.x = 42;
-	  l.y = 60;
-  }
-  else if (player == 1) {
-	  l.x = 59;
-	  l.y = 42;
-  }
-  else if (player == 2) {
-	  l.x = 42;
-	  l.y = 23;
-  }
-  else  {
-	  l.x = 25;
-	  l.y = 42;
-  }
   return l;
 }
 
 function getCardLocation (i)
 {
-  var player = i%4;
-  var n = Math.floor(i/4);
-  var x=0;
-  var y=0;
-  var location = {x: 0, y: 0, p:0,};
+  var l = {x: 0, y: 0, p:0,};
+  var p = i%4;
+  var n = Math.floor (i/4); 
+  var dx = (p == 0 || p == 2) ? (p == 0 ? 0 : 3)  : ((p == 1) ? 10 : -10);
+  var dy = (p == 1 || p == 3) ? (p == 1 ? 0 : 2)  : ((p == 0) ? 10 : -10);
   
-  if (player == 0) {
-	  x = n*4 + 20;
-	  y = 70;
-  }
-  else if (player == 1) {
-	  x = 75;
-	  y = 55 - n*2;
-  }
-  else if (player == 2) {
-	  x = 69 - n*4;
-	  y = 10;
-  }
-  else if (player == 3) {
-	  x = 10;
-	  y = n*2 + 30;
-  }
-  location.x = x;
-  location.y = y;
-  location.p = player;
-  return location;
+  l.p = p;
+  l.x = ((p == 0 || p == 2) ? (p == 0 ? n*4 : 48-n*4) : (p == 1 ? 48 : 0)) + dx + center.x - 24;
+  l.y = ((p == 1 || p == 3) ? (p == 3 ? n*4 : 48-n*4) : (p == 0 ? 48 : 0)) + dy + center.y - 24;
+  
+  return l;
+}
+
+function getPointCardLocation (i, p)
+{
+	var d = ((playerPoints[p].length - 1) % 13) * 4 + p;
+	var l = getCardLocation (d);
+	var m = (playerPoints[p].length < 14 ? 1 : 1.5);
+	var dx = (p == 0 || p == 2) ? (p == 0 ? -2 : 2)  : ((p == 1) ? 5 : -5);
+	var dy = (p == 1 || p == 3) ? (p == 1 ? 2 : -2)  : ((p == 0) ? 5 : -5);
+	
+	l.x += dx * m;
+	l.y += dy * m;
+	
+	return l;
 }
 
 //=========================================================
@@ -824,18 +809,18 @@ function randomMove ()
 	animationPlaying = true;
 	var count = 0;
 	for (i=0; i<52; ++i) {
-		var x = carddeck[i].x + (Math.random() - 0.5) * 30;
-		var y = carddeck[i].y + (Math.random() - 0.5) * 30;
+		var x = carddeck[i].x + (Math.random() - 0.5) * 10;
+		var y = carddeck[i].y + (Math.random() - 0.5) * 10;
 		
-		if (x > 90) x = 180 - x;
-		if (y > 90) y = 180 - y;
-		if (x < 10) x = 10 - x;
-		if (y < 10) y = 10 - y;
+		if (x > 80) x = 160 - x;
+		if (y > 80) y = 160 - y;
+		if (x < 30) x = 30 - x;
+		if (y < 30) y = 30 - y;
 		carddeck[i].x = x;
 		carddeck[i].y = y;
-		moveCardEffect (i, carddeck[i].x, carddeck[i].y, loopback, 100, 25, true);
+		moveCardEffect (i, carddeck[i].x, carddeck[i].y, loop, 100, 25, true);
 	}
-	function loopback () {
+	function loop () {
 		count ++;
 		if (count == 52 && gameState == "Idle") {
 			randomMove ();
@@ -934,8 +919,8 @@ function allowCard (i, is_allowed)
 //=========================================
 function toggleCardSelection (i) 
 {
-	var location=getCardLocation (i);
-	if (location.p == 0 ) {
+	var l=getCardLocation (i);
+	if (l.p == 0 ) {
 		var c=document.getElementById('scene'+i);
 	    var cy=parseFloat(c.style.top, 10);
 	    var idx=Math.floor(i/4);
@@ -1328,7 +1313,7 @@ function testLoop ()
 			"<player name='" + testUsers[0] + "' position='2'/>" +
 			"<status>OK</status>" +
 			"</event>";
-		testState = "Test_Reconnect";
+		testState = "Test_Idle";
 		break;
 	case "Test_Reconnect":
 		if (testStage == 0) {
