@@ -613,6 +613,7 @@ function setPlayerDisplayFaceup (p, c) {
 			if (p != 0) {
 				flipCard (idx);
 				playerCards[p][12-i] = cards[i];
+				raiseCard (idx, 80+i);
 			} 
 			moveCardEffect (idx, pos.x, pos.y)
 		}

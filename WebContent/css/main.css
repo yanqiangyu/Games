@@ -237,10 +237,8 @@ h3.ex1 {
   background-size: 100% 100%;
   background-color: #004C00;
   position: absolute;
-  top: 10%;
-  bottom: 10%;
+  top: 20%;
   left: 20%;
-  right: 10%;
   height: 350px;
   width: 250px;
   opacity: 0;
@@ -257,11 +255,9 @@ h3.ex1 {
   font-family: Arial, Helvetica, sans-serif;
   font-size: 24px;
   position: absolute;
-  top: 50%;
-  left: 50%;
-  -webkit-transform: translate(-50%, -50%);
-  -ms-transform: translate(-50%, -50%);
-  transform: translate(-50%, -50%);
+  margin-top: 45%;
+  margin-left: 25%;
+  margin-right: 25%;
   text-align: center;
 }
 
@@ -309,26 +305,25 @@ h3.ex1 {
 }
 
 input[type=text], select {
-  width: 100%;
-  padding: 12px 20px;
-  margin: 8px 0;
+  width: 85%;
+  margin: 8px 8px;
   display: inline-block;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 24px;
   border: 1px solid #ccc;
   border-radius: 4px;
   box-sizing: border-box;
 }
 
 input[type=button] {
-  width: 100%;
-  margin: 8px 0;
+  margin: 0 0;
   display: inline-block;
+  width: 100%;
   border: 1px solid #ccc;
   border-radius: 4px;
   box-sizing: border-box;
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 24px;
-  border-radius: 10px;
-  border: none;
+  font-size: 32px;
   color: #FFFFFF;
   animation: glowing 1500ms infinite;
   cursor: pointer;
@@ -338,12 +333,6 @@ input[type=button] {
   text-align: center;
   text-decoration: none;
 }
-
-input[type=button]:hover {
-    background-color: #00B200; box-shadow: 0 0 3px #00B200;
-	animation: glowing 1500ms 1;
-}
-
 
 @keyframes ticking {
   0% { box-shadow: 0 0 1px #00B200; }
