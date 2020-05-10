@@ -20,6 +20,9 @@ public class CardEventPlayerAction extends CardEvent {
 	}
 	public void setFieldValues(HashMap<String, String> request) {
 		cardPlayed = request.get("cards");
+		setMessage (String.format("Player '%s' played '%s'", 
+				getPlayer().getName(),
+				cardPlayed));
 	}
 	public String getXMLString() {
 		String response = String.format("<event name='%s'><message>%s</message><player name='%s'/>"+

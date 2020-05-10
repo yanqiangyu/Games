@@ -22,6 +22,9 @@ public class CardPlayerHttpClient extends CardPlayer {
 		setName (name);
 		this.code = code;
 	}
+	public String getCode() {
+		return code;
+	}
 	public void handleEvent(CardUI ui, CardEvent request) {
 		if (request.getPlayer() == this) {
 			if (request instanceof CardEventPlayerReconnect) {
@@ -87,7 +90,7 @@ public class CardPlayerHttpClient extends CardPlayer {
 		if (!events.isEmpty()) {
 			CardEvent e= events.poll ();
 			response = e.getXMLString (); 
-			System.out.println ("Sent to:[" + getName() + "]" + response);
+			System.out.println ("Sent to: " + code + " [" + getName() + "]" + response);
 		}
 		return response;
 	}

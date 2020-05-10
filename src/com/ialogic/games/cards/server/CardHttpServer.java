@@ -9,12 +9,9 @@ import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
-
 import com.ialogic.games.cards.CardGame;
 import com.ialogic.games.cards.CardPlayer;
 import com.ialogic.games.cards.CardUI;
-import com.ialogic.games.cards.PigChase;
 import com.ialogic.games.cards.event.CardEvent;
 import com.ialogic.games.cards.event.CardEventFaceUpResponse;
 import com.ialogic.games.cards.event.CardEventGameOver;
@@ -29,15 +26,8 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
 public class CardHttpServer implements CardUI {
-//============================================================================================
-// TODO use code to organize them to rooms;
 	static CardHttpServer instance = null;
     HttpServer server;
-	CardGame game=null;
-	String code;
-	Queue<CardEvent>events = new LinkedBlockingQueue<CardEvent> ();
-	HashMap<String, CardPlayer> sessions = new HashMap<String, CardPlayer> ();
-//============================================================================================
 	public CardHttpServer (final int port){
 		if (instance == null) {
 			try {
@@ -46,7 +36,7 @@ public class CardHttpServer implements CardUI {
 				HttpContext context = server.createContext("/");
 				context.setHandler(CardHttpServer::handleRequest);
 				server.start();
-				System.out.println(String.format ("Game Server on %d Started.", port));
+				log ("SERVER: HTTP Server on %d Started.", port);
 				
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -81,20 +71,17 @@ public class CardHttpServer implements CardUI {
 			Class[] paramType = {String.class};
 			CardEvent e = (CardEvent) Class.forName(clz).getConstructor(paramType).newInstance(eventName);
 			if (!(e instanceof CardEventPlayerUpdate)) {
-				System.out.println(String.format("DEBUG: %s Event from player %s.", clz, player));
+				log ("SERVER: %s %s Event from player %s.", clientCode, clz, player);
 			}
 			if (e instanceof CardEventPlayerRegister) {
+				int pos = 0;
 				String status = "OK";
 				String m = "";
-				int pos = 0;
+				GameRoom room = GameRoom.getRoom(clientCode);
 				
-				if (clientCode.contentEquals("NEW") || game == null || game.isGameOver()) {
-					if (game != null) {
-						game.handleEvent(new CardEventGameOver());
-					}
-					sessions.clear();
-					events.clear();
-					game = new PigChase ();
+				if (clientCode.contentEquals("NEW")) {
+					room = GameRoom.createGameRoom ();
+					CardGame game = room.getGame();
 					game.setUi(this);
 					new Thread () {
 						public void run () {
@@ -102,34 +89,41 @@ public class CardHttpServer implements CardUI {
 						}
 					}.start();
 					synchronized (game) {
-						System.out.println ("DEBUG: Waiting for game to request player");
+						log ("SERVER: %s Waiting for game to request player", room.getCode());
 						game.wait();
 					}
-					code = String.format("%04d", (int) (Math.random() * 10000));
-					m = String.format ("New Game Started, use code %s to join.", code);
-					System.out.println (m);
+					m = String.format ("New Game Started, use code %s to join.", room.getCode());
+					log ("SERVER: " + m);
 				}
-				else if (clientCode.contentEquals(code) && game != null && game.getPlayers().size() < 4 ){
-					m = String.format ("Joining with code:", code);
+				else if (room != null && room.getSessions().containsKey(player)) {
+					m = String.format ("Rejoining with code: %s", clientCode);
 					status = "OK";
 				}
-				else if (clientCode.contentEquals(code) && sessions.containsKey(player)){
-					m = String.format ("Rejoining with code:", code);
-					status = "OK";
-				}
-				else if (game != null && game.getPlayers().size() == 4) {
-					m = "Game in progress, please wait or use 'new' to interrupt.";
-					status = "REJECT";
+				else if (room != null) {
+					CardGame game = room.getGame();
+					if (!game.isGameOver() && game.getPlayers().size() < 4 ) {
+						m = String.format ("Joining with code %s:", clientCode);
+						status = "OK";
+					}
+					else if (!game.isGameOver()) {
+						m = "Game in progress, please use 'new' to a start new game.";
+						status = "REJECT";
+					}
+					else {
+						m = "The game is over, please use 'new' to start a new game.";
+						status = "REJECT";
+					}
 				}
 				else {
-					m = "Invalid Request";
+					m = String.format ("Code %s is not valid, please use 'new' to join.", clientCode);
 					status = "REJECT";
 				}
-				if (status.contentEquals("OK")) {
+				if (status.contentEquals("OK") && room != null) {
+					HashMap<String, CardPlayer> sessions = room.getSessions();
 					CardPlayerHttpClient c = (CardPlayerHttpClient) sessions.get(player);
 					m = "Wecome back!";
 					if (c == null) {
-						c = new CardPlayerHttpClient (player, code);
+						c = new CardPlayerHttpClient (player, room.getCode());
 						synchronized (sessions) {
 							c.setPosition (sessions.size());
 							sessions.put(player, c);
@@ -147,12 +141,12 @@ public class CardHttpServer implements CardUI {
 					pos = c.getPosition();
 				}
 				response = String.format("<event name='CardEventLoginAck'><status>%s</status>" + 
-						"<player name='%s' position='%d'/>" +
-						"<message>%s, %s!</message></event>", status, player, pos, player, m);
-				System.out.println("DEBUG:" + response);
+						"<player name='%s' code='%s' position='%d'/>" +
+						"<message>%s, %s!</message></event>", status, player, (room == null ? "" : room.getCode()), pos, player, m);
+				log ("SERVER:" + response);
 			}
-			else if (sessions.containsKey(player)) {
-				CardPlayer c = sessions.get(player);
+			else if (GameRoom.getRoom(clientCode) != null && GameRoom.getRoom(clientCode).getSessions().containsKey(player)) {
+				CardPlayer c = GameRoom.getRoom(clientCode).getSessions().get(player);
 				e.setPlayer(c);
 				if (e instanceof CardEventPlayerUpdate) {
 					response = ((CardPlayerHttpClient)c).getEventFromQueue ();
@@ -163,6 +157,9 @@ public class CardHttpServer implements CardUI {
 					response = "<event name='CardEventPlayerAck'><status>OK</status>" + 
 							"<message>Action Received</message></event>";
 				}
+			}
+			else {
+				log ("SERVER: Exception - "  + query);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -188,59 +185,66 @@ public class CardHttpServer implements CardUI {
 		}
 		return nvPairs;
 	}
+	private void log(String format, Object...args) {
+		System.out.println (String.format(format, args));
+	}
 	public void showText(String text) {
-		System.out.println ("DEBUG: " + text);
+		log ("Game Text: " + text);
 	}
 	public void open(CardGame cardGame) {
-		game = cardGame;
-		addEvent(new CardEventGameStart ());
-		System.out.println(String.format ("Game %s Started.", cardGame.getName()));
-		showText ("Welcome to a game of \"" + cardGame.getName() + "\"!");
+		GameRoom room = GameRoom.findRoom (cardGame);
+		addEvent(room, new CardEventGameStart ());
+		log ("SERVER: Game %s %s Started.", cardGame.getName(), room.getCode());
 	}
-
 	public void close(CardGame cardGame) {
-		showText ("Good bye!");
-		System.out.println(String.format ("Game %s Stopped.", cardGame.getName()));
+		GameRoom room = GameRoom.findRoom (cardGame);
+		// GameRoom.closeRoom (room.getCode());
+		log ("SERVER: Game %s %s Stopped.", cardGame.getName(), room.getCode());
 	}
 
 	public void sendEvent(CardGame cardGame, CardEvent request) {
+		GameRoom room = GameRoom.findRoom(cardGame);
 		if (request instanceof CardEventWaitForPlayers) {
-			synchronized (game) {
-				game.notifyAll();
+			synchronized (room.getGame()) {
+				room.getGame().notifyAll();
 			}
 			return;
 		}
 		if (request instanceof CardEventGameOver) {
-			addEvent(request);
+			addEvent(room, request);
 		}
 		if (request.getPlayer() != null) {
-			System.out.println(String.format ("Debug: %s - %s", request.getMessage(), request.getPlayer().getName()));
+			log ("Send: %s %s - %s", room.getCode(), request.getMessage(), request.getPlayer().getName());
 			CardPlayer p = request.getPlayer();
 			p.handleEvent (this, request);
 		}
 		else {
-			System.out.println(String.format ("Debug: %s", request.getMessage()));
+			log ("Send: %s %s", room.getCode(), request.getMessage());
 			for (CardPlayer p : cardGame.getPlayers()) {
 				p.handleEvent (this, request);
 			}
 		}
 	}
 	public void playerEvent(CardEvent request) {
-		addEvent (request);
-		for (CardPlayer c : sessions.values()) {
+		String code = ((CardPlayerHttpClient) request.getPlayer()).getCode();
+		GameRoom room = GameRoom.getRoom(code);
+		addEvent (room, request);
+		for (CardPlayer c : room.getSessions().values()) {
 			if (c != request.getPlayer()) {
 				c.handleEvent(this, request);
 			}
 		}
-		System.out.println(String.format ("Debug: Player Event - %s", request.getXMLString()));
+		log ("Recv: %s Player Event - %s", room.getCode(), request.getXMLString());
 	}
 	public CardEvent getEvent(CardGame cardGame) {
+		GameRoom room = GameRoom.findRoom (cardGame);
+		Queue<CardEvent>events = room.getEvents();
 		synchronized (events) {
 			if (events.isEmpty()) {
 				try {
 					events.wait();
 				} catch (InterruptedException e1) {
-					showText ("Interrupted");
+					log ("SERVER: Game %s Interrupted", room.getCode());
 					return new CardEventGameOver ();
 				}
 			}
@@ -248,7 +252,8 @@ public class CardHttpServer implements CardUI {
 			return e;
 		}
 	}
-	private void addEvent(CardEvent e) {
+	private void addEvent(GameRoom room, CardEvent e) {
+		Queue<CardEvent>events = room.getEvents();
 		synchronized (events) {
 			events.add(e);
 			events.notifyAll();

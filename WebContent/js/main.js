@@ -1164,6 +1164,7 @@ function handleResponseText (text)
 		var status = response.getElementsByTagName("status")[0].childNodes[0].nodeValue;
 		if (status == "OK") {
 			myPosition = parseInt(player.getAttribute("position"));
+			session.code = parseInt(player.getAttribute("code"));
 			startGame ();
 		}
 		else {
