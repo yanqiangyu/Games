@@ -33,6 +33,9 @@ To run your own game server:
 
 Development Log:
 
+05/09/2020	Cleaned up layout calculations and layout points clear. Thanks to everyone who played
+		the game and provided feedback.
+
 05/08/2020	Reorganized the code and added a help screen. Multi-room next.
 
 05/07/2020      Allow state recovery for disconnected players. Clean up client side code.
