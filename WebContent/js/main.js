@@ -1239,6 +1239,12 @@ function handleResponseText (text)
 			setPlayerDisplay (players);
 		}
 		break;
+	case "CardEventGameOver":
+		gameState = "GameOver";
+		prompt ("Game Over");
+		cleanup ();
+		clearinterval(idleThread);
+		break;
 	default:
 		prompt (message);
 	}
