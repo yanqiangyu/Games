@@ -68,7 +68,11 @@ public class CardHttpServer implements CardUI {
 				  exchange.sendResponseHeaders(200, file.length());
 				  FileInputStream fs = new FileInputStream (file);
 				  OutputStream os = exchange.getResponseBody();
-				  os.write(fs.readAllBytes());
+				  byte buffer[] = new byte[65536];
+				  while (fs.available() > 0) {
+					  int len = fs.read(buffer);
+					  os.write(buffer, 0, len);
+				  }
 				  os.close();
 				  fs.close();
 	    	  }
