@@ -22,18 +22,20 @@ intelligent game play. To test this without the time consuming human UI, run thi
 
 To run your own game server:
 
-	1. Serve WebContent (index.html, js, cs, image) using Apache or any simple HTTP server
-	
-	2. Start java server listening on your server port 8001
+	1. Start java server listening on your server port 8001, make sure ./WebContext is in the working directory
 	
 		com.ialogic.games.cards.server.CardHttpServer
 	
-	3. Redirect relative url "/cardgame" to your appserverhost:8001 (using Apache 2 Virtual host)
+	2. Use http://myhost:8001 to play
+	
+	3. Open your firewall to allow your friends to join or host it on a cloud server
 
 
 Development Log:
 
-05/09/2020	Cleaned up layout calculations and layout points clear. Thanks to everyone who played
+05/11/2020	Reorganized client side code and finished standalone server so you don't need Apache. Thanks Chris!
+
+05/09/2020	Cleaned up layout calculations and improved points display. Thanks to everyone who played
 		the game and provided feedback.
 
 05/08/2020	Reorganized the code and added a help screen. Multi-room next.
