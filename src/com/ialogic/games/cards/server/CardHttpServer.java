@@ -44,7 +44,6 @@ public class CardHttpServer implements CardUI {
 		}
 	}
 	private static void handleRequest(HttpExchange exchange) throws IOException {
-		  // printRequestInfo (exchange);
 	      URI requestURI = exchange.getRequestURI();
 		  String response = "Invalid URI";
 	      String path = requestURI.getPath();
