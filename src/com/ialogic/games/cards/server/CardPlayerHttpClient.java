@@ -75,6 +75,7 @@ public class CardPlayerHttpClient extends CardPlayer {
 	}
 	private void addRequest(CardEvent request) {
 		events.add(request);
+		// TODO: post request localhost:6000
 	}
 	private synchronized void setPendingInput (CardEvent e) {
 		pendingInput = e;
