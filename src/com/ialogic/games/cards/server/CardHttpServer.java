@@ -11,6 +11,9 @@ import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Queue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import com.ialogic.games.cards.CardGame;
 import com.ialogic.games.cards.CardPlayer;
 import com.ialogic.games.cards.CardUI;
@@ -18,6 +21,7 @@ import com.ialogic.games.cards.event.CardEvent;
 import com.ialogic.games.cards.event.CardEventFaceUpResponse;
 import com.ialogic.games.cards.event.CardEventGameOver;
 import com.ialogic.games.cards.event.CardEventGameStart;
+import com.ialogic.games.cards.event.CardEventLoginAck;
 import com.ialogic.games.cards.event.CardEventPlayerAction;
 import com.ialogic.games.cards.event.CardEventPlayerReconnect;
 import com.ialogic.games.cards.event.CardEventPlayerRegister;
@@ -30,6 +34,7 @@ import com.sun.net.httpserver.HttpServer;
 public class CardHttpServer implements CardUI {
 	static CardHttpServer instance = null;
     HttpServer server;
+    ExecutorService pool = Executors.newFixedThreadPool(16);
 	public CardHttpServer (final int port){
 		if (instance == null) {
 			try {
@@ -45,11 +50,29 @@ public class CardHttpServer implements CardUI {
 			}
 		}
 	}
-	private static void handleRequest(HttpExchange exchange) throws IOException {
+	private ExecutorService getThreadPool () {
+		return pool;
+	}
+	
+	private static void handleRequest(HttpExchange exchange) {
+		Runnable work = new Runnable () {
+			public void run () {
+				try {
+					getServer().createResponse (exchange);
+				} catch (IOException e) {
+					getServer().log ("Exeption" + e);
+				}
+			}
+		};
+		getServer().getThreadPool ().execute (work);
+	}
+		
+	private void createResponse (HttpExchange exchange) throws IOException {
 	      URI requestURI = exchange.getRequestURI();
 		  String response = "<html>Invalid URI<html>";
 	      String path = requestURI.getPath();
 	      String query = requestURI.getQuery();
+	      
 	      if ((path.contentEquals("/") || path.contentEquals("/cardgame"))
 	    		  && query != null && !query.isEmpty()) {
 	    	  response = getServer().createResponse (query);
@@ -85,6 +108,7 @@ public class CardHttpServer implements CardUI {
 	    	  }
 	      }
 	}
+	
 	private String createResponse(String query) {
 		String response = "<event name='CardEventServerReject'><status>REJECT</status>" + 
 				"<message>Error</message></event>";
@@ -102,7 +126,6 @@ public class CardHttpServer implements CardUI {
 				log ("SERVER: %s %s Event from player %s.", clientCode, clz, player);
 			}
 			if (e instanceof CardEventPlayerRegister) {
-				int pos = 0;
 				String status = "OK";
 				String m = "";
 				GameRoom room = GameRoom.getRoom(clientCode);
@@ -166,11 +189,12 @@ public class CardHttpServer implements CardUI {
 					((CardEventPlayerRegister)e).setAllPlayers (sessions.values());
 					e.setPlayer(c);
 					c.handleEvent(this, e);
-					pos = c.getPosition();
 				}
-				response = String.format("<event name='CardEventLoginAck'><status>%s</status>" + 
-						"<player name='%s' code='%s' position='%d'/>" +
-						"<message>%s, %s!</message></event>", status, player, (room == null ? "" : room.getCode()), pos, player, m);
+				CardEventLoginAck ack = new CardEventLoginAck (m);
+				ack.setCode(room == null ? "" : room.getCode());
+				ack.setStatus (status);
+				ack.setPlayer (e.getPlayer());
+				response = ack.getXMLString();
 				log ("SERVER:" + response);
 			}
 			else if (GameRoom.getRoom(clientCode) != null && GameRoom.getRoom(clientCode).getSessions().containsKey(player)) {
