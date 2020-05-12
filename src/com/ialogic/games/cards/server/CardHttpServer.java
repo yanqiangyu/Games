@@ -1,5 +1,7 @@
 package com.ialogic.games.cards.server;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
@@ -45,16 +47,39 @@ public class CardHttpServer implements CardUI {
 	}
 	private static void handleRequest(HttpExchange exchange) throws IOException {
 	      URI requestURI = exchange.getRequestURI();
-		  String response = "Invalid URI";
+		  String response = "<html>Invalid URI<html>";
 	      String path = requestURI.getPath();
 	      String query = requestURI.getQuery();
-	      if (path.contentEquals("/") && !query.isEmpty()) {
+	      if ((path.contentEquals("/") || path.contentEquals("/cardgame"))
+	    		  && query != null && !query.isEmpty()) {
 	    	  response = getServer().createResponse (query);
+			  exchange.sendResponseHeaders(200, response.getBytes().length);
+			  OutputStream os = exchange.getResponseBody();
+			  os.write(response.getBytes());
+			  os.close();
 	      }
-		  exchange.sendResponseHeaders(200, response.getBytes().length);
-		  OutputStream os = exchange.getResponseBody();
-		  os.write(response.getBytes());
-		  os.close();
+	      else {
+	    	  if (path.contentEquals("/")) {
+	    		  path = "index.html";
+	    	  }
+	    	  path = "WebContent/" + path;
+	    	  File file = new File (path);
+	    	  if (file.exists()) {
+				  exchange.sendResponseHeaders(200, file.length());
+				  FileInputStream fs = new FileInputStream (file);
+				  OutputStream os = exchange.getResponseBody();
+				  os.write(fs.readAllBytes());
+				  os.close();
+				  fs.close();
+	    	  }
+	    	  else {
+		    	  getServer().log ("File not found %s", path);
+				  exchange.sendResponseHeaders(200, response.getBytes().length);
+				  OutputStream os = exchange.getResponseBody();
+				  os.write(response.getBytes());
+				  os.close();
+	    	  }
+	      }
 	}
 	private String createResponse(String query) {
 		String response = "<event name='CardEventServerReject'><status>REJECT</status>" + 
