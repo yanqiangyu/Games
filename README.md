@@ -33,6 +33,9 @@ To run your own game server:
 
 Development Log:
 
+05/13/2020	Finished multi-room support and removed dependency for Apache, the server code has a
+		fully self-contained web server that can serve the game resources now.
+
 05/11/2020	Reorganized client side code and finished standalone server so you don't need Apache. Thanks Chris!
 
 05/09/2020	Cleaned up layout calculations and improved points display. Thanks to everyone who played
