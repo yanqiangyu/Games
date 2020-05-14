@@ -129,13 +129,13 @@ function randomMove ()
 	animationPlaying = true;
 	var count = 0;
 	for (i=0; i<52; ++i) {
-		var x = carddeck[i].x + (Math.random() - 0.5) * 20;
-		var y = carddeck[i].y + (Math.random() - 0.5) * 20;
+		var x = carddeck[i].x + (Math.random() - 0.5) * 30;
+		var y = carddeck[i].y + (Math.random() - 0.5) * 30;
 		
 		if (x > 80) x = 160 - x;
 		if (y > 80) y = 160 - y;
-		if (x < 20) x = 40 - x;
-		if (y < 20) y = 40 - y;
+		if (x < 10) x = 20 - x;
+		if (y < 10) y = 20 - y;
 		carddeck[i].x = x;
 		carddeck[i].y = y;
 		moveCardEffect (i, carddeck[i].x, carddeck[i].y, loop, 100, 25, true);

@@ -270,6 +270,7 @@ function handleResponseText (text)
 		prompt ("Game Over. Thank you for playing.");
 		cleanup ();
 		clearInterval(idleThread);
+		setServerState ("Offline");
 		break;
 	default:
 		prompt (message);
