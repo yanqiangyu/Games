@@ -8,6 +8,7 @@ var serverState="Offline";
 var eventQueue=[];
 var idleThread;
 var pollingInterval = 500;
+var idleCount=0;
 
 function mainLoop ()
 {
@@ -59,7 +60,6 @@ function login (player, code) {
 	return "Player/Code Required";
 }
 
-var idleCount=0;
 function setServerState (s) {
 	serverState = s;
 	if (serverState == "Connected") {

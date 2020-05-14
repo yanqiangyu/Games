@@ -27,18 +27,19 @@
 		top: 1vh;"
 	>
   	<div class="overlay" id="over">
-    <div class="text" id="register">
+    <div class="overlay_text" id="register">
     	<form>
-		  <label for="player">Name:</label>
-		  <input type="text" id="player" name="player"><BR>
-		  <label for="code">Code:</label>
-		  <input type="text" id="code" name="code"><BR>
+		  <label for="player" class='label'>Name:</label>
+		  <input type="text" id="player" name="player">
+		  <label for="code" class='label' >Code:</label>
+		  <input type="text" id="code" name="code">
+		  <BR><BR>
 		  <input type="button" id="login" onclick="sendLogin()" value="Let's Go!">
 		</form>
     </div>
   </div>		
 </div>
-<div class="logo" id="logo">
+<div class="logo" id="logo" onClick="clickLogo()">
 </div>
 <div class="auto" id="auto" onClick="toggleAutoPlay()">
 </div>

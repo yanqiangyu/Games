@@ -50,10 +50,6 @@ function toggleAutoPlay () {
 		autoPlayGame=true;
 		setTimeout (sendLogin, 0);
 		break;
-	case "Idle":
-	case "Login":
-		prompt ("Auto play not available");
-		break;
 	default:
 		autoPlayGame = !autoPlayGame;
 	}
