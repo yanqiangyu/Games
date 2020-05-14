@@ -27,7 +27,7 @@ public class CardEventFaceUpResponse extends CardEvent {
 		}
 	}
 	public String getXMLString() {
-		String response = String.format("<event name='%s'><message>%s</message><player name='%s'/><faceup>%s</faceup></event>",
+		String response = String.format("<event name='%s'><message>%s</message><player name='%s'><faceup>%s</faceup></player></event>",
 				this.getClass().getSimpleName(), getMessage(), getPlayer().getName(), cards);
 		return response;
 	}

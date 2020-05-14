@@ -15,7 +15,7 @@ import com.ialogic.games.cards.event.CardEventTurnToPlay;
 
 public class CardPlayerHttpClient extends CardPlayer {
 	String code;
-	LinkedBlockingQueue<CardEvent> events = new LinkedBlockingQueue<CardEvent>();
+	LinkedBlockingQueue<CardEvent> notificationQueue = new LinkedBlockingQueue<CardEvent>();
 	private CardEvent pendingInput = null;
 	
 	public CardPlayerHttpClient (String name, String code) {
@@ -28,16 +28,16 @@ public class CardPlayerHttpClient extends CardPlayer {
 	public void handleEvent(CardUI ui, CardEvent request) {
 		if (request.getPlayer() == this) {
 			if (request instanceof CardEventPlayerReconnect) {
-				events.clear();
-				addRequest (request);
+				notificationQueue.clear();
+				addNotification (request);
 				CardEvent p = getPendingInput ();
 				if (p != null) {
-					addRequest (pendingInput);
+					addNotification (pendingInput);
 				}
 			}
 			else if (request instanceof CardEventPlayerRegister) {
 				ui.playerEvent(request);
-				addRequest (request);
+				addNotification (request);
 			}
 			else if (request instanceof CardEventFaceUpResponse) {
 				setPendingInput (null);
@@ -54,27 +54,27 @@ public class CardPlayerHttpClient extends CardPlayer {
 			else if (request instanceof CardEventEndRound) {
 				getPoints().addAll(((CardEventEndRound)request).getPoints());
 				ui.playerEvent(request);
-				addRequest (request);
+				addNotification (request);
 			}
 			else if (request instanceof CardEventTurnToPlay) {
 				CardEventTurnToPlay masked = new CardEventTurnToPlay (request.getPlayer());
 				ui.playerEvent(masked);
 				setPendingInput (request);
-				addRequest (request);
+				addNotification (request);
 			}
 			else {
-				addRequest (request);
+				addNotification (request);
 			}
 		}
 		else {
 			if (request instanceof CardEventFaceUp) {
 				setPendingInput (request);
 			}
-			addRequest (request);
+			addNotification (request);
 		}
 	}
-	private void addRequest(CardEvent request) {
-		events.add(request);
+	private void addNotification(CardEvent request) {
+		notificationQueue.add(request);
 		// TODO: post request;
 	}
 	private synchronized void setPendingInput (CardEvent e) {
@@ -85,8 +85,8 @@ public class CardPlayerHttpClient extends CardPlayer {
 	}
 	public String getEventFromQueue() {
 		String response = ""; 
-		if (!events.isEmpty()) {
-			CardEvent e= events.poll ();
+		if (!notificationQueue.isEmpty()) {
+			CardEvent e= notificationQueue.poll ();
 			response = e.getXMLString (); 
 			System.out.println ("Sent to: " + code + " [" + getName() + "]" + response);
 		}

@@ -335,7 +335,7 @@ function score (players, lines, faceups)
 {
 	if (players && players.length > 0) {
 		for (i = 0; i < players.length; ++i) {
-			var points = players[i].getAttribute("points");
+			var points = players[i].points;
 			if (points && points != "") {
 				var cards = points.split(",");
 				var text = "";
@@ -358,26 +358,26 @@ function score (players, lines, faceups)
 	}
 	if (lines && lines.length > 2) {
 		document.getElementById("score").style.display="block";
-		var names = lines[0].childNodes[0].nodeValue.split(",");
+		var names = lines[0].split(",");
 		for (i = 0; i < 4; ++i) {
 			document.getElementById("name_" + i).innerHTML=names[i];
 		}
-		var scores = lines[1].childNodes[0].nodeValue.split(",");
+		var scores = lines[1].split(",");
 		for (i = 0; i < 4; ++i) {
 			document.getElementById("score_" + i).innerHTML=scores[i];
 		}
 		// We only have 10 line display
 		var start = lines.length > 17 ? lines.length - 15 : 2;
 		for (i = 0; i < lines.length - start; ++i) {
-			scores = lines[i + start].childNodes[0].nodeValue.split(",");
+			scores = lines[i + start].split(",");
 			document.getElementById("hand_" + i).innerHTML=scores[0];
 			document.getElementById("score_0_" + i).innerHTML=scores[1];
 			document.getElementById("score_1_" + i).innerHTML=scores[2];
 		}
 		document.getElementById("headline").innerHTML="Score Board - Hand " + (lines.length - 2);
 		var f = "";
-		if (faceups && faceups[0].childNodes[0]) {
-			var cards = faceups[0].childNodes[0].nodeValue.split(",");
+		if (faceups) {
+			var cards = faceups.split(",");
 			for (i = 0; i < cards.length; ++i) {
 				f += "<img class='score_faceups' src='image/cards/" + cards[i] + ".jpg'>";
 			}
@@ -399,26 +399,25 @@ function setPlayerDisplay (players)
 	  		clearInterval (id);
 	  		for (k = 0; k < players.length; ++k) {
 				var player = players[k];
-				var p = (parseInt(player.getAttribute("position")) - myPosition + 4) % 4;
-				var cards = player.getElementsByTagName("hand")[0].childNodes[0].nodeValue.split(",");				
+				var p = (player.position - myPosition + 4) % 4;
+				var cards = player.hand.split(",");				
 				// Fill discarded cards
 				for (i = cards.length; i < 13; ++i) {
 					cards.unshift ("XX");
 				}
 				playerCards[p] = cards;
-				setPlayer (p, player.getAttribute("name"));
+				setPlayer (p, player.name);
 				setPlayerDisplayCards (p, cards);
-				var faceup = player.getElementsByTagName("faceup")[0].childNodes[0];
-				var c = faceup ? faceup.nodeValue : "NA";
+				var c = player.faceup;
 				setPlayerDisplayFaceup (p, c);
-				var played = player.getElementsByTagName("cardPlayed")[0].getAttribute("card");
+				var played = player.card;
 				setPlayerDisplayPlayed (p, played, false);
 	  		}
 	  		// We don't know where the points are from, so we need to do it after showing the played cards
 	  		for (k = 0; k < players.length; ++k) {
 				var player = players[k];
-				var p = (parseInt(player.getAttribute("position")) - myPosition + 4) % 4;
-				var points = player.getAttribute("points");
+				var p = (player.position - myPosition + 4) % 4;
+				var points = player.points;
 				setPlayerDisplayPoints (p, points, -1);
 	  		}
 			gameState = "PlayerReady";

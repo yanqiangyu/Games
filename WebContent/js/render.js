@@ -232,7 +232,7 @@ function showDeck ()
 		scene.style.top = carddeck[i].y + "vh";
 		
 		var logo=document.getElementById("logo");
-		logo.style.backgroundImage="url('image/table.jpg')";
+		logo.style.backgroundImage="url('image/brass.jpg')";
 		logo.innerHTML="<BR>Score";
 	}
 }

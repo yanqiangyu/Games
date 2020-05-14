@@ -114,10 +114,10 @@ function serverRequest (event, cards)
 	}
 }
 
-function findPlayerPosition (player)
+function findPlayerPosition (players)
 {
-	if (player != null) {
-		var name = player.getAttribute("name");
+	if (players && players[0]) {
+		var name = players[0].name;
 		for (i = 0; i < myPlayers.length; ++i) {
 			if (myPlayers[i] == name) {
 				return i;
@@ -130,11 +130,11 @@ function findPlayerPosition (player)
 
 function handleResponseText (text)
 {
-	var response = new DOMParser().parseFromString(text,"text/xml");
-	var event=response.getElementsByTagName("event")[0].getAttribute("name");
-	var message = response.getElementsByTagName("message")[0].childNodes[0].nodeValue;
-	var player = response.getElementsByTagName("player")[0];
-	var position = findPlayerPosition (player);
+	var res = getResponseFromXML (text); 
+	var event = res.event;
+	var message = res.message;
+	var players = res.players;
+	var position = findPlayerPosition (players);
 	//=============================================================
 	//	BEGIN State Transition:
 	//=============================================================
@@ -205,21 +205,20 @@ function handleResponseText (text)
 	
 	switch (event) {
 	case "CardEventLoginAck":
-		var status = response.getElementsByTagName("status")[0].childNodes[0].nodeValue;
+		var status = res.status;
 		if (status == "OK") {
-			myPosition = parseInt(player.getAttribute("position"));
-			session.code = player.getAttribute("code");
+			myPosition = players[0].position;
+			session.code = players[0].code;
 			startGame ();
 		}
 		else {
 			restartClient (message);
 		}
 	case "CardEventPlayerRegister":
-		var players = response.getElementsByTagName("player");
 		if (players) {
 			for (i = 0; i < players.length; ++i) {
-				var p = (parseInt(players[i].getAttribute("position")) - myPosition + 4) % 4;
-				setPlayer (p, players[i].getAttribute("name"));
+				var p = (players[i].position - myPosition + 4) % 4;
+				setPlayer (p, players[i].name);
 			}
 		}
 		prompt (message);
@@ -230,64 +229,47 @@ function handleResponseText (text)
 		cleanup ();
 		break;
 	case "CardEventDealCards":
-		var hand = response.getElementsByTagName("hand")[0].childNodes[0].nodeValue;
-		dealCards (hand);
+		dealCards (res.players[0].hand);
 		break;
 	case "CardEventFaceUp":
-		var rule = response.getElementsByTagName("rule")[0];
-		var reason = rule.getAttribute("reason");
-		var allowed = rule.getAttribute("allowed");
-		faceupReady (reason, allowed);
+		faceupReady (res.rule.reason, res.rule.allowed);
 		if (position == 0 && autoPlayGame) {
 			sendAutoPlayAction ();
 		}
 		break;
 	case "CardEventFaceUpResponse":
-		var played = response.getElementsByTagName("faceup")[0].childNodes[0];
-		var cards = played == null ? "NA" : played.nodeValue;
-		showFaceup (position, cards);
+		showFaceup (position, res.players[0].faceup);
 		break;
 	case "CardEventTurnToPlay":
-		var rule = response.getElementsByTagName("rule")[0];
-		var reason = rule.getAttribute("reason");
-		var allowed = rule.getAttribute("allowed");
-		playerReady (position, reason, allowed);
+		playerReady (position, res.rule.reason, res.rule.allowed);
 		if (position == 0 && autoPlayGame) {
 			sendAutoPlayAction ();
 		}
 		break;
 	case "CardEventPlayerAction":
-		var card = response.getElementsByTagName("cardPlayed")[0].getAttribute("card");
-		playCard (position, card);
+		playCard (position, players[0].card);
 		break;
 	case "CardEventPlayerAutoAction":
 		autoPlayCard ();
 		break;
 	case "CardEventEndRound":
-		var points = response.getElementsByTagName("player")[0].getAttribute("points");
-		discardCards (position, points);
+		discardCards (position, players[0].points);
 		gameState = "PlayerReady";
 		break;
 	case "CardEventScoreBoard":
-		var players = response.getElementsByTagName("player");
-		var lines = response.getElementsByTagName("line");
-		var faceups = response.getElementsByTagName("faceup");
-		score (players, lines, faceups);
+		score (players, res.lines, res.faceup);
 		break;
 	case "CardEventPlayerReconnect":
 		gameState = "Reconnect";
 		prompt (message);
 		cleanup ();
-		var players = response.getElementsByTagName("player");
-		if (players) {
-			setPlayerDisplay (players);
-		}
+		setPlayerDisplay (players);
 		break;
 	case "CardEventGameOver":
 		gameState = "GameOver";
-		prompt ("Game Over");
+		prompt ("Game Over. Thank you for playing.");
 		cleanup ();
-		clearinterval(idleThread);
+		clearInterval(idleThread);
 		break;
 	default:
 		prompt (message);
@@ -304,4 +286,71 @@ function sendAutoPlayAction () {
 	function send () {
 		eventQueue.unshift (response);
 	}
+}
+
+function getResponseFromXML (text) {
+	var dom = new DOMParser().parseFromString(text,"text/xml");
+	var response = {
+			event: "",
+			message: "",
+			players : [],
+			status : "",
+			lines: [],
+			faceup: "",
+			rule: {
+				reason: "",
+				allowed: ""
+			},
+	};
+	response.event = dom.getElementsByTagName("event")[0].getAttribute("name")
+	response.message = dom.getElementsByTagName("message")[0].childNodes[0].nodeValue;
+	if (dom.getElementsByTagName("status")[0] && dom.getElementsByTagName("status")[0].childNodes[0]) {
+		response.status = dom.getElementsByTagName("status")[0].childNodes[0].nodeValue;
+	}
+	if (dom.getElementsByTagName("faceup")[0] && dom.getElementsByTagName("faceup")[0].childNodes[0]) {
+		response.faceup = dom.getElementsByTagName("faceup")[0].childNodes[0].nodeValue;
+	}
+	var rule = dom.getElementsByTagName("rule")[0];
+	if (rule) {
+		response.rule.reason = rule.getAttribute("reason");
+		response.rule.allowed = rule.getAttribute("allowed");
+	}
+	var players = dom.getElementsByTagName("player");
+	if (players) {
+		for (i = 0; i < players.length; ++i) {
+			var p = {
+				name: "",
+				code: "",
+				points: "",
+				position: 0,
+				card: "",
+				hand: "",
+				faceup: "",
+			};
+			var pDoc = dom.getElementsByTagName("player")[i];
+			p.name = pDoc.getAttribute("name");
+			p.points = pDoc.getAttribute("points");
+			p.code = pDoc.getAttribute("code");
+			if(pDoc.getAttribute("position")) {
+				p.position = parseInt(pDoc.getAttribute("position"));
+			}
+			if (pDoc.getElementsByTagName("cardPlayed")[0]) {
+				p.card = pDoc.getElementsByTagName("cardPlayed")[0].getAttribute("card");
+			}
+			if (pDoc.getElementsByTagName("hand")[0] && pDoc.getElementsByTagName("hand")[0].childNodes[0]) {
+				p.hand = pDoc.getElementsByTagName("hand")[0].childNodes[0].nodeValue;
+			}
+			if (pDoc.getElementsByTagName("faceup")[0] && pDoc.getElementsByTagName("faceup")[0].childNodes[0]) {
+				p.faceup = pDoc.getElementsByTagName("faceup")[0].childNodes[0].nodeValue;
+			}
+			response.players.push(p);
+		}
+	}
+	var lines = dom.getElementsByTagName("line");
+	if (lines) {
+		for (i = 0; i < lines.length; ++i) {
+			response.lines.push(lines[i].childNodes[0].nodeValue);
+		}
+	}
+	return response;
 }

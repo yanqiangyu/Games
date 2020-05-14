@@ -25,8 +25,8 @@ public class CardEventPlayerAction extends CardEvent {
 				cardPlayed));
 	}
 	public String getXMLString() {
-		String response = String.format("<event name='%s'><message>%s</message><player name='%s'/>"+
-				"<cardPlayed card='%s'/></event>",
+		String response = String.format("<event name='%s'><message>%s</message><player name='%s'>"+
+				"<cardPlayed card='%s'/></player></event>",
 				this.getClass().getSimpleName(), getMessage(), 
 				getPlayer().getName(), cardPlayed);
 		return response;
