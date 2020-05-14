@@ -264,25 +264,29 @@ h3.ex1 {
   padding: 0 0;
 }
 input[type=text], select {
+  color: royalblue;
   width: 85%;
   margin: 8px 8px;
   display: inline-block;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 20px;
+  font-weight: bold;
   border: 1px solid #ccc;
   border-radius: 15px;
   box-sizing: border-box;
+  text-align: center;
 }
 
 input[type=button] {
   color: #FFFFFF;
-  background-color: #00B200;
+  background-color: #009100;
   display: block;
   width: 100%;
   margin: 0 0;
   border: 1px solid #ccc;
   border-radius: 25px;
   box-sizing: border-box;
+  font-weight: bold;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 24px;
   cursor: pointer;
