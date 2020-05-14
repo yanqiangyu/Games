@@ -214,7 +214,7 @@ h3.ex1 {
 	width:  32px;
 	height: 32px;
 	display: block;
-	opacity: .5;
+	opacity: 1;
 	cursor: pointer;
 	z-Index: 300;
 }
@@ -241,7 +241,7 @@ h3.ex1 {
   left: 20%;
   height: 350px;
   width: 250px;
-  opacity: 1;
+  opacity: 0.5;
   transition: 1s ease;
 }
 
@@ -275,27 +275,26 @@ input[type=text], select {
 }
 
 input[type=button] {
-  margin: 0 0;
+  color: #FFFFFF;
+  background-color: #00B200;
   display: block;
   width: 100%;
+  margin: 0 0;
   border: 1px solid #ccc;
   border-radius: 25px;
   box-sizing: border-box;
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 32px;
-  color: #FFFFFF;
-  animation: glowing 1500ms infinite;
+  font-size: 24px;
   cursor: pointer;
   display: inline-block;
-  font-size: 20px;
-  padding: 10px;
+  padding: 5px;
   text-align: center;
   text-decoration: none;
 }
 
 
 .container:hover .overlay {
-  opacity: 0.70;
+  opacity: 1;
 }
 
 .card_scene {
