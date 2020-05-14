@@ -19,6 +19,7 @@ import com.ialogic.games.cards.CardPlayer;
 import com.ialogic.games.cards.CardUI;
 import com.ialogic.games.cards.event.CardEvent;
 import com.ialogic.games.cards.event.CardEventFaceUpResponse;
+import com.ialogic.games.cards.event.CardEventGameIdle;
 import com.ialogic.games.cards.event.CardEventGameOver;
 import com.ialogic.games.cards.event.CardEventGameStart;
 import com.ialogic.games.cards.event.CardEventLoginAck;
@@ -152,7 +153,7 @@ public class CardHttpServer implements CardUI {
 				}
 				else if (room != null) {
 					CardGame game = room.getGame();
-					if (!game.isGameOver() && game.getPlayers().size() < 4 ) {
+					if (!game.isGameOver() && game.getPlayers().size() < room.getNumPlayer()) {
 						m = String.format ("Joining with code %s:", clientCode);
 						status = "OK";
 					}
@@ -202,6 +203,16 @@ public class CardHttpServer implements CardUI {
 				e.setPlayer(c);
 				if (e instanceof CardEventPlayerUpdate) {
 					response = ((CardPlayerHttpClient)c).getEventFromQueue ();
+					if (response.isEmpty()) {
+						int n = GameRoom.getRoom(clientCode).getSessions().size();
+						int numPlayer = GameRoom.getRoom(clientCode).getNumPlayer();
+						String m = (n == 1 ?
+								String.format("%s, you are the first one here, invite others with code %s", player, clientCode) :
+									(n < numPlayer ? 
+										String.format("%s, we have %d players, invite others with code %s", player, n, clientCode) :
+										String.format("Room code %s", clientCode)));
+						response = new CardEventGameIdle (m).getXMLString();
+					}
 				}
 				else if (e instanceof CardEventFaceUpResponse || e instanceof CardEventPlayerAction) {
 					e.setFieldValues (request);
@@ -258,6 +269,8 @@ public class CardHttpServer implements CardUI {
 		GameRoom room = GameRoom.findRoom(cardGame);
 		if (request instanceof CardEventWaitForPlayers) {
 			synchronized (room.getGame()) {
+				int total = ((CardEventWaitForPlayers)request).getNumPlayer();
+				room.setNumPlayer(total);
 				room.getGame().notifyAll();
 			}
 			return;

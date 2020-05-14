@@ -75,7 +75,7 @@ public class CardPlayerHttpClient extends CardPlayer {
 	}
 	private void addRequest(CardEvent request) {
 		events.add(request);
-		// TODO: post request localhost:6000
+		// TODO: post request;
 	}
 	private synchronized void setPendingInput (CardEvent e) {
 		pendingInput = e;
@@ -84,10 +84,7 @@ public class CardPlayerHttpClient extends CardPlayer {
 		return pendingInput;
 	}
 	public String getEventFromQueue() {
-		String response = 
-				"<event name='CardEventGameIdle'>" +
-				"<message>Code:" + code +"</message>" +
-				"</event>";
+		String response = ""; 
 		if (!events.isEmpty()) {
 			CardEvent e= events.poll ();
 			response = e.getXMLString (); 

@@ -232,6 +232,8 @@ function showDeck ()
 		scene.style.top = carddeck[i].y + "vh";
 		
 		var logo=document.getElementById("logo");
+		logo.style.backgroundImage="url('image/table.jpg')";
+		logo.innerHTML="<BR>Score";
 	}
 }
 
@@ -250,6 +252,7 @@ function showPlayers ()
 	}
 	setPlayer(0, session.player);
 }
+
 
 function setPlayer (p, name)
 {

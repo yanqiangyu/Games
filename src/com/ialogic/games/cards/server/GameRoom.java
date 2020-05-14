@@ -17,6 +17,7 @@ public class GameRoom {
 	private String code="";
 	private Queue<CardEvent>events = new LinkedBlockingQueue<CardEvent> ();
 	private HashMap<String, CardPlayer> sessions = new HashMap<String, CardPlayer> ();
+	private int numPlayer;
 	public GameRoom () {
 		game = new PigChase();
 		sessions.clear();
@@ -64,5 +65,11 @@ public class GameRoom {
 	}
 	public static GameRoom findRoom(CardGame cardGame) {
 		return gameIndex.get (cardGame);
+	}
+	public void setNumPlayer(int total) {
+		numPlayer = total;
+	}
+	public int getNumPlayer() {
+		return numPlayer;
 	}
 }
