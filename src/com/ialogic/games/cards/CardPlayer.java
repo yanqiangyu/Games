@@ -4,6 +4,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonValue;
+
 import com.ialogic.games.cards.event.CardEvent;
 
 public abstract class CardPlayer {
@@ -103,6 +108,19 @@ public abstract class CardPlayer {
 				}
 			}
 		}
+	}
+	public JsonValue getJsonObject() {
+		JsonObjectBuilder builder =  Json.createObjectBuilder()
+				.add("name",getName())
+				.add("postion", getPosition())
+				.add("points", Card.showCSList(getPoints()))
+				.add("faceup", Card.showCSList(getFaceup()))
+				.add("hand", Card.showCSList(getHand()));
+				
+		if (getCardPlayed() != null) {
+				builder.add("card", getCardPlayed().toString());
+		}
+		return builder.build();
 	}
 	abstract public void handleEvent (CardUI ui, CardEvent request);
 }

@@ -2,6 +2,11 @@ package com.ialogic.games.cards.event;
 
 import java.util.HashMap;
 
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+
 import com.ialogic.games.cards.CardPlayer;
 
 public class CardEvent {
@@ -35,12 +40,21 @@ public class CardEvent {
 				this.getClass().getSimpleName(), getMessage(), p);
 		return response;
 	}
-	public void setFieldValues(HashMap<String, String> request) {
-	}
 	public String getJsonString() {
-		String response = "";
+		return getJsonObject().toString();
+	}
+	public JsonObject getJsonObject () {
 		
-		return response;
-		
+		JsonObjectBuilder builder =  Json.createObjectBuilder()
+				.add("event",this.getClass().getSimpleName())
+				.add("message", getMessage());
+		if (getPlayer () != null) {
+			JsonArray players = Json.createArrayBuilder()
+				     .add(getPlayer().getJsonObject()).build();
+			builder.add ("players", players);
+		}
+		return builder.build();
+	}
+	public void setFieldValues(HashMap<String, String> request) {
 	}
 }

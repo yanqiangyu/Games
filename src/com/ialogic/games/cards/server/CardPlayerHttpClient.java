@@ -2,6 +2,10 @@ package com.ialogic.games.cards.server;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
+import javax.json.Json;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonValue;
+
 import com.ialogic.games.cards.CardPlayer;
 import com.ialogic.games.cards.CardUI;
 import com.ialogic.games.cards.event.CardEvent;
@@ -89,7 +93,22 @@ public class CardPlayerHttpClient extends CardPlayer {
 			CardEvent e= notificationQueue.poll ();
 			response = e.getXMLString (); 
 			System.out.println ("Sent to: " + code + " [" + getName() + "]" + response);
+			System.out.println ("****NEXT STEP: " + code + " [" + getName() + "]" + e.getJsonString());
 		}
 		return response;
 	}
+	@Override
+	public JsonValue getJsonObject() {
+		JsonValue obj =  super.getJsonObject();
+		if (getCode () != null) {
+			JsonObjectBuilder builder = Json.createObjectBuilder();
+			for (String k : obj.asJsonObject().keySet()) {
+				builder.add(k, obj.asJsonObject().get(k));
+			}
+			builder.add("code", getCode());
+			obj = builder.build();
+		}
+		return obj;
+	}
+	
 }
