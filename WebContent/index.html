@@ -24,15 +24,18 @@
 	style="width: 98vw; 
 		height: 98vh;
 		left: 1vw;
-		top: 1vh;"
+		top: 1vh;
+		display:flex;
+		align-items:center;
+		justify-content:center;"
 	>
-  	<div class="overlay" id="over">
+  <div class="overlay" id="over">
     <div class="overlay_text" id="register">
     	<form>
 		  <label for="player" class='label'>Name:</label>
 		  <input type="text" id="player" name="player">
 		  <label for="code" class='label' >Code:</label>
-		  <input type="text" id="code" name="code" value="New" onfocus="this.value=''">
+		  <input type="text" id="code" name="code" value="New" onfocus="helpCode()">
 		  <BR><BR>
 		  <input type="button" id="login" onclick="sendLogin()" value="Start">
 		</form>
@@ -54,9 +57,9 @@ Hello!
 <div class="score" id="score" onClick="dismiss(this)">
 <div id='headline' class='score_headline'>Score Board</div>
 <table>
-<TR><td></td>
-<td align='center'><div id='name_0'>Player1</div></td><td align='center'><div id='name_2'>Player3</div></td>
-<td align='center'><div id='name_1'>Player2</div></td><td align='center'><div id='name_3'>Player4</div></td>
+<TR><th></th>
+<th align='center'><div id='name_0'>Player1</div></th><th align='center'><div id='name_2'>Player3</div></th>
+<th align='center'><div id='name_1'>Player2</div></th><th align='center'><div id='name_3'>Player4</div></th>
 </TR>
 <TR><td align='center'><div id='faceups' class='score_cards'></div></td>
 <td align='center'><div id="cards_0" class='score_cards'></div></td>
@@ -64,14 +67,14 @@ Hello!
 <td align='center'><div id="cards_1" class='score_cards'></div></td>
 <td align='center'><div id="cards_3" class='score_cards'></div></td>
 </TR>
-<TR><td align='center'>Score</td>
+<TR><td align='center'></td>
 <td align='center'><div id="score_0">0</div></td><td align='center'><div id="score_2">0</div></td>
 <td align='center'><div id="score_1">0</div></td><td align='center'><div id="score_3">0</div></td>
 </TR>
 <TR><td colspan='5' align='center'align='center'><div></div></td></TR>
-<TR><td align='center'><div id="hand_0"></div></td><td colspan='2' align='center'><div id="score_0_0"></div></td><td colspan='2' align='center'><div id="score_1_0"></div></td></TR>
-<TR><td align='center'><div id="hand_1"></div></td><td colspan='2' align='center'><div id="score_0_1"></div></td><td colspan='2' align='center'><div id="score_1_1"></div></td></TR>
-<TR><td align='center'><div id="hand_2"></div></td><td colspan='2' align='center'><div id="score_0_2"></div></td><td colspan='2' align='center'><div id="score_1_2"></div></td></TR>
+<TR><td align='center'><div id="hand_0">1</div></td><td colspan='2' align='center'><div id="score_0_0"></div></td><td colspan='2' align='center'><div id="score_1_0"></div></td></TR>
+<TR><td align='center'><div id="hand_1">2</div></td><td colspan='2' align='center'><div id="score_0_1"></div></td><td colspan='2' align='center'><div id="score_1_1"></div></td></TR>
+<TR><td align='center'><div id="hand_2">3</div></td><td colspan='2' align='center'><div id="score_0_2"></div></td><td colspan='2' align='center'><div id="score_1_2"></div></td></TR>
 <TR><td align='center'><div id="hand_3"></div></td><td colspan='2' align='center'><div id="score_0_3"></div></td><td colspan='2' align='center'><div id="score_1_3"></div></td></TR>
 <TR><td align='center'><div id="hand_4"></div></td><td colspan='2' align='center'><div id="score_0_4"></div></td><td colspan='2' align='center'><div id="score_1_4"></div></td></TR>
 <TR><td align='center'><div id="hand_5"></div></td><td colspan='2' align='center'><div id="score_0_5"></div></td><td colspan='2' align='center'><div id="score_1_5"></div></td></TR>
@@ -91,34 +94,60 @@ Hello!
 <div class="info" id="info" onClick="document.getElementById('help').style.display='block'">
 </div>
 <div class="help" id="help" onClick="dismiss(this)">
-<H1>
-<img height="64px" width="64px" src="image/pig.jpg" style="box-shadow: 5px 5px 5px black;">
-<img height="64px" width="64px" src="image/goat.jpg" style="box-shadow: 5px 5px 5px black;">
-</H1>
-<h3 class="ex1">Enter player name and code "new" to start a game, then share the 4 digit code 
-with your friends so they can join. Have fun!</h3>
-<h3 class="ct1">
-<img height="56px" width="40px" src="image/cards/QS.jpg">-100
-<img height="56px" width="40px" src="image/cards/AH.jpg">-50
-<img height="56px" width="40px" src="image/cards/XC.jpg">x2
-<img height="56px" width="40px" src="image/cards/JD.jpg">+100
-</h3>
-<h3 class="ex1">Turn any of the above four cards face up before a hand to double the score. 
-Ace of hearts doubles all hearts score when faced up. 
-Ten of clubs quadruples all points for the player when faced up.  
-With the exception of ace of hearts, a suit must be broken before the faced up 
-card can be played.</h3>
-<h3 class="ex1">Capturing all hearts or "shoot the moon" scores +200. Ten of clubs without any hearts and other points scores +50</h3>
-<h2>
-<img height="56px" width="40px" src="image/cards/KH.jpg">-40
-<img height="56px" width="40px" src="image/cards/QH.jpg">-30
-<img height="56px" width="40px" src="image/cards/JH.jpg">-20<BR>
-<img height="56px" width="40px" src="image/cards/XH.jpg">
-<img height="56px" width="40px" src="image/cards/9H.jpg">
-<img height="56px" width="40px" src="image/cards/8H.jpg">
-<img height="56px" width="40px" src="image/cards/7H.jpg">
-<img height="56px" width="40px" src="image/cards/6H.jpg">
-<img height="56px" width="40px" src="image/cards/5H.jpg">-10<BR>
-</h2>
+	<H1>
+		<img height="64px" width="64px" src="image/pig.jpg" style="box-shadow: 5px 5px 5px black;">
+		<img height="64px" width="64px" src="image/goat.jpg" style="box-shadow: 5px 5px 5px black;">
+	</H1>
+	<h3 class="ex1">Enter player name and code "new" to start a game, then share the 4 digit code 
+	with your friends so they can join. Have fun!</h3>
+	<div class="help-card-point-container">
+		<div>
+			<img height="56px" width="40px" src="image/cards/QS.jpg">
+			-100
+		</div>
+		<div>
+			<img height="56px" width="40px" src="image/cards/AH.jpg">
+			-50
+		</div>
+		<div>
+			<img height="56px" width="40px" src="image/cards/XC.jpg">
+			x2
+		</div>
+		<div>
+			<img height="56px" width="40px" src="image/cards/JD.jpg">
+			+100
+		</div>
+	</div>
+	<h3 class="ex1">Turn any of the above four cards face up before a hand to double the score. 
+	Ace of hearts doubles all hearts score when faced up. 
+	Ten of clubs quadruples all points for the player when faced up.  
+	With the exception of ace of hearts, a suit must be broken before the faced up 
+	card can be played.</h3>
+	<h3 class="ex1">Capturing all hearts or "shoot the moon" scores +200. Ten of clubs without any hearts and other points scores +50</h3>
+	<div class="help-card-point-container">
+		<div>
+			<img height="56px" width="40px" src="image/cards/KH.jpg">
+			-40
+		</div>
+		<div>
+			<img height="56px" width="40px" src="image/cards/QH.jpg">
+			-30
+		</div>
+		<div>
+			<img height="56px" width="40px" src="image/cards/JH.jpg">
+			-20
+		</div>
+	</div>
+	<div class="help-card-point-container">
+		<div>
+			<img height="56px" width="40px" src="image/cards/XH.jpg">
+			<img height="56px" width="40px" src="image/cards/9H.jpg">
+			<img height="56px" width="40px" src="image/cards/8H.jpg">
+			<img height="56px" width="40px" src="image/cards/7H.jpg">
+			<img height="56px" width="40px" src="image/cards/6H.jpg">
+			<img height="56px" width="40px" src="image/cards/5H.jpg">
+			-10
+		</div>
+	</div>
 </div>
 </body></html>

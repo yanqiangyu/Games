@@ -37,4 +37,10 @@ public class CardEvent {
 	}
 	public void setFieldValues(HashMap<String, String> request) {
 	}
+	public String getJsonString() {
+		String response = "";
+		
+		return response;
+		
+	}
 }

@@ -80,3 +80,10 @@ function enableLogin ()
 	var c=document.getElementById("login");
 	c.style.display="block";
 }
+
+function helpCode ()
+{
+	var c=document.getElementById("code");
+	c.value = "";
+	prompt ("Enter 'new' to start a new game");
+}

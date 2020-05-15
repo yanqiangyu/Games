@@ -53,30 +53,25 @@
     background-size: 100% 100%;
 	box-shadow: 5px 5px 5px black;
     font-family: 'Caveat', cursive;;
-    font-size: 28px;
-    margin: auto;
-	padding: 100px, 10px;
+    font-size: 20px;
+	padding: 0px 0px;
 	text-align: left;
 	position: absolute;
-    left: 10vw;
-    top: 10vh;
-    width:  80vw;
-	height: 70vh;
+	top: 10vh;
+	left: 10vw;
+	width: 80vw;
+	height: 80vh;
 	overflow: auto;
 	display: none;
 	opacity: 0.90;
 	z-Index: 200;
 }
 
-table{
-	margin-left: 5%; 
-    width: 90%;
-	border-collapse: collapse; /* Remove cell spacing */
-}
-
-td {
+table, tr {
+	border-collapse: collapse;
 	padding: 0;
 	font-weight: bold;
+	width: 100%;
 }
 
 .score_headline {
@@ -87,7 +82,7 @@ td {
 }
 
 .score_faceups {
-	width: 20px;
+	width: 10px;
 	height: 28px;
 }
 
@@ -242,23 +237,36 @@ h3.ex1 {
   background-repeat: no-repeat;
   background-size: 100% 100%;
   background-color: #004C00;
-  position: absolute;
-  top: 20%;
-  left: 20%;
   height: 350px;
   width: 250px;
   opacity: 1;
   transition: 1s ease;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
 }
 
 
 .overlay_text {
   background-color: transparent;
-  position: absolute;
-  margin-top: 38%;
-  margin-left: 20%;
-  margin-right: 20%;
-  text-align: center;
+  width:50%; 
+}
+
+.help-card-point-container {
+	display:flex;
+	align-items:center;
+	justify-content:center;	
+	margin:auto;
+	flex-wrap:wrap;
+}
+.help-card-point-container div {
+	font-size:20px;
+	margin-right: 20px;
+	display:flex;
+	align-items:center;
+	justify-content:center;
+	flex-wrap:wrap;
 }
 
 .label {
