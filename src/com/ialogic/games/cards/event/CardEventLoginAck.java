@@ -1,8 +1,18 @@
 package com.ialogic.games.cards.event;
 
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+
+import com.ialogic.games.cards.CardPlayer;
 public class CardEventLoginAck extends CardEvent {
 	String status;
 	String code;
+	public CardEventLoginAck(CardPlayer player, String c, String m, String s) {
+		super(m);
+		setPlayer (player);
+		setStatus (s);
+		setCode(c);
+	}
 	public String getCode() {
 		return code;
 	}
@@ -15,20 +25,10 @@ public class CardEventLoginAck extends CardEvent {
 	public void setStatus(String status) {
 		this.status = status;
 	}
-	public CardEventLoginAck(String message) {
-		super(message);
-	}
-	public String getXMLString() {
-		String response = String.format("<event name='%s'><status>%s</status>" + 
-				"<player name='%s' code='%s' position='%d'/>" +
-				"<message>%s, %s!</message></event>", 
-				this.getClass().getSimpleName(), 
-				getStatus(),
-				getPlayer() == null ? "" : getPlayer().getName(), 
-				getCode (),
-				getPlayer() == null ? 0 : getPlayer().getPosition(), 
-				getPlayer() == null ? "" : getPlayer().getName(), 
-				getMessage());
-		return response;
+	public JsonObject getJsonObject () {
+		JsonObjectBuilder builder = super.getJsonObjectBuilder ();
+		builder.add ("status", getStatus());
+		builder.add ("new_code", getCode());
+		return builder.build();
 	}
 }

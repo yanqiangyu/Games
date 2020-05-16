@@ -4,5 +4,4 @@ public class CardEventGameIdle extends CardEvent {
 	public CardEventGameIdle(String message) {
 		super(message);
 	}
-
 }

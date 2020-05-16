@@ -27,6 +27,7 @@ import com.ialogic.games.cards.event.CardEventPlayerAction;
 import com.ialogic.games.cards.event.CardEventPlayerReconnect;
 import com.ialogic.games.cards.event.CardEventPlayerRegister;
 import com.ialogic.games.cards.event.CardEventPlayerUpdate;
+import com.ialogic.games.cards.event.CardEventServerReject;
 import com.ialogic.games.cards.event.CardEventWaitForPlayers;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
@@ -111,8 +112,7 @@ public class CardHttpServer implements CardUI {
 	}
 	
 	private String createResponse(String query) {
-		String response = "<event name='CardEventServerReject'><status>REJECT</status>" + 
-				"<message>Error</message></event>";
+		String response = new CardEventServerReject ().getJsonString();
 		try {
 			HashMap<String, String>request = parseQuery(query);
 			String eventName = request.get("CardEvent");
@@ -191,11 +191,9 @@ public class CardHttpServer implements CardUI {
 					e.setPlayer(c);
 					c.handleEvent(this, e);
 				}
-				CardEventLoginAck ack = new CardEventLoginAck (m);
-				ack.setCode(room == null ? "" : room.getCode());
-				ack.setStatus (status);
-				ack.setPlayer (e.getPlayer());
-				response = ack.getXMLString();
+				String code = (room == null ? "" : room.getCode());
+				CardEventLoginAck ack = new CardEventLoginAck (e.getPlayer(), code, m, status);
+				response = ack.getJsonString();
 				log ("SERVER:" + response);
 			}
 			else if (GameRoom.getRoom(clientCode) != null && GameRoom.getRoom(clientCode).getSessions().containsKey(player)) {
@@ -211,14 +209,13 @@ public class CardHttpServer implements CardUI {
 									(n < numPlayer ? 
 										String.format("%s, we have %d players, invite others with code %s", player, n, clientCode) :
 										String.format("Room code %s", clientCode)));
-						response = new CardEventGameIdle (m).getXMLString();
+						response = new CardEventGameIdle (m).getJsonString();
 					}
 				}
 				else if (e instanceof CardEventFaceUpResponse || e instanceof CardEventPlayerAction) {
 					e.setFieldValues (request);
 					((CardPlayerHttpClient)c).handleEvent(this, e);
-					response = "<event name='CardEventPlayerAck'><status>OK</status>" + 
-							"<message>Action Received</message></event>";
+					response = new CardEventGameIdle ("OK").getJsonString();
 				}
 			}
 			else {
@@ -293,13 +290,13 @@ public class CardHttpServer implements CardUI {
 	public void playerEvent(CardEvent request) {
 		String code = ((CardPlayerHttpClient) request.getPlayer()).getCode();
 		GameRoom room = GameRoom.getRoom(code);
-		addEvent (room, request);
 		for (CardPlayer c : room.getSessions().values()) {
 			if (c != request.getPlayer()) {
 				c.handleEvent(this, request);
 			}
 		}
-		log ("Recv: %s Player Event - %s", room.getCode(), request.getXMLString());
+		addEvent (room, request);
+		log ("Recv: %s Player Event - %s", room.getCode(), request.getJsonString());
 	}
 	public CardEvent getEvent(CardGame cardGame) {
 		GameRoom room = GameRoom.findRoom (cardGame);

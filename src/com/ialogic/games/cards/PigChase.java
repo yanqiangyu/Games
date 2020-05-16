@@ -220,7 +220,7 @@ public class PigChase extends CardGame {
 					System.out.println(t);
 				}
 				starter = findLastPig();
-				ui.showText(scoreHand.getXMLString());
+				ui.showText(scoreHand.getJsonString ());
 				ui.showText("===========================================================");
 			}
 			ui.showText("=======================Game Over!==========================");
@@ -401,6 +401,8 @@ public class PigChase extends CardGame {
 			shootTheMoon = "<H>";
 			if (!hasPig.isEmpty() && !hasGoat.isEmpty()) {
 				score = "SHOOT THE MOON";
+				points += 2 * (0-pig) * scalePig;
+				// Reverse the Pig Score when this happens
 			}
 		}
 		if (!hasMultiplier.isEmpty() && hasPig.isEmpty() && hasGoat.isEmpty() && allHearts.size() == 0) {

@@ -50,30 +50,27 @@ function testStart () {
 
 function testLoop () 
 {
-	var testResponse=
-		"<event name='CardEventGameIdle'>" +
-		"<message>testState: " + testState + ", stage:" + testStage + "</message>" +
-		"</event>";
+	var testResponse= {
+			event:'CardEventGameIdle',
+			message: "testState: " + testState + ", stage:" + testStage
+		};
 	
 	switch (testState) {
 	case "Test_Login":
-		testResponse=
-			"<event name='CardEventLoginAck'>" +
-			"<message>Welcome</message>" +
-			"<player name='" + testUsers[0] + "' position='2'/>" +
-			"<status>OK</status>" +
-			"</event>";
+		testResponse= {
+			event:'CardEventLoginAck',
+			message: "Welcome",
+			player: {
+				name: testUsers[0],
+				position: 2
+			},
+			status: "OK"
+		};
 		testState = "Test_Idle";
 		break;
 	case "Test_Reconnect":
 		if (testStage == 0) {
-			testResponse = 
-				"<event name='CardEventPlayerReconnect'><message>Welcome back!</message>" +
-					"<player name='" + testUsers[0] + "' position='2' points='4H'><hand>XC,4D,5D,6D,7D,5H,XH,QS,4S</hand><faceup>XC</faceup><cardPlayed card='NA'/></player>" +
-					"<player name='" + testUsers[1] + "' position='3' points='9H'><hand>NA,NA,NA,NA,NA,NA,NA,NA</hand><faceup>JD</faceup><cardPlayed card='4C'/></player>" + 
-					"<player name='" + testUsers[2] + "' position='0' points='3H,5H'><hand>NA,NA,NA,NA,NA,NA,NA,NA</hand><faceup>AH</faceup><cardPlayed card='2C'/></player>" +
-					"<player name='" + testUsers[3] + "' position='1' points=''><hand>NA,NA,NA,NA,NA,NA,NA,NA</hand><faceup></faceup><cardPlayed card='3C'/></player>";
-			testResponse = testResponse + "</event>";
+			testResponse = null; // TODO
 		}
 		else if (testStage > 3) {
 			testState = "Test_EndHand";
@@ -83,58 +80,68 @@ function testLoop ()
 	case "Test_Idle":
 		++testStage;
 		if (testStage == 1) {
-			testResponse=
-				"<event name='CardEventGameIdle'>" +
-				"<message>Waiting for Players</message>" +
-				"</event>";
+			testResponse= {
+				event: 'CardEventGameIdle',
+				message: "Waiting for Players"
+			}
 		}
 		else if (testStage < 5) {
 			var i = testStage - 1;
-			testResponse=
-				"<event name='CardEventPlayerRegister'>" +
-				"<message>New Player: " + testUsers[testStage-1] + "</message>";
-			testResponse = testResponse + 
-				"<player name='" + testUsers[i] + "' position='" + ((i+2)%4) + "' />"; 
-			testResponse = testResponse + "</event>";
+			testResponse= {
+				event:'CardEventPlayerRegister',
+				message: "New Player: " + testUsers[testStage-1],
+				player_list: [
+					{
+						name: testUsers[i],
+						position: ((i+2)%4)
+					}
+				]
+			};
 		}
 		else {
-			testResponse=
-				"<event name='CardEventShuffleEffect'>" +
-				"<message>Shuffling Cards</message>";
-				testResponse = testResponse + "</event>";
+			testResponse= {
+				event:'CardEventShuffleEffect',
+				message: "Shuffling Cards ",
+			};
 			testState = "Test_DealCard";
 		}
 		break;
 	case "Test_DealCard":
-		testResponse=
-			"<event name='CardEventDealCards'>" +
-			"<message>Dealing Cards</message>" +
-				"<player name='Steve'>" +
-				"<hand>" + testHand + "</hand>" +
-				"</player>";
-			testResponse = testResponse + "</event>";
+			testResponse= {
+				event:'CardEventDealCards',
+				message: "Dealing Cards",
+				player: { 
+					name: testUsers[0],
+					position: 2,
+					hand: testHand
+				}
+			};
+			testStage = 0;
 			testState = "Test_Negotiate";
 			break;
 	case "Test_Negotiate":
-		testResponse=
-			"<event name='CardEventFaceUp'>" +
-			"<message>Choose Cards or Pass</message>" + 
-			"<rule reason='Special card only' allowed='AH,QS,XC,JD'/>";
-			testResponse = testResponse + "</event>";
-			testStage = 0;
+			testResponse= {
+				event:'CardEventFaceUp',
+				message: "Choose Cards or Pass",
+				rule: { 
+					reason: "Special card only",
+					allowed: "AH,QS,XC,JD"
+				}
+			};
 			testState = "Test_FaceUpResponse";
 			break;
 	case "Test_FaceUpResponse":
 		if (testFaceups.length > 0) {
 			var card = testFaceups.shift();
 			var p = (testStage + 3 + 2) % 4;
-			testResponse=
-				"<event name='CardEventFaceUpResponse'>" +
-				"<message>Player Face Up</message>" + 
-				"<player name='" + testUsers[p] + "'>" +
-				"<faceup>" + card + "</faceup>" +
-				"</player>";
-			testResponse = testResponse + "</event>";
+			testResponse= {
+				event:'CardEventFaceUpResponse',
+				message: "Player Face Up",
+				player: { 
+					name: testUsers[p]
+				},
+				card_played: card
+			};
 			++testStage;
 		}
 		else {
@@ -163,13 +170,17 @@ function testLoop ()
 			var card = testGame[r][1].split(",")[step];
 			
 			if ((testStage % 2) == 0) {
-				testResponse=
-					"<event name='CardEventTurnToPlay'>" +
-					"<message>" + testUsers[p] + "'s turn to play</message>" + 
-					"<player name='" + testUsers[p] + "'>" +
-					"</player>" +
-					"<rule reason='Test Only' allowed='" + card + "'/>";
-				testResponse = testResponse + "</event>";
+				testResponse= {
+					event:'CardEventTurnToPlay',
+					message: testUsers[p] + "'s turn to play",
+					player: { 
+						name: testUsers[p]
+					},
+					rule: {
+						reason: "Test Only",
+						allowed: card
+					}
+				};
 				if (p == 0) {
 					testState = "Test_PlayerTurnResponse";
 				}
@@ -177,13 +188,14 @@ function testLoop ()
 			}
 			else {
 				if (p != 0) {
-					testResponse=
-						"<event name='CardEventPlayerAction'>" +
-						"<message>" + testUsers[p] + " played card</message>" + 
-						"<player name='" + testUsers[p] +"'>" +
-						"<cardPlayed card='" + card + "'/>" +
-						"</player>";
-					testResponse = testResponse + "</event>";
+					testResponse= {
+						event:'CardEventPlayerAction',
+						message: testUsers[p] + " played card",
+						player: { 
+							name: testUsers[p],
+						},
+						card_played: card
+					};
 				}
 				if (step == 3) {
 					testState = "Test_EndRound";
@@ -200,38 +212,44 @@ function testLoop ()
 		var r = Math.floor (turn / 4);
 		var p = testGame[r][2];
 		var points = testGame[r][3];
-		testResponse=
-			"<event name='CardEventEndRound'>" +
-			"<message>Round Ended</message>" +
-			"<player name='" + testUsers[p] +
-				"' points='" + points +
-				"'>" +
-			"</player>";
-		testResponse = testResponse + "</event>";
+		testResponse= {
+			event:'CardEventEndRound',
+			message: "Round Ended",
+			player: { 
+				name: testUsers[p],
+			},
+			points_this_round: points
+		};
 		testState = "Test_PlayerReady";
 		break;
 	case "Test_EndHand":
 		testStage = 0;
-		testResponse=
-			"<event name='CardEventScoreBoard'>" +
-			"<message>Score for Test Hand</message>\n";
-			for (i = 0; i < testPoints.length; ++i) {
-				testResponse += "<player name='" + testUsers[i] + 
-					"' points='" + testPoints[i] + "' />\n";
+		testResponse= {
+			event:'CardEventScoreBoard',
+			message: "Score for Test Hand",
+			player_list: [],
+			lines: [],
+			faceup: ""
+		};
+		for (i = 0; i < testPoints.length; ++i) {
+			var ps = {
+				name: testUsers[i],
+				points: testPoints[i]
 			}
-			for (i = 0; i < testScore.length; ++i) {
-				testResponse += "<line>" + testScore[i] + "</line>\n";
+			testResponse.player_list.push(ps);
+		}
+		for (i = 0; i < testScore.length; ++i) {
+			testResponse.lines.push(testScore[i]);
+		}
+		var f = ""
+		var sep = ""
+		for (i = 0; i < testFaceups.length; ++i) {
+			if (testFaceups[i] != "") {
+				f += sep + testFaceups[i];
+				sep = ",";
 			}
-			testResponse += "<faceup>";
-			var sep = ""
-			for (i = 0; i < testFaceups.length; ++i) {
-				if (testFaceups[i] != "") {
-					testResponse += sep + testFaceups[i];
-					sep = ",";
-				}
-			}
-			testResponse += "</faceup>";
-		testResponse = testResponse + "</event>";
+		}
+		testResponse.faceup = f;
 		testState = "Test_End";
 		break;
 	case "Test_End":
@@ -241,5 +259,7 @@ function testLoop ()
 		break;
 	default:;
 	}
-	eventQueue.push (testResponse);
+	var text = JSON.stringify(testResponse)
+	console.log(text);
+	eventQueue.push (text);
 }

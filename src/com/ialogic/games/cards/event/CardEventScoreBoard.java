@@ -4,6 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+
 import com.ialogic.games.cards.Card;
 import com.ialogic.games.cards.CardPlayer;
 
@@ -18,19 +23,6 @@ public class CardEventScoreBoard extends CardEvent {
 
 	public void addLine(String ps) {
 		text.add(ps);
-	}
-	public String getXMLString() {
-		String response = String.format("<event name='%s'><message>%s</message>\n",
-				this.getClass().getSimpleName(), getMessage());
-		for (int i = 0; i < names.size(); ++i) {
-			response += String.format("<player name='%s' points='%s' />\n", names.get(i), points.get(i));
-		}
-		for (String line : text) {
-			response +=String.format ("<line>%s</line>\n", line);
-		}
-		response += String.format ("<faceup>%s</faceup>\n", faceups);
-		response += "</event>";
-		return response;
 	}
 	public void setPoints(List<CardPlayer> players) {
 		for (CardPlayer p : players) {
@@ -49,4 +41,21 @@ public class CardEventScoreBoard extends CardEvent {
 		}
 		faceups = Card.showCSList(cards);
 	}
+	public JsonObject getJsonObject () {
+		JsonObjectBuilder builder =  super.getJsonObjectBuilder();
+		JsonArrayBuilder ab = Json.createArrayBuilder();
+		for (int i = 0; i < names.size(); ++i) {
+			ab.add(Json.createObjectBuilder()
+				.add("name", names.get(i))
+				.add("points", points.get(i)).build());
+		}
+		builder.add("player_list", ab.build());
+		JsonArrayBuilder lb = Json.createArrayBuilder();
+		for (String line : text) {
+			lb.add(line);
+		}
+		builder.add("lines", lb.build());
+		builder.add("faceup", faceups);
+		return builder.build();
+	}	
 }

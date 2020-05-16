@@ -109,18 +109,27 @@ public abstract class CardPlayer {
 			}
 		}
 	}
-	public JsonValue getJsonObject() {
+	public JsonValue getJsonObject(boolean masked) {
+		String hand = Card.showCSList(getHand());
+		if (masked) {
+			hand = hand.replaceAll("[^,][^,]", "NA");
+		}
 		JsonObjectBuilder builder =  Json.createObjectBuilder()
 				.add("name",getName())
-				.add("postion", getPosition())
+				.add("position", getPosition())
 				.add("points", Card.showCSList(getPoints()))
 				.add("faceup", Card.showCSList(getFaceup()))
-				.add("hand", Card.showCSList(getHand()));
+				.add("hand", hand);
 				
 		if (getCardPlayed() != null) {
-				builder.add("card", getCardPlayed().toString());
+				builder.add("card", getCardPlayed().toString().substring(1,3));
 		}
 		return builder.build();
+	}
+	public JsonValue getJsonObjectId() {
+		return Json.createObjectBuilder()
+				.add("name",getName())
+				.add("position",getPosition ()).build();
 	}
 	abstract public void handleEvent (CardUI ui, CardEvent request);
 }

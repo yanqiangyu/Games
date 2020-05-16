@@ -114,10 +114,10 @@ function serverRequest (event, cards)
 	}
 }
 
-function findPlayerPosition (players)
+function findPlayerPosition (player)
 {
-	if (players && players[0]) {
-		var name = players[0].name;
+	if (player) {
+		var name = player.name;
 		for (i = 0; i < myPlayers.length; ++i) {
 			if (myPlayers[i] == name) {
 				return i;
@@ -130,11 +130,11 @@ function findPlayerPosition (players)
 
 function handleResponseText (text)
 {
-	var res = getResponseFromXML (text); 
+	var res = getResponseFromJson (text); 
 	var event = res.event;
 	var message = res.message;
-	var players = res.players;
-	var position = findPlayerPosition (players);
+	var player = res.player;
+	var position = findPlayerPosition (player);
 	//=============================================================
 	//	BEGIN State Transition:
 	//=============================================================
@@ -174,13 +174,14 @@ function handleResponseText (text)
 			break;
 		}
 	case "FaceUpResponse":
-		if (event == "CardEventFaceUpResponse" ||
-			event == "CardEventGameIdle" ||
+		if (event == "CardEventGameIdle" ||
+			event == "CardEventFaceUpResponse" ||
 			event == "CardEventPlayerAutoAction") {
 			break;
 		}
 	case "PlayerTurnResponse":
-		if (event == "CardEventPlayerAutoAction") {
+		if (event == "CardEventGameIdle" ||
+			event == "CardEventPlayerAutoAction") {
 			break;
 		}
 	case "EndRound":
@@ -207,18 +208,19 @@ function handleResponseText (text)
 	case "CardEventLoginAck":
 		var status = res.status;
 		if (status == "OK") {
-			myPosition = players[0].position;
-			session.code = players[0].code;
+			myPosition = player.position;
+			session.code = res.new_code;
 			startGame ();
 		}
 		else {
 			restartClient (message);
 		}
 	case "CardEventPlayerRegister":
-		if (players) {
-			for (i = 0; i < players.length; ++i) {
-				var p = (players[i].position - myPosition + 4) % 4;
-				setPlayer (p, players[i].name);
+		if (res.player_list) {
+			var player_list = res.player_list;
+			for (i = 0; i < player_list.length; ++i) {
+				var p = (player_list[i].position - myPosition + 4) % 4;
+				setPlayer (p, player_list[i].name);
 			}
 		}
 		prompt (message);
@@ -229,42 +231,41 @@ function handleResponseText (text)
 		cleanup ();
 		break;
 	case "CardEventDealCards":
-		dealCards (res.players[0].hand);
+		dealCards (res.player.hand);
 		break;
 	case "CardEventFaceUp":
 		faceupReady (res.rule.reason, res.rule.allowed);
-		if (position == 0 && autoPlayGame) {
-			sendAutoPlayAction ();
-		}
 		break;
 	case "CardEventFaceUpResponse":
-		showFaceup (position, res.players[0].faceup);
+		showFaceup (position, res.card_played);
 		break;
 	case "CardEventTurnToPlay":
-		playerReady (position, res.rule.reason, res.rule.allowed);
-		if (position == 0 && autoPlayGame) {
-			sendAutoPlayAction ();
-		}
+		playerReady (position, res.rule);
 		break;
 	case "CardEventPlayerAction":
-		playCard (position, players[0].card);
+		playCard (position, res.card_played);
 		break;
 	case "CardEventPlayerAutoAction":
 		autoPlayCard ();
 		break;
 	case "CardEventEndRound":
-		discardCards (position, players[0].points);
+		discardCards (position, res.points_this_round);
 		gameState = "PlayerReady";
 		break;
 	case "CardEventScoreBoard":
-		score (players, res.lines, res.faceup);
+		score (res.player_list, res.lines, res.faceup);
 		break;
 	case "CardEventPlayerReconnect":
 		gameState = "Reconnect";
 		prompt (message);
 		cleanup ();
-		setPlayerDisplay (players);
+		setPlayerDisplay (res.player_list);
 		break;
+	case "CardEventGameIdle":
+		if (autoPlayGame && (gameState == "PlayerTurnResponse" || gameState == "FaceUpResponse")) {
+			sendAutoPlayAction ();
+		}
+		break
 	case "CardEventGameOver":
 		gameState = "GameOver";
 		prompt ("Game Over. Thank you for playing.");
@@ -278,80 +279,19 @@ function handleResponseText (text)
 }
 
 function sendAutoPlayAction () {
-	var response = 
-		"<event name='CardEventPlayerAutoAction'>" +
-		"<message>Auto Player</message>" + 
-		"<player name='" + session.player +"'/>" + 
-		"</event>";
+	var response = {
+			event: "CardEventPlayerAutoAction",
+			message: "Auto Player is on",
+			player: {
+				name: session.player
+			}
+	}
 	var id = setTimeout (send, 500);
 	function send () {
-		eventQueue.unshift (response);
+		eventQueue.unshift (JSON.stringify(response));
 	}
 }
 
-function getResponseFromXML (text) {
-	var dom = new DOMParser().parseFromString(text,"text/xml");
-	var response = {
-			event: "",
-			message: "",
-			players : [],
-			status : "",
-			lines: [],
-			faceup: "",
-			rule: {
-				reason: "",
-				allowed: ""
-			},
-	};
-	response.event = dom.getElementsByTagName("event")[0].getAttribute("name")
-	response.message = dom.getElementsByTagName("message")[0].childNodes[0].nodeValue;
-	if (dom.getElementsByTagName("status")[0] && dom.getElementsByTagName("status")[0].childNodes[0]) {
-		response.status = dom.getElementsByTagName("status")[0].childNodes[0].nodeValue;
-	}
-	if (dom.getElementsByTagName("faceup")[0] && dom.getElementsByTagName("faceup")[0].childNodes[0]) {
-		response.faceup = dom.getElementsByTagName("faceup")[0].childNodes[0].nodeValue;
-	}
-	var rule = dom.getElementsByTagName("rule")[0];
-	if (rule) {
-		response.rule.reason = rule.getAttribute("reason");
-		response.rule.allowed = rule.getAttribute("allowed");
-	}
-	var players = dom.getElementsByTagName("player");
-	if (players) {
-		for (i = 0; i < players.length; ++i) {
-			var p = {
-				name: "",
-				code: "",
-				points: "",
-				position: 0,
-				card: "",
-				hand: "",
-				faceup: "",
-			};
-			var pDoc = dom.getElementsByTagName("player")[i];
-			p.name = pDoc.getAttribute("name");
-			p.points = pDoc.getAttribute("points");
-			p.code = pDoc.getAttribute("code");
-			if(pDoc.getAttribute("position")) {
-				p.position = parseInt(pDoc.getAttribute("position"));
-			}
-			if (pDoc.getElementsByTagName("cardPlayed")[0]) {
-				p.card = pDoc.getElementsByTagName("cardPlayed")[0].getAttribute("card");
-			}
-			if (pDoc.getElementsByTagName("hand")[0] && pDoc.getElementsByTagName("hand")[0].childNodes[0]) {
-				p.hand = pDoc.getElementsByTagName("hand")[0].childNodes[0].nodeValue;
-			}
-			if (pDoc.getElementsByTagName("faceup")[0] && pDoc.getElementsByTagName("faceup")[0].childNodes[0]) {
-				p.faceup = pDoc.getElementsByTagName("faceup")[0].childNodes[0].nodeValue;
-			}
-			response.players.push(p);
-		}
-	}
-	var lines = dom.getElementsByTagName("line");
-	if (lines) {
-		for (i = 0; i < lines.length; ++i) {
-			response.lines.push(lines[i].childNodes[0].nodeValue);
-		}
-	}
-	return response;
+function getResponseFromJson (text) {
+	return JSON.parse (text);
 }

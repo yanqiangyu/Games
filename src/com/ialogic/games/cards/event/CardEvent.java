@@ -3,16 +3,25 @@ package com.ialogic.games.cards.event;
 import java.util.HashMap;
 
 import javax.json.Json;
-import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
+import com.ialogic.games.cards.Card;
+import com.ialogic.games.cards.CardGameRule;
 import com.ialogic.games.cards.CardPlayer;
 
 public class CardEvent {
 	String message;
 	CardPlayer player;
-	
+	CardGameRule rule;
+	boolean masked=false;
+
+	public CardGameRule getRule() {
+		return rule;
+	}
+	public void setRule (CardGameRule rule) {
+		this.rule = rule;
+	}
 	public String getMessage() {
 		return message;
 	}
@@ -25,35 +34,37 @@ public class CardEvent {
 	public static CardEvent getEvent(String message) {
 		return new CardEvent (message);
 	}
+	public boolean isMasked() {
+		return masked;
+	}
+	public void setMasked(boolean masked) {
+		this.masked = masked;
+	}
 	public CardPlayer getPlayer() {
 		return player;
 	}
 	public void setPlayer(CardPlayer player) {
 		this.player = player;
 	}
-	public String getXMLString() {
-		String  p = "";
-		if (getPlayer() != null ) {
-			p = String.format("<player name='%s' position='%s'/>", getPlayer().getName(), getPlayer().getPosition());
-		}
-		String response = String.format("<event name='%s'><message>%s</message>%s</event>",
-				this.getClass().getSimpleName(), getMessage(), p);
-		return response;
-	}
-	public String getJsonString() {
-		return getJsonObject().toString();
-	}
-	public JsonObject getJsonObject () {
-		
+	public JsonObjectBuilder getJsonObjectBuilder() {
 		JsonObjectBuilder builder =  Json.createObjectBuilder()
 				.add("event",this.getClass().getSimpleName())
 				.add("message", getMessage());
 		if (getPlayer () != null) {
-			JsonArray players = Json.createArrayBuilder()
-				     .add(getPlayer().getJsonObject()).build();
-			builder.add ("players", players);
+			builder.add ("player", getPlayer().getJsonObjectId ());
 		}
-		return builder.build();
+		if (!masked && getRule () != null) {
+			builder.add ("rule", Json.createObjectBuilder()
+				.add("reason",  getRule().getExplanation())
+				.add("allowed", Card.showCSList(getRule().getAllowed())).build());
+		}
+		return builder;
+	}
+	public JsonObject getJsonObject () {
+		return getJsonObjectBuilder().build();
+	}
+	public String getJsonString() {
+		return getJsonObject().toString();
 	}
 	public void setFieldValues(HashMap<String, String> request) {
 	}

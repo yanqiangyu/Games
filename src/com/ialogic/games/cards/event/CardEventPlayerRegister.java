@@ -2,6 +2,11 @@ package com.ialogic.games.cards.event;
 
 import java.util.Collection;
 
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+
 import com.ialogic.games.cards.CardPlayer;
 
 public class CardEventPlayerRegister extends CardEvent {
@@ -15,13 +20,13 @@ public class CardEventPlayerRegister extends CardEvent {
 	public Collection<CardPlayer> getAllPlayers() {
 		return allPlayers;
 	}
-	public String getXMLString() {
-		String  p = "\n";
-		for (CardPlayer player  : allPlayers) {
-			p += String.format("<player name='%s' position='%s'/>\n", player.getName(), player.getPosition());
+	public JsonObject getJsonObject () {
+		JsonObjectBuilder builder = super.getJsonObjectBuilder ();
+		JsonArrayBuilder ab = Json.createArrayBuilder();
+		for (CardPlayer player : allPlayers) {
+			ab = ab.add(player.getJsonObjectId());
 		}
-		String response = String.format("<event name='%s'><message>%s</message>%s</event>",
-				this.getClass().getSimpleName(), getMessage(), p);
-		return response;
+		builder.add("player_list", ab);
+		return builder.build();
 	}
 }

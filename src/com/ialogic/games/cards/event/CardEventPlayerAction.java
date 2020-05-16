@@ -1,6 +1,12 @@
 package com.ialogic.games.cards.event;
 
 import java.util.HashMap;
+
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+
+import com.ialogic.games.cards.Card;
 import com.ialogic.games.cards.CardPlayer;
 
 public class CardEventPlayerAction extends CardEvent {
@@ -24,11 +30,9 @@ public class CardEventPlayerAction extends CardEvent {
 				getPlayer().getName(),
 				cardPlayed));
 	}
-	public String getXMLString() {
-		String response = String.format("<event name='%s'><message>%s</message><player name='%s'>"+
-				"<cardPlayed card='%s'/></player></event>",
-				this.getClass().getSimpleName(), getMessage(), 
-				getPlayer().getName(), cardPlayed);
-		return response;
+	public JsonObject getJsonObject () {
+		JsonObjectBuilder builder = super.getJsonObjectBuilder ();
+		builder.add ("card_played", cardPlayed);
+		return builder.build();
 	}
 }

@@ -223,7 +223,7 @@ function clickPlayer (p)
 }
 
 
-function playerReady (position, reason, allowed)
+function playerReady (position, rule)
 {
   var id = setInterval (work, 100);
   function work () {
@@ -231,14 +231,16 @@ function playerReady (position, reason, allowed)
  		  	clearInterval (id);
 			for (i = 0; i < 4; ++i) {
 				flashPlayer (i, i==position);
-				if (position == 0) {
-					if (allowed != "") {
-						enableCards (reason, allowed);
+				if (rule) {
+					if (position == 0) {
+						if (rule.allowed != "") {
+							enableCards (rule.reason, rule.allowed);
+						}
+						else {
+							prompt ("Unexpected rule exception");
+						}
+						gameState = "PlayerTurnResponse";
 					}
-					else {
-						prompt ("Unexpected rule exception");
-					}
-					gameState = "PlayerTurnResponse";
 				}
 			}
   	}
@@ -483,7 +485,7 @@ function setPlayerDisplayFaceup (p, c) {
 }
 
 function setPlayerDisplayPlayed (p, played, normal) {
-	if (played != "NA") {
+	if (played && played != "" && played != "NA") {
 		var l = getPlayerLocation (p);
 		cards = playerCards[p];
 		var i = 0;

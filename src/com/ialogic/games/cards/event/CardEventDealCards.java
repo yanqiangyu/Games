@@ -1,6 +1,8 @@
 package com.ialogic.games.cards.event;
 
-import com.ialogic.games.cards.Card;
+import javax.json.Json;
+import javax.json.JsonObjectBuilder;
+
 import com.ialogic.games.cards.CardPlayer;
 
 public class CardEventDealCards extends CardEvent {
@@ -8,10 +10,13 @@ public class CardEventDealCards extends CardEvent {
 		super("Card Dealt");
 		setPlayer (p);
 	}
-	public String getXMLString() {
-		CardPlayer p = getPlayer();
-		String response = String.format("<event name='%s'><message>%s</message><player name='%s' position='0'><hand>%s</hand></player></event>",
-				this.getClass().getSimpleName(), getMessage(), p.getName(),Card.showCSList(p.getHand()));
-		return response;
+	public JsonObjectBuilder getJsonObjectBuilder() {
+		JsonObjectBuilder builder =  Json.createObjectBuilder()
+				.add("event",this.getClass().getSimpleName())
+				.add("message", getMessage());
+		if (getPlayer () != null) {
+			builder.add ("player", getPlayer().getJsonObject (false));
+		}
+		return builder;
 	}
 }

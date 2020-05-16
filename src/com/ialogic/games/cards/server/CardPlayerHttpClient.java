@@ -40,12 +40,12 @@ public class CardPlayerHttpClient extends CardPlayer {
 				}
 			}
 			else if (request instanceof CardEventPlayerRegister) {
-				ui.playerEvent(request);
 				addNotification (request);
+				ui.playerEvent(request);
 			}
 			else if (request instanceof CardEventFaceUpResponse) {
 				setPendingInput (null);
-				String cards = ((CardEventFaceUpResponse) request).getCards();
+				String cards = ((CardEventFaceUpResponse) request).getCardPlayed();
 				faceupCards (cards);
 				ui.playerEvent(request);
 			}
@@ -62,6 +62,7 @@ public class CardPlayerHttpClient extends CardPlayer {
 			}
 			else if (request instanceof CardEventTurnToPlay) {
 				CardEventTurnToPlay masked = new CardEventTurnToPlay (request.getPlayer());
+				masked.setMasked(true);
 				ui.playerEvent(masked);
 				setPendingInput (request);
 				addNotification (request);
@@ -91,15 +92,14 @@ public class CardPlayerHttpClient extends CardPlayer {
 		String response = ""; 
 		if (!notificationQueue.isEmpty()) {
 			CardEvent e= notificationQueue.poll ();
-			response = e.getXMLString (); 
+			response = e.getJsonString (); 
 			System.out.println ("Sent to: " + code + " [" + getName() + "]" + response);
-			System.out.println ("****NEXT STEP: " + code + " [" + getName() + "]" + e.getJsonString());
 		}
 		return response;
 	}
 	@Override
-	public JsonValue getJsonObject() {
-		JsonValue obj =  super.getJsonObject();
+	public JsonValue getJsonObject(boolean masked) {
+		JsonValue obj =  super.getJsonObject(masked);
 		if (getCode () != null) {
 			JsonObjectBuilder builder = Json.createObjectBuilder();
 			for (String k : obj.asJsonObject().keySet()) {
