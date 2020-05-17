@@ -8,6 +8,7 @@ import javax.json.JsonObjectBuilder;
 import com.ialogic.games.cards.CardPlayer;
 
 public class CardEventPlayerReconnect extends CardEventPlayerRegister {
+	boolean gameOver = false;
 	public CardEventPlayerReconnect(String message) {
 		super(message);
 	}
@@ -19,6 +20,12 @@ public class CardEventPlayerReconnect extends CardEventPlayerRegister {
 			ab = ab.add(player.getJsonObject (masked));
 		}
 		builder.add("player_list", ab);
+		builder.add("game_over", isGameOver());
 		return builder.build();
+	}
+	public void setGameOver(boolean gameOver) {
+	}
+	public boolean isGameOver() {
+		return gameOver;
 	}
 }

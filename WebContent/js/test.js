@@ -8,48 +8,76 @@
 //*******************************************************************************
 var testThread=null;
 var testThreadInterval = 1000;
-var testUsers = ['Steve', 'Ying','Chris','Tiff'];
 var testState = "Test_Login";
 var testStage = 0;
-var testHand="3C,4C,5C,8C,7D,AD,5H,XH,JH,QH,AH,5S,9S";
-var testFaceups = ["XC,QS", '',"JD"];
+var testUsers = ['Steve', 'Ying','Chris','Tiff'];
+var testHand = "6C,8C,KC,2D,5D,XD,3H,7H,8H,2S,5S,7S,XS";
+var testFaceups = ["","","","JD"];
 var testGame = [
-	[2, '6D,XD,AD,2D', 0, ''],
-	[0, 'XH,6H,2H,7H', 0, '2H,6H,7H,XH'],
-	[0, '5H,4S,4H,9H', 3, '4H,5H,9H'],
-	[3, '2C,8C,9C,QC', 2, ''],
-	[2, '3H,4D,AH,8S', 0, '3H,AH'],
-	[0, 'QH,XC,KH,6S', 2, 'XC,QH,KH'],
-	[2, '8H,7C,JH,QD', 0, '8H,JH'],
-	[0, '4C,6C,3D,AC', 3, ''],
-	[3, '2S,9S,XS,AS', 2, ''],
-	[2, '9D,KD,7D,7S', 3, ''],
-	[3, '8D,3C,KC,5D', 3, ''],
-	[3, 'KS,5S,QS,3S', 3, 'QS'],
-	[3, 'JD,5C,JC,JS', 3, 'JD'],
+		[0, '2D,QD,3D,8D', 1, ''],
+		[1, 'XC,2C,AC,KC', 3, 'XC'],
+		[3, 'KD,5D,4D,9D', 3, ''],
+		[3, 'AH,7H,6H,2H', 3, '2H,6H,7H,AH'],
+		[3, 'JC,6C,4C,QC', 2, ''],
+		[2, 'JS,QS,5S,3S', 3, 'QS'],
+		[3, '6D,XD,AD,5C', 1, ''],
+		[1, 'JH,4H,5H,3H', 1, '3H,4H,5H,JH'],
+		[1, 'KS,AS,8S,7S', 2, ''],
+		[2, 'KH,QH,8H,XH', 2, '8H,XH,QH,KH'],
+		[2, '9S,4S,2S,6S', 2, ''],
+		[2, '9H,7D,8C,7C', 2, '9H'],
+		[2, '3C,JD,XS,9C', 1, 'JD'],
 ];
-var testScore = [
-	"Steve,Ying,Chris,Tiff",
-	"180,0,-1120,0",
-	"1,-480,-160",
-	"2,-840,-380",
-	"3,-1780,-380"
-]
+var testScoreBoard = 
 
-var testPoints = [
-	"2H,3H,9H,XH,JD,4H",
-	"",
-	"QS,KH,8H,XC,AH,5H,6H,7H,QH,JH",
-	""
-]
-
+{
+    "event": "CardEventScoreBoard",
+    "message": "Score for hand 8",
+    "player_list": [
+        {
+            "name": "Steve",
+            "points": ""
+        },
+        {
+            "name": "Chris",
+            "points": "JD,3H,4H,5H,JH"
+        },
+        {
+            "name": "Ying",
+            "points": "8H,9H,XH,QH,KH"
+        },
+        {
+            "name": "Tiff",
+            "points": "XC,2H,6H,7H,AH,QS"
+        }
+    ],
+    "lines": [
+        "Steve,Chris,Ying,Tiff",
+        "0,170,-100,-340",
+        "1,-160,110",
+        "2,-260,-90",
+        "3,-140,-320",
+        "4,-290,-320",
+        "5,-560,-200",
+        "6,-780,-340",
+        "7,-900,-420",
+        "8,-1000,-590"
+    ],
+    "faceup": "JD"
+}
 function testStart () {
+	for (i = 0; i < testScoreBoard.player_list.length; ++i ) {
+		testUsers[i] = testScoreBoard.player_list[i].name;
+	}
 	testThread = setInterval(testLoop, testThreadInterval);
 	return "Waiting for test cases...";
 }
 
 function testLoop () 
 {
+	if (eventQueue.length > 0) {
+		return;
+	}
 	var testResponse= {
 			event:'CardEventGameIdle',
 			message: "testState: " + testState + ", stage:" + testStage
@@ -133,7 +161,7 @@ function testLoop ()
 	case "Test_FaceUpResponse":
 		if (testFaceups.length > 0) {
 			var card = testFaceups.shift();
-			var p = (testStage + 3 + 2) % 4;
+			var p = (testStage + 3 + 1) % 4;
 			testResponse= {
 				event:'CardEventFaceUpResponse',
 				message: "Player Face Up",
@@ -224,42 +252,16 @@ function testLoop ()
 		break;
 	case "Test_EndHand":
 		testStage = 0;
-		testResponse= {
-			event:'CardEventScoreBoard',
-			message: "Score for Test Hand",
-			player_list: [],
-			lines: [],
-			faceup: ""
-		};
-		for (i = 0; i < testPoints.length; ++i) {
-			var ps = {
-				name: testUsers[i],
-				points: testPoints[i]
-			}
-			testResponse.player_list.push(ps);
-		}
-		for (i = 0; i < testScore.length; ++i) {
-			testResponse.lines.push(testScore[i]);
-		}
-		var f = ""
-		var sep = ""
-		for (i = 0; i < testFaceups.length; ++i) {
-			if (testFaceups[i] != "") {
-				f += sep + testFaceups[i];
-				sep = ",";
-			}
-		}
-		testResponse.faceup = f;
+		testResponse = testScoreBoard;
 		testState = "Test_End";
 		break;
 	case "Test_End":
-		prompt ("Restarting hand");
-		testStage = 5;
-		testState = "Test_Idle";
+		prompt ("Test End");
+		testStage = 0;
+		clearInterval (testThread);
 		break;
 	default:;
 	}
 	var text = JSON.stringify(testResponse)
-	console.log(text);
 	eventQueue.push (text);
 }

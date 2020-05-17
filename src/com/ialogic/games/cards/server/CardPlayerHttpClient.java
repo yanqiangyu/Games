@@ -15,6 +15,7 @@ import com.ialogic.games.cards.event.CardEventFaceUpResponse;
 import com.ialogic.games.cards.event.CardEventPlayerAction;
 import com.ialogic.games.cards.event.CardEventPlayerReconnect;
 import com.ialogic.games.cards.event.CardEventPlayerRegister;
+import com.ialogic.games.cards.event.CardEventScoreBoard;
 import com.ialogic.games.cards.event.CardEventTurnToPlay;
 
 public class CardPlayerHttpClient extends CardPlayer {
@@ -30,13 +31,21 @@ public class CardPlayerHttpClient extends CardPlayer {
 		return code;
 	}
 	public void handleEvent(CardUI ui, CardEvent request) {
+		if (request instanceof CardEventEndRound) {
+			endRound ();
+		}
+		if (request instanceof CardEventScoreBoard) {
+			setScoreBoard ((CardEventScoreBoard) request);
+		}
 		if (request.getPlayer() == this) {
 			if (request instanceof CardEventPlayerReconnect) {
 				notificationQueue.clear();
+				if (getScoreBoard() != null) {
+					addNotification (getScoreBoard());
+				}
 				addNotification (request);
-				CardEvent p = getPendingInput ();
-				if (p != null) {
-					addNotification (pendingInput);
+				if (getPendingInput () != null) {
+					addNotification (getPendingInput ());
 				}
 			}
 			else if (request instanceof CardEventPlayerRegister) {

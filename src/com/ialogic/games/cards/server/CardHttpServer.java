@@ -190,6 +190,9 @@ public class CardHttpServer implements CardUI {
 					((CardEventPlayerRegister)e).setAllPlayers (sessions.values());
 					e.setPlayer(c);
 					c.handleEvent(this, e);
+					if (room.getGame().isGameOver()) {
+						c.handleEvent(this, new CardEventGameOver());				
+					}
 				}
 				String code = (room == null ? "" : room.getCode());
 				CardEventLoginAck ack = new CardEventLoginAck (e.getPlayer(), code, m, status);

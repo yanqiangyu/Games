@@ -1,10 +1,20 @@
 package com.ialogic.games.cards;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonWriter;
+import javax.json.JsonWriterFactory;
+import javax.json.stream.JsonGenerator;
 
 import com.ialogic.games.cards.Card.Suits;
 import com.ialogic.games.cards.event.CardEvent;
@@ -116,112 +126,28 @@ public class PigChase extends CardGame {
 				deck.shuffle ();
 				ui.sendEvent (this, new CardEventShuffleEffect());
 				deck.deal (players);
-				testCases.add ("testHand = \"" + Card.showCSList (Card.sort(players.get(0).getHand())) + "\"");
+				testCases.add ("var testHand = \"" + Card.showCSList (Card.sort(players.get(0).getHand())) + "\";");
 				for (CardPlayer p : getPlayers()) {
 					ui.sendEvent (this, new CardEventDealCards (p));
 				}
-				ui.showText("===========================================================");
 				synchronized (faceUps) {
 					faceUps.clear();
 					ui.sendEvent (this, new CardEventFaceUp());
 					faceUps.wait();
 				}
-				if (starter < 0) {
-					starter = findStarter();
-					banner = String.format("====================%-20s===================", "    Three of Spades");
-					ui.showText(banner);
+				String sf = "";
+				String f = "";
+				for (CardPlayer p : getPlayers()) {
+					f += sf + "\"" + Card.showCSList(p.getFaceup()) + "\"";
+					sf = ",";
 				}
-				else {
-					banner = String.format("====================%-20s===================", "     Last Pig");
-					ui.showText(banner);
-				}
-				Set<Suits> suitsPlayed = new HashSet <Suits>();
-				for (int round = 1; round <= 13; ++round) {
-					int newStarter = starter;
-					List<Card>played = new ArrayList<Card>();
-					ui.showText("...........................................................");
-					for (int i = 0; i < 4; ++i) {
-						CardPlayer p = getPlayers().get ((starter + i) % 4);
-						CardEventTurnToPlay turn = new CardEventTurnToPlay (p);
-						turn.setRule (checkRules (hand, round, p, played, suitsPlayed));
-						synchronized (p) {
-							p.setCardPlayed(null);
-							ui.sendEvent (this, turn);
-							p.wait ();
-						}
-						played.add(p.getCardPlayed());
-					}
-					CardPlayer winner = getPlayers().get (starter);
-					Card highCard = winner.getCardPlayed();
-					for (int i = 1; i < 4; ++i) {
-						CardPlayer p = getPlayers().get ((starter + i) % 4);
-						if (highCard.compareTo (p.getCardPlayed()) < 0) {
-							winner = p;
-							newStarter = (starter + i) % 4;
-							highCard = p.getCardPlayed();
-						}
-					}
-					for (Card c: played) {
-						suitsPlayed.add(c.getSuit());
-					}
-					winner.collectTrick (played);
-					CardEventEndRound endRound = new CardEventEndRound (winner);
-					endRound.setPoints(getCardWithPoints (played));
-					ui.sendEvent (this, endRound);
-					
-					String trick = Card.showCSList (played);
-					String points = Card.showCSList (endRound.getPoints());
-					String testString = String.format("\t\t[%d, '%s', %d, '%s'],", 
-							starter, trick, newStarter, points);
-					testCases.add (testString);
-					starter = newStarter;
-				}
-				banner = String.format("==================== Score For Hand %-4d===================", hand);
-				ui.showText(banner);
-				for (CardPlayer p : getPlayers ()) {
-					String ps = updateScore (p);
-					ui.showText(ps);
-				}
-				ui.showText("...........................................................");
-				for (CardPlayerTeam team : teams) {
-					int total = 0;
-					for (CardPlayer p : team.getPlayers()) {
-						total += p.getScore();
-					}
-					String score = String.format("%24s Team Score %d", team.getName(), total);
-					ui.showText(score);
-					if (total >= 1000 || total <= -1000) {
-						setGameOver(true);
-					}
-					team.setTeamScore(total);
-				}
-				ui.showText("===========================================================");
-				CardEventScoreBoard scoreHand = new CardEventScoreBoard (String.format("Score for hand %d", hand));
-				String line1 = ""; 
-				String line2 = ""; 
-				String sep = "";
-				for (CardPlayer p : getPlayers ()) {
-					line1 += sep + p.getName();
-					line2 += sep + p.getCurScore();
-					sep = ",";
-				}
-				scoreHand.addLine(line1);
-				scoreHand.addLine(line2);
-				String line = hand + "," + teams[0].getTeamScore() + "," + teams[1].getTeamScore();
-				teamScores.add(line);
-				for (String s : teamScores) {
-					scoreHand.addLine(s);
-				}
-				scoreHand.setPoints (getPlayers());
-				scoreHand.setFaceups (faceUps);
-				ui.sendEvent(this, scoreHand);
+				testCases.add("var testFaceups = [" + f + "];");
+				testCases.add("var testGame = [");
+				starter = playHand (hand, starter, teams, testCases);
+				ui.showText("=====================Replay Test Case======================");
 				while (!testCases.isEmpty()) {
-					String t = testCases.remove(0);
-					System.out.println(t);
+					ui.showText(testCases.remove(0));
 				}
-				starter = findLastPig();
-				ui.showText(scoreHand.getJsonString ());
-				ui.showText("===========================================================");
 			}
 			ui.showText("=======================Game Over!==========================");
 			if (teams[0].getTeamScore() > teams[1].getTeamScore()) {
@@ -241,6 +167,87 @@ public class PigChase extends CardGame {
 		}
 		ui.sendEvent (this, new CardEventGameOver());
 	}
+	public int playHand (int hand, int starter, CardPlayerTeam teams[], ArrayList<String>testCases) throws InterruptedException {
+		if (starter < 0) {
+			starter = findStarter();
+		}
+		Set<Suits> suitsPlayed = new HashSet <Suits>();
+		for (int round = 1; round <= 13; ++round) {
+			int newStarter = starter;
+			List<Card>played = new ArrayList<Card>();
+			for (int i = 0; i < 4; ++i) {
+				CardPlayer p = getPlayers().get ((starter + i) % 4);
+				CardEventTurnToPlay turn = new CardEventTurnToPlay (p);
+				turn.setRule (checkRules (hand, round, p, played, suitsPlayed));
+				synchronized (p) {
+					p.setCardPlayed(null);
+					ui.sendEvent (this, turn);
+					p.wait ();
+				}
+				played.add(p.getCardPlayed());
+			}
+			CardPlayer winner = getPlayers().get (starter);
+			Card highCard = winner.getCardPlayed();
+			for (int i = 1; i < 4; ++i) {
+				CardPlayer p = getPlayers().get ((starter + i) % 4);
+				if (highCard.compareTo (p.getCardPlayed()) < 0) {
+					winner = p;
+					newStarter = (starter + i) % 4;
+					highCard = p.getCardPlayed();
+				}
+			}
+			for (Card c: played) {
+				suitsPlayed.add(c.getSuit());
+			}
+			winner.collectTrick (played);
+			CardEventEndRound endRound = new CardEventEndRound (winner);
+			endRound.setPoints(getCardWithPoints (played));
+			ui.sendEvent (this, endRound);
+			
+			String trick = Card.showCSList (played);
+			String points = Card.showCSList (endRound.getPoints());
+			String testString = String.format("\t\t[%d, '%s', %d, '%s'],", 
+					starter, trick, newStarter, points);
+			testCases.add (testString);
+			starter = newStarter;
+		}
+		testCases.add("];");
+		for (CardPlayer p : getPlayers ()) {
+			updateScore (p);
+		}
+		for (CardPlayerTeam team : teams) {
+			int total = 0;
+			for (CardPlayer p : team.getPlayers()) {
+				total += p.getScore();
+			}
+			if (total >= 1000 || total <= -1000) {
+				setGameOver(true);
+			}
+			team.setTeamScore(total);
+		}
+		CardEventScoreBoard scoreHand = new CardEventScoreBoard (String.format("Score for hand %d", hand));
+		String line1 = ""; 
+		String line2 = ""; 
+		String sep = "";
+		for (CardPlayer p : getPlayers ()) {
+			line1 += sep + p.getName();
+			line2 += sep + p.getCurScore();
+			sep = ",";
+		}
+		scoreHand.addLine(line1);
+		scoreHand.addLine(line2);
+		String line = hand + "," + teams[0].getTeamScore() + "," + teams[1].getTeamScore();
+		teamScores.add(line);
+		for (String s : teamScores) {
+			scoreHand.addLine(s);
+		}
+		scoreHand.setPoints (getPlayers());
+		scoreHand.setFaceups (faceUps);
+		ui.sendEvent(this, scoreHand);
+		testCases.add("var testScoreBoard = " + jsonPrettyPrint(scoreHand.getJsonString ()));
+		return starter = findLastPig();
+	}
+
 	private List<Card> getCardWithPoints(List<Card> played) {
 		List<Card>points = new ArrayList<Card>();
 		for (Card c : played) {
@@ -425,4 +432,21 @@ public class PigChase extends CardGame {
 		
 		return score;
 	}
+	public String jsonPrettyPrint (String jsonString) {
+	    StringWriter sw = new StringWriter();
+	    try {
+	       JsonReader jsonReader = Json.createReader(new StringReader(jsonString));
+	       JsonObject jsonObj = jsonReader.readObject();
+	       Map<String, Object> map = new HashMap<>();
+	       map.put(JsonGenerator.PRETTY_PRINTING, true);
+	       JsonWriterFactory writerFactory = Json.createWriterFactory(map);
+	       JsonWriter jsonWriter = writerFactory.createWriter(sw);
+	       jsonWriter.writeObject(jsonObj);
+	       jsonWriter.close();
+	    } catch(Exception e) {
+	       e.printStackTrace();
+	    }
+	    return sw.toString();
+	}
 }
+	    

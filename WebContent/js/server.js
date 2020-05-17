@@ -141,21 +141,28 @@ function handleResponseText (text)
 	if (event == "CardEventServerReject") {
 		restartClient (message);
 	}
+	var pass = false;
 	switch (gameState) {
 	case "Idle":
+		pass = true;
 		break;
 	case "NewHand":
 		gameState="Idle";
 		randomMove();
+		pass = true;
 		break;
 	case "Login":
 		if (event == "CardEventLoginAck") {
-			break;
+			pass = true;
 		}
+		break
+	case "Shuffling":
+		break;
 	case "CleanupEnd":
 		if (event == "CardEventDealCards") {
-			break;
+			pass = true;
 		}
+		break;
 	case "PlayerReady":
 		if (event == "CardEventEndRound") {
 			eventQueue.unshift(text);
@@ -163,39 +170,34 @@ function handleResponseText (text)
 			gameState = "EndRound";
 			return;
 		}
-		if (event == "CardEventFaceUp" || 
-			event == "CardEventGamePlayStart" ||
-			event == "CardEventShuffleEffect" ||
-			event == "CardEventPlayerAction" ||
-			event == "CardEventGameIdle" ||
-			event == "CardEventPlayerAck" ||
-			event == "CardEventFaceUpResponse" ||
-			event == "CardEventTurnToPlay") {
-			break;
+		if (event == "CardEventScoreBoard") {
+			gameState = "NewHand";
 		}
+		pass = true;
+		break;
 	case "FaceUpResponse":
 		if (event == "CardEventGameIdle" ||
 			event == "CardEventFaceUpResponse" ||
 			event == "CardEventPlayerAutoAction") {
-			break;
+			pass = true;
 		}
+		break;
 	case "PlayerTurnResponse":
 		if (event == "CardEventGameIdle" ||
 			event == "CardEventPlayerAutoAction") {
-			break;
+			pass = true;
 		}
+		break;
 	case "EndRound":
 		if (event == "CardEventEndRound") {
-			break;
+			pass = true;
 		}
-		if (event == "CardEventScoreBoard") {
-			gameState = "NewHand";
-			break;
-		}
+		break;
 	default:
+		break;
+	}
+	if (!pass) {
 		eventQueue.unshift(text);
-		// TODO Change to DEBUG
-		// prompt ("State: " + gameState + " Pending:" + event);
 		return;
 	}
 	//=============================================================
@@ -203,7 +205,6 @@ function handleResponseText (text)
 	//=============================================================
 	setServerState ("Connected");
 	prompt (message );
-	
 	switch (event) {
 	case "CardEventLoginAck":
 		var status = res.status;
@@ -226,7 +227,7 @@ function handleResponseText (text)
 		prompt (message);
 		break;
 	case "CardEventShuffleEffect":
-		gameState = "PlayerReady";
+		gameState = "Shuffling";
 		prompt (message);
 		cleanup ();
 		break;
@@ -237,7 +238,9 @@ function handleResponseText (text)
 		faceupReady (res.rule.reason, res.rule.allowed);
 		break;
 	case "CardEventFaceUpResponse":
-		showFaceup (position, res.card_played);
+		if (position != 0) {
+			showFaceup (position, res.card_played);
+		}
 		break;
 	case "CardEventTurnToPlay":
 		playerReady (position, res.rule);
@@ -286,10 +289,7 @@ function sendAutoPlayAction () {
 				name: session.player
 			}
 	}
-	var id = setTimeout (send, 500);
-	function send () {
-		eventQueue.unshift (JSON.stringify(response));
-	}
+	eventQueue.unshift (JSON.stringify(response));
 }
 
 function getResponseFromJson (text) {

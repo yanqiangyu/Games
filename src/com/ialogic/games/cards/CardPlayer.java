@@ -10,11 +10,13 @@ import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 
 import com.ialogic.games.cards.event.CardEvent;
+import com.ialogic.games.cards.event.CardEventScoreBoard;
 
 public abstract class CardPlayer {
 	String name;
 	int score;
 	int curScore;
+	private CardEventScoreBoard scoreBoard = null;
 	List<Card>hand = Collections.synchronizedList(new ArrayList<Card>());
 	List<Card>faceup =  Collections.synchronizedList(new ArrayList<Card>());
 	List<Card>points =  Collections.synchronizedList(new ArrayList<Card>());
@@ -108,6 +110,16 @@ public abstract class CardPlayer {
 				}
 			}
 		}
+	}
+	public void endRound() {
+		getTricks().add(cardPlayed);
+		setCardPlayed(null);
+	}
+	public CardEventScoreBoard getScoreBoard() {
+		return scoreBoard;
+	}
+	public void setScoreBoard(CardEventScoreBoard scoreBoard) {
+		this.scoreBoard = scoreBoard;
 	}
 	public JsonValue getJsonObject(boolean masked) {
 		String hand = Card.showCSList(getHand());
