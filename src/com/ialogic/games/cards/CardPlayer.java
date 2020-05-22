@@ -2,15 +2,23 @@ package com.ialogic.games.cards;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 
+import com.ialogic.games.cards.Card.Suits;
+import com.ialogic.games.cards.CardPlayer.GameMemory;
 import com.ialogic.games.cards.event.CardEvent;
+import com.ialogic.games.cards.event.CardEventEndRound;
+import com.ialogic.games.cards.event.CardEventFaceUpResponse;
+import com.ialogic.games.cards.event.CardEventPlayerAction;
 import com.ialogic.games.cards.event.CardEventScoreBoard;
+import com.ialogic.games.cards.event.CardEventTurnToPlay;
 
 public abstract class CardPlayer {
 	String name;
@@ -23,6 +31,28 @@ public abstract class CardPlayer {
 	List<Card>tricks =  Collections.synchronizedList(new ArrayList<Card>());
 	Card cardPlayed = null;
 	int position;
+	String algo = "random";
+	GameMemory memory = new GameMemory ();
+	public class GameMemory {
+		List<String>played = new ArrayList<String>();
+		List<String>names = new ArrayList<String>();
+		Map<String, String>faceup = new HashMap<String,String>();
+		Map<String, String>points = new HashMap<String,String>();
+		public String currentHand = "";
+		public String allowed = "";
+		public String toString () {
+			return String.format("Memory:%s, %s, played=%s, faceups=%s, points=%points, hand=%s",
+				getName(),
+				names,
+				played.toString(),
+				faceup.toString(),
+				points.toString(),
+				currentHand);
+		}
+	};
+	public GameMemory getMemory() {
+		return memory;
+	}
 	public String getName() {
 		return name;
 	}
@@ -84,7 +114,13 @@ public abstract class CardPlayer {
 	public void setCurScore(int curScore) {
 		this.curScore = curScore;
 	}
-	public void playCard(String cs) {
+	public String getAlgo () {
+		return algo;
+	}
+	public void setAlgo (String a) {
+		this.algo = a;
+	}
+	void playCard(String cs) {
 		Card played = null;
 		for (Card c : getHand ()) {
 			if (c.toString().contains(cs)) {
@@ -98,7 +134,7 @@ public abstract class CardPlayer {
 			setCardPlayed (played);
 		}
 	}
-	public void faceupCards(String cs) {
+	void faceupCards(String cs) {
 		if (!cs.isEmpty()) {
 			String cards[] = cs.split(",");
 			for (Card c : getHand ()) {
@@ -111,15 +147,48 @@ public abstract class CardPlayer {
 			}
 		}
 	}
-	public void endRound() {
+	private void endRound() {
 		getTricks().add(cardPlayed);
 		setCardPlayed(null);
+	}
+	private void setScoreBoard(CardEventScoreBoard scoreBoard) {
+		this.scoreBoard = scoreBoard;
 	}
 	public CardEventScoreBoard getScoreBoard() {
 		return scoreBoard;
 	}
-	public void setScoreBoard(CardEventScoreBoard scoreBoard) {
-		this.scoreBoard = scoreBoard;
+	public int countSuit(Suits suit) {
+		int count = 0;
+		for (Card c : getHand()) {
+			if (c.getSuit() == suit) {
+				++count;
+			}
+		}
+		return count;
+	}
+	public void memorizeEvent (CardEvent request) {
+		if (request instanceof CardEventEndRound) {
+			endRound ();
+		}
+		else if (request instanceof CardEventFaceUpResponse) {
+			String f = ((CardEventFaceUpResponse)request).getCardPlayed();
+			if (request.getPlayer() == this) {
+				faceupCards (f);
+			}
+			memory.faceup.put (getName(), f == null ? "" : f);
+		}
+		else if (request instanceof CardEventPlayerAction) {
+			String p = ((CardEventPlayerAction)request).getCardPlayed();
+			if (request.getPlayer() == this) {
+				playCard (p);
+			}
+			memory.played.add (p);
+			memory.points.put (getName (), Card.showCSList(request.getPlayer().getPoints()));
+		}
+		else if (request instanceof CardEventScoreBoard) {
+			setScoreBoard ((CardEventScoreBoard) request);
+			memory = new GameMemory();
+		}
 	}
 	public JsonValue getJsonObject(boolean masked) {
 		String hand = Card.showCSList(getHand());

@@ -1,20 +1,10 @@
 package com.ialogic.games.cards;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonWriter;
-import javax.json.JsonWriterFactory;
-import javax.json.stream.JsonGenerator;
 
 import com.ialogic.games.cards.Card.Suits;
 import com.ialogic.games.cards.event.CardEvent;
@@ -41,6 +31,7 @@ public class PigChase extends CardGame {
 	
 	Thread runThread = new Thread () {
 		public void run () {
+			setName ("Game Enegine:"+getId());
 			startGamePlay ();
 		}
 	};
@@ -142,12 +133,12 @@ public class PigChase extends CardGame {
 					sf = ",";
 				}
 				testCases.add("var testFaceups = [" + f + "];");
-				testCases.add("var testGame = [");
 				starter = playHand (hand, starter, teams, testCases);
 				ui.showText("=====================Replay Test Case======================");
 				while (!testCases.isEmpty()) {
 					ui.showText(testCases.remove(0));
 				}
+				ui.showText("Last Pig: " + getPlayers().get(starter).getName());
 			}
 			ui.showText("=======================Game Over!==========================");
 			if (teams[0].getTeamScore() > teams[1].getTeamScore()) {
@@ -167,24 +158,42 @@ public class PigChase extends CardGame {
 		}
 		ui.sendEvent (this, new CardEventGameOver());
 	}
-	public int playHand (int hand, int starter, CardPlayerTeam teams[], ArrayList<String>testCases) throws InterruptedException {
+	public int playHand (int hand, int starter, CardPlayerTeam teams[], ArrayList<String>recording) throws InterruptedException {
+		return playHand (hand, starter, 1, null, teams, recording);
+	}
+	public int playHand (int hand, int starter, int startRound, List<Card>playedCards, CardPlayerTeam teams[], ArrayList<String>recording) throws InterruptedException {
+		if (recording != null) recording.add("var testGame = [");
 		if (starter < 0) {
 			starter = findStarter();
 		}
 		Set<Suits> suitsPlayed = new HashSet <Suits>();
-		for (int round = 1; round <= 13; ++round) {
+		for (int round = startRound; round <= 13; ++round) {
 			int newStarter = starter;
+			int ps = 0;
 			List<Card>played = new ArrayList<Card>();
-			for (int i = 0; i < 4; ++i) {
+			if (round == startRound && playedCards != null) {
+				played.addAll(playedCards);
+				ps = played.size();
+			}
+			for (int i = ps; i < 4; ++i) {
 				CardPlayer p = getPlayers().get ((starter + i) % 4);
 				CardEventTurnToPlay turn = new CardEventTurnToPlay (p);
 				turn.setRule (checkRules (hand, round, p, played, suitsPlayed));
-				synchronized (p) {
-					p.setCardPlayed(null);
-					ui.sendEvent (this, turn);
-					p.wait ();
+				if (turn.getRule().getAllowed().size() > 0) {
+					synchronized (p) {
+						ui.sendEvent (this, turn);
+						p.wait ();
+					}
+					played.add(p.getCardPlayed());
 				}
-				played.add(p.getCardPlayed());
+				else {
+					ui.showText ("Exception: no card allowed " + round + "," + i + "," + played.size() + 
+							"\n" + turn.getJsonString());
+					for (CardPlayer pl : getPlayers()) {
+						ui.showText (pl.getJsonObject(false).toString());
+					}
+
+				}
 			}
 			CardPlayer winner = getPlayers().get (starter);
 			Card highCard = winner.getCardPlayed();
@@ -200,18 +209,21 @@ public class PigChase extends CardGame {
 				suitsPlayed.add(c.getSuit());
 			}
 			winner.collectTrick (played);
+			List<Card> points = getCardWithPoints (played);
+			winner.getPoints().addAll(points);
+			
 			CardEventEndRound endRound = new CardEventEndRound (winner);
-			endRound.setPoints(getCardWithPoints (played));
+			endRound.setPoints(points);
 			ui.sendEvent (this, endRound);
 			
-			String trick = Card.showCSList (played);
-			String points = Card.showCSList (endRound.getPoints());
-			String testString = String.format("\t\t[%d, '%s', %d, '%s'],", 
-					starter, trick, newStarter, points);
-			testCases.add (testString);
+			if (recording != null) {
+				String testString = String.format("\t\t[%d, '%s', %d, '%s'],", 
+						starter, Card.showCSList (played), newStarter, Card.showCSList (points));
+				recording.add (testString);
+			}
 			starter = newStarter;
 		}
-		testCases.add("];");
+		if (recording != null) recording.add("];");
 		for (CardPlayer p : getPlayers ()) {
 			updateScore (p);
 		}
@@ -244,8 +256,8 @@ public class PigChase extends CardGame {
 		scoreHand.setPoints (getPlayers());
 		scoreHand.setFaceups (faceUps);
 		ui.sendEvent(this, scoreHand);
-		testCases.add("var testScoreBoard = " + jsonPrettyPrint(scoreHand.getJsonString ()));
-		return starter = findLastPig();
+		if (recording != null) recording.add("var testScoreBoard = " + jsonPrettyPrint(scoreHand.getJsonString ()));
+		return findLastPig();
 	}
 
 	private List<Card> getCardWithPoints(List<Card> played) {
@@ -269,7 +281,7 @@ public class PigChase extends CardGame {
 	}
 	private int findLastPig () {
 		for (int i = 0; i < getPlayers().size(); ++i) {
-			for (Card c : getPlayers().get(i).getTricks()) {
+			for (Card c : getPlayers().get(i).getPoints()) {
 				if (c.isPig()) {
 					return i;
 				}
@@ -432,21 +444,46 @@ public class PigChase extends CardGame {
 		
 		return score;
 	}
-	public String jsonPrettyPrint (String jsonString) {
-	    StringWriter sw = new StringWriter();
-	    try {
-	       JsonReader jsonReader = Json.createReader(new StringReader(jsonString));
-	       JsonObject jsonObj = jsonReader.readObject();
-	       Map<String, Object> map = new HashMap<>();
-	       map.put(JsonGenerator.PRETTY_PRINTING, true);
-	       JsonWriterFactory writerFactory = Json.createWriterFactory(map);
-	       JsonWriter jsonWriter = writerFactory.createWriter(sw);
-	       jsonWriter.writeObject(jsonObj);
-	       jsonWriter.close();
-	    } catch(Exception e) {
-	       e.printStackTrace();
-	    }
-	    return sw.toString();
+	public ArrayList<String> runSimulation(List<CardPlayer> simPlayers) {
+		this.players = simPlayers;
+		teamScores.clear();
+		int round = 13 - players.get(0).getHand().size() + 1;
+		ArrayList<Card>played = new ArrayList<Card> ();
+		for (CardPlayer p : simPlayers) {
+			faceUps.put (p, p.getFaceup());
+			if (p.getCardPlayed() != null) {
+				played.add(p.getCardPlayed());
+			}
+		}
+		int starter = (4 - played.size() + 1) % 4;
+		CardPlayerTeam teams[] = new CardPlayerTeam[2];
+		teams[0] = new CardPlayerTeam ();
+		teams[0].getPlayers().add (getPlayers().get(0));
+		teams[0].getPlayers().add (getPlayers().get(2));
+		teams[1] = new CardPlayerTeam ();
+		teams[1].getPlayers().add (getPlayers().get(1));
+		teams[1].getPlayers().add (getPlayers().get(3));
+		
+		Thread pump = new Thread () {
+			public void run () {
+				setName (players.get(0).getName() + " simulation");
+				while (!interrupted()) {
+					CardEvent e = getEvent ();
+					PigChase.this.handleEvent(e);
+					if (e instanceof CardEventGameOver) {
+						break;
+					}
+				}
+			}
+		};
+		try {
+			pump.start();
+			playHand (1, starter, round, played, teams, null);
+			pump.interrupt();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 }
 	    

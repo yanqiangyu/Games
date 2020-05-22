@@ -3,12 +3,10 @@ package com.ialogic.games.cards.terminal;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
-
 import com.ialogic.games.cards.Card;
 import com.ialogic.games.cards.CardGame;
 import com.ialogic.games.cards.CardPlayer;
+import com.ialogic.games.cards.CardPlayerAI;
 import com.ialogic.games.cards.CardUI;
 import com.ialogic.games.cards.event.CardEvent;
 import com.ialogic.games.cards.event.CardEventFaceUp;
@@ -18,8 +16,8 @@ import com.ialogic.games.cards.event.CardEventPlayerRegister;
 import com.ialogic.games.cards.event.CardEventWaitForPlayers;
 
 public class TerminalUI implements CardUI {
-	Queue<CardEvent>events = new LinkedBlockingQueue<CardEvent> ();
 	CardEvent inputEvent = new CardEventGameOver ();
+	CardGame game;
 	private class TerminalInput extends Thread {
 		String prompt = null;
 		public void run () {
@@ -35,15 +33,20 @@ public class TerminalUI implements CardUI {
 					String in = reader.readLine();
 					if (!in.isEmpty()) {
 						if (in.toUpperCase().contentEquals("QUIT")) {
-							addEvent (new CardEventGameOver());
+							game.gameEvent (new CardEventGameOver());
 							break;
 						}
 						if (inputEvent instanceof CardEventPlayerRegister) {
 							inputEvent.setMessage("Add Player:");
-							CardPlayer p = new CardPlayerDummy ();
+							CardPlayer p = new CardPlayerAI ();
 							p.setName(in);
+							if (in.startsWith("AI_")) {
+								((CardPlayerAI)p).setAlgo("sim");
+							}
+								
 							inputEvent.setPlayer(p);
-							addEvent (inputEvent);
+							((CardEventPlayerRegister) inputEvent).setAllPlayers(game.getPlayers());
+							game.gameEvent (inputEvent);
 						}
 					}
 				}
@@ -69,19 +72,20 @@ public class TerminalUI implements CardUI {
 	}
 
 	public void open(CardGame cardGame) {
+		game = cardGame;
 		showText ("Welcome to a game of \"" + cardGame.getName() + "\"!");
-		CardEvent e = new CardEventGameStart ();
-		addEvent (e);
+		cardGame.gameEvent (new CardEventGameStart());
 	}
 
 	public void close(CardGame cardGame) {
 		terminalInput.interrupt();
+		cardGame.gameEvent (new CardEventGameOver());
 		showText ("Good bye!");
 	}
 	public void sendEvent(CardGame cardGame, CardEvent request) {
 		String message = "";
 		if (request instanceof CardEventGameOver) {
-			addEvent(request);
+			cardGame.gameEvent(request);
 		}
 		if (request instanceof CardEventWaitForPlayers) {
 			terminalInput.getPlayer (((CardEventWaitForPlayers)request).getNumPlayer());
@@ -104,26 +108,9 @@ public class TerminalUI implements CardUI {
 			}
 		}
 	}
-	public CardEvent getEvent(CardGame cardGame) {
-		synchronized (inputEvent) {
-			inputEvent.notifyAll();
-		}
-		synchronized (events) {
-			if (events.isEmpty()) {
-				try {
-					events.wait();
-				} catch (InterruptedException e1) {
-					showText ("Interrupted");
-					return new CardEventGameOver ();
-				}
-			}
-			CardEvent e = events.remove ();
-			return e;
-		}
-	}
 	public void playerEvent(CardEvent request) {
 		updateDisplay (request.getPlayer());
-		addEvent (request);
+		game.playerEvent(request);
 	}
 	private void updateDisplay (CardPlayer p) {
 		Card c= p.getCardPlayed();
@@ -138,11 +125,5 @@ public class TerminalUI implements CardUI {
 				hand,
 				points);
 		showText (line);
-	}
-	private void addEvent(CardEvent e) {
-		synchronized (events) {
-			events.add(e);
-			events.notifyAll();
-		}
 	}
 }

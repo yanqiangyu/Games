@@ -10,7 +10,6 @@ import java.net.URI;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -137,6 +136,7 @@ public class CardHttpServer implements CardUI {
 					game.setUi(this);
 					new Thread () {
 						public void run () {
+							setName ("Game Server Thread:" + clientCode);
 							game.play();
 						}
 					}.start();
@@ -180,6 +180,9 @@ public class CardHttpServer implements CardUI {
 							c.setPosition (sessions.size());
 							sessions.put(player, c);
 						}
+						if (player.startsWith("AI_")) {
+							c.setAlgo("sim");
+						}
 						m = "Welcome!";
 						e.setMessage(m);
 					}
@@ -203,7 +206,7 @@ public class CardHttpServer implements CardUI {
 				CardPlayer c = GameRoom.getRoom(clientCode).getSessions().get(player);
 				e.setPlayer(c);
 				if (e instanceof CardEventPlayerUpdate) {
-					response = ((CardPlayerHttpClient)c).getEventFromQueue ();
+					response = ((CardPlayerHttpClient)c).getNotification ();
 					if (response.isEmpty()) {
 						int n = GameRoom.getRoom(clientCode).getSessions().size();
 						int numPlayer = GameRoom.getRoom(clientCode).getNumPlayer();
@@ -256,7 +259,7 @@ public class CardHttpServer implements CardUI {
 	}
 	public void open(CardGame cardGame) {
 		GameRoom room = GameRoom.findRoom (cardGame);
-		addEvent(room, new CardEventGameStart ());
+		cardGame.gameEvent(new CardEventGameStart ());
 		log ("SERVER: Game %s %s Started.", cardGame.getName(), room.getCode());
 	}
 	public void close(CardGame cardGame) {
@@ -276,7 +279,7 @@ public class CardHttpServer implements CardUI {
 			return;
 		}
 		if (request instanceof CardEventGameOver) {
-			addEvent(room, request);
+			cardGame.gameEvent(request);
 		}
 		if (request.getPlayer() != null) {
 			log ("Send: %s %s - %s", room.getCode(), request.getMessage(), request.getPlayer().getName());
@@ -293,36 +296,8 @@ public class CardHttpServer implements CardUI {
 	public void playerEvent(CardEvent request) {
 		String code = ((CardPlayerHttpClient) request.getPlayer()).getCode();
 		GameRoom room = GameRoom.getRoom(code);
-		for (CardPlayer c : room.getSessions().values()) {
-			if (c != request.getPlayer()) {
-				c.handleEvent(this, request);
-			}
-		}
-		addEvent (room, request);
+		room.getGame().playerEvent(request);
 		log ("Recv: %s Player Event - %s", room.getCode(), request.getJsonString());
-	}
-	public CardEvent getEvent(CardGame cardGame) {
-		GameRoom room = GameRoom.findRoom (cardGame);
-		Queue<CardEvent>events = room.getEvents();
-		synchronized (events) {
-			if (events.isEmpty()) {
-				try {
-					events.wait();
-				} catch (InterruptedException e1) {
-					log ("SERVER: Game %s Interrupted", room.getCode());
-					return new CardEventGameOver ();
-				}
-			}
-			CardEvent e = events.remove ();
-			return e;
-		}
-	}
-	private void addEvent(GameRoom room, CardEvent e) {
-		Queue<CardEvent>events = room.getEvents();
-		synchronized (events) {
-			events.add(e);
-			events.notifyAll();
-		}
 	}
 	static public void main (String args[]) {
 		new CardHttpServer (8001);

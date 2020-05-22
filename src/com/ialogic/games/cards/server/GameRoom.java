@@ -15,13 +15,11 @@ public class GameRoom {
 	static private ConcurrentHashMap<CardGame, GameRoom>gameIndex = new ConcurrentHashMap<CardGame, GameRoom>();
 	private CardGame game;
 	private String code="";
-	private Queue<CardEvent>events = new LinkedBlockingQueue<CardEvent> ();
 	private HashMap<String, CardPlayer> sessions = new HashMap<String, CardPlayer> ();
 	private int numPlayer;
 	public GameRoom () {
 		game = new PigChase();
 		sessions.clear();
-		events.clear();
 		do {
 			code = String.format("%04d", (int) (Math.random() * 10000));
 		} while (rooms.containsKey(code));
@@ -43,12 +41,6 @@ public class GameRoom {
 	}
 	public void setCode(String code) {
 		this.code = code;
-	}
-	public Queue<CardEvent> getEvents() {
-		return events;
-	}
-	public void setEvents(Queue<CardEvent> events) {
-		this.events = events;
 	}
 	public HashMap<String, CardPlayer> getSessions() {
 		return sessions;

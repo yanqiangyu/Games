@@ -129,9 +129,7 @@ function showFaceup (p, c)
   	if (gameState == "FaceUpResponse" || gameState == "PlayerReady") {
  		  	clearInterval (id);
 			flashPlayer (p, false);
-			if (p != 0) {
-				setPlayerDisplayFaceup (p, c);
-			}
+			setPlayerDisplayFaceup (p, c);
   	}
   }
 }

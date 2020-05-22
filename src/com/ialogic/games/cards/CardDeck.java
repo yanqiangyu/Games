@@ -16,6 +16,9 @@ public class CardDeck {
 			}
 		}
 	}
+	public List<Card> cards () {
+		return cards;
+	}
 	public List<Card> played () {
 		return played;
 	}

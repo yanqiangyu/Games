@@ -8,5 +8,4 @@ public interface CardUI {
 	void close(CardGame cardGame);
 	void sendEvent (CardGame cardGame, CardEvent request);
 	void playerEvent (CardEvent request);
-	CardEvent getEvent(CardGame cardGame);
 }

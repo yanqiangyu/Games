@@ -238,9 +238,7 @@ function handleResponseText (text)
 		faceupReady (res.rule.reason, res.rule.allowed);
 		break;
 	case "CardEventFaceUpResponse":
-		if (position != 0) {
-			showFaceup (position, res.card_played);
-		}
+		showFaceup (position, res.card_played);
 		break;
 	case "CardEventTurnToPlay":
 		playerReady (position, res.rule);

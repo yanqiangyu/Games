@@ -2,11 +2,9 @@ package com.ialogic.games.cards.event;
 
 import java.util.HashMap;
 
-import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
-import com.ialogic.games.cards.Card;
 import com.ialogic.games.cards.CardPlayer;
 
 public class CardEventPlayerAction extends CardEvent {
@@ -32,7 +30,9 @@ public class CardEventPlayerAction extends CardEvent {
 	}
 	public JsonObject getJsonObject () {
 		JsonObjectBuilder builder = super.getJsonObjectBuilder ();
-		builder.add ("card_played", cardPlayed);
+		if (cardPlayed != null) {
+			builder.add ("card_played", cardPlayed);
+		}
 		return builder.build();
 	}
 }

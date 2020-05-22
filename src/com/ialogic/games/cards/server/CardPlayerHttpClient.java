@@ -1,11 +1,16 @@
 package com.ialogic.games.cards.server;
 
+import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 
+import com.ialogic.games.cards.Card;
+import com.ialogic.games.cards.CardGameRule;
+import com.ialogic.games.cards.CardGameSimulation;
 import com.ialogic.games.cards.CardPlayer;
 import com.ialogic.games.cards.CardUI;
 import com.ialogic.games.cards.event.CardEvent;
@@ -15,7 +20,6 @@ import com.ialogic.games.cards.event.CardEventFaceUpResponse;
 import com.ialogic.games.cards.event.CardEventPlayerAction;
 import com.ialogic.games.cards.event.CardEventPlayerReconnect;
 import com.ialogic.games.cards.event.CardEventPlayerRegister;
-import com.ialogic.games.cards.event.CardEventScoreBoard;
 import com.ialogic.games.cards.event.CardEventTurnToPlay;
 
 public class CardPlayerHttpClient extends CardPlayer {
@@ -31,12 +35,7 @@ public class CardPlayerHttpClient extends CardPlayer {
 		return code;
 	}
 	public void handleEvent(CardUI ui, CardEvent request) {
-		if (request instanceof CardEventEndRound) {
-			endRound ();
-		}
-		if (request instanceof CardEventScoreBoard) {
-			setScoreBoard ((CardEventScoreBoard) request);
-		}
+		memorizeEvent(request);
 		if (request.getPlayer() == this) {
 			if (request instanceof CardEventPlayerReconnect) {
 				notificationQueue.clear();
@@ -52,20 +51,11 @@ public class CardPlayerHttpClient extends CardPlayer {
 				addNotification (request);
 				ui.playerEvent(request);
 			}
-			else if (request instanceof CardEventFaceUpResponse) {
-				setPendingInput (null);
-				String cards = ((CardEventFaceUpResponse) request).getCardPlayed();
-				faceupCards (cards);
-				ui.playerEvent(request);
-			}
 			else if (request instanceof CardEventPlayerAction) {
 				setPendingInput (null);
-				String card = ((CardEventPlayerAction) request).getCardPlayed();
-				playCard (card);
 				ui.playerEvent(request);
 			}
 			else if (request instanceof CardEventEndRound) {
-				getPoints().addAll(((CardEventEndRound)request).getPoints());
 				ui.playerEvent(request);
 				addNotification (request);
 			}
@@ -73,8 +63,25 @@ public class CardPlayerHttpClient extends CardPlayer {
 				CardEventTurnToPlay masked = new CardEventTurnToPlay (request.getPlayer());
 				masked.setMasked(true);
 				ui.playerEvent(masked);
-				setPendingInput (request);
-				addNotification (request);
+				if (getAlgo ().contentEquals("sim")) {
+					CardGameRule r = ((CardEventTurnToPlay) request).getRule();
+					CardGameSimulation sim = new CardGameSimulation();
+					getMemory().currentHand = Card.showCSList (getHand());
+					getMemory().allowed = Card.showCSList(r.getAllowed());
+					ui.showText (getName() + " running Simmulation");
+					int n = sim.getRecommendation (getMemory(), 100);
+					ui.showText (getName() + " simulation completed.");
+					String c = r.getAllowed().get(n).toString().substring(1,3);
+					CardEventPlayerAction e = new CardEventPlayerAction (this);
+					e.setCardPlayed(c);
+					memorizeEvent (e);
+					ui.playerEvent (e);
+					addNotification (e);
+				}
+				else {
+					setPendingInput (request);
+					addNotification (request);
+				}
 			}
 			else {
 				addNotification (request);
@@ -82,9 +89,27 @@ public class CardPlayerHttpClient extends CardPlayer {
 		}
 		else {
 			if (request instanceof CardEventFaceUp) {
-				setPendingInput (request);
+				if (getAlgo ().contentEquals("sim")) {
+					CardEventFaceUpResponse e = new CardEventFaceUpResponse (this);
+					List<Card> f = new ArrayList<Card>();
+					for (Card c : getHand ()) {
+						if (c.isSpecial() && countSuit (c.getSuit()) > 4) {
+							f.add(c);
+						}
+					}
+					e.setCardPlayed(Card.showCSList(f));
+					memorizeEvent (e);
+					ui.playerEvent (e);
+					addNotification (e);
+				}
+				else {
+					setPendingInput (request);
+					addNotification (request);
+				}
 			}
-			addNotification (request);
+			else {
+				addNotification (request);
+			}
 		}
 	}
 	private void addNotification(CardEvent request) {
@@ -97,7 +122,7 @@ public class CardPlayerHttpClient extends CardPlayer {
 	private synchronized CardEvent getPendingInput () {
 		return pendingInput;
 	}
-	public String getEventFromQueue() {
+	public String getNotification () {
 		String response = ""; 
 		if (!notificationQueue.isEmpty()) {
 			CardEvent e= notificationQueue.poll ();
