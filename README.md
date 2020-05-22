@@ -35,7 +35,7 @@ To run your own game server:
 Development Log:
 
 05/21/2020      Reoganized the Game Engine and plugged in AI. The game tree evaluation is implemted
-                with random path exporers with decision based on simple min-max heuristic rules. 
+                with random path explorers with decision based on simple min-max heuristic rules. 
 		Further tweaking the algorithm can produce AI players of differnt styles of play.
 
 05/17/2020	Major rewrite of client server communication to use JSON representation. Thanks 
@@ -62,7 +62,7 @@ Development Log:
 
 05/02/2020      Test run with friends and updated READ ME for general public.
 
-05/02/2020      Finally it is ready for multiplayer. Auto play is still glitch.
+05/02/2020      Finally it is ready for multiplayer. Auto play is still glitchy.
 
 04/20/2020	I have the basic client HTML5 and JS framework and a basic java HTTP server proxy through Apache
 
