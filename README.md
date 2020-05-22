@@ -5,7 +5,7 @@ To play game copy the following link:
 		http://www.ialogic.com/
 
 	Enter your name and the code "new" to start a new game and share the 4 digit code on screen with 
-	your friends over video chat or conference call.
+	your friends over video chat or conference call. You can add AI players to the game now.
 	
 	Click on the blue automplay icon to see an interactive demo and check your browser compatibility. 
 	Latest versions of Chrome, Safari and Firefox should work fine on all devices. I personally don't 
