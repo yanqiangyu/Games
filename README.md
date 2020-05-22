@@ -34,6 +34,9 @@ To run your own game server:
 
 Development Log:
 
+05/17/2020	Major rewrite of client server communication to use JSON representation. Thanks 
+		to Chris for the push. Reconnection and auto-play are more stable now.
+
 05/13/2020	Finished multi-room support and rack the new Dell PowerEdge server.
 
 05/11/2020	Reorganized client side code and finished standalone server so you don't need Apache. 
