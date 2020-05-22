@@ -60,6 +60,14 @@ function login (player, code) {
 	return "Player/Code Required";
 }
 
+function serverRegsiterAI (aiPlayer) {
+	enableAI(false);
+	var saved_player = session.player;
+	session.player = aiPlayer;
+	serverRequest ("CardEventPlayerRegister", null);
+	session.player = saved_player;
+}
+
 function setServerState (s) {
 	serverState = s;
 	if (serverState == "Connected") {
@@ -90,7 +98,8 @@ function restartClient (message) {
 	}
 }
 
-function serverRequest (event, cards)
+
+function serverRequest (event, cards, code)
 {
 	var theUrl = "/cardgame?" +
 		"CardEvent=" + event + 
@@ -208,14 +217,18 @@ function handleResponseText (text)
 	switch (event) {
 	case "CardEventLoginAck":
 		var status = res.status;
-		if (status == "OK") {
-			myPosition = player.position;
-			session.code = res.new_code;
-			startGame ();
+		if (session.player == res.player.name) {
+			if (status == "OK") {
+				myPosition = player.position;
+				session.code = res.new_code;
+				startGame ();
+			}
+			else {
+				restartClient (message);
+			}
 		}
-		else {
-			restartClient (message);
-		}
+		enableAI (true);
+		break;
 	case "CardEventPlayerRegister":
 		if (res.player_list) {
 			var player_list = res.player_list;

@@ -30,9 +30,39 @@ function startGame()
 	randomMove ();
 }
 
+function enableAI (display) {
+	var ai = document.getElementById("selectAI");
+	if (display) {
+		setTimeout (function () {
+			for (i = 0; i < 4; ++i) {
+				if (myPlayers[i] == "") {
+						ai.style.display = "flex";
+						ai.classList.toggle("fade-in", true);
+					break;
+				}
+			}
+		}, 2000);
+	}
+	else {
+		ai.style.display = "none";
+	}
+}
+
+function requestAI ()
+{
+	for (i = 0; i < 4; ++i) {
+		if (myPlayers[i] == "") {
+			serverRegsiterAI ("AI_" + i);
+			break;
+		}
+	}
+}
+
 function cleanup ()
 {
   var id = setInterval (work, 100);
+  var ai = document.getElementById("selectAI");
+  ai.style.display="none";
   function work () {
   	// Wait for animation finishes
   	if (!animationPlaying) {

@@ -29,18 +29,26 @@
 		align-items:center;
 		justify-content:center;"
 	>
-  <div class="overlay" id="over">
-    <div class="overlay_text" id="register">
-    	<form>
-		  <label for="player" class='label'>Name:</label>
-		  <input type="text" id="player" name="player">
-		  <label for="code" class='label' >Code:</label>
-		  <input type="text" id="code" name="code" value="New" onfocus="helpCode()">
-		  <BR><BR>
-		  <input type="button" id="login" onclick="sendLogin()" value="Start">
-		</form>
-    </div>
-  </div>		
+	<div class="overlay" id="over">
+		<div class="overlay_text" id="register">
+			<form>
+			<label for="player" class='label'>Name:</label>
+			<input type="text" id="player" name="player">
+			<label for="code" class='label' >Code:</label>
+			<input type="text" id="code" name="code" value="New" onfocus="helpCode()">
+			<BR><BR>
+			<input type="button" id="login" onclick="sendLogin()" value="Start">
+			</form>
+		  </div>
+	</div>
+	<div class="selectAI" id="selectAI">
+		<div>
+			Waiting for friends 
+			<div>
+				<input type="button" id="selectAIButton" onclick="requestAI()" value="AI Player">
+			</div>
+		</div>
+	</div>		
 </div>
 <div class="logo" id="logo" onClick="clickLogo()">
 </div>
@@ -89,6 +97,8 @@ Hello!
 <TR><td align='center'><div id="hand_14"></div></td><td colspan='2' align='center'><div id="score_0_14"></div></td><td colspan='2' align='center'><div id="score_1_14"></div></td></TR>
 </table>
 </div>
+
+
 <div class="server" id="server" onClick="dismiss(this)">
 </div>
 <div class="info" id="info" onClick="document.getElementById('help').style.display='block'">
