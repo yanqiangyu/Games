@@ -17,6 +17,7 @@ import com.ialogic.games.cards.event.CardEvent;
 import com.ialogic.games.cards.event.CardEventEndRound;
 import com.ialogic.games.cards.event.CardEventFaceUpResponse;
 import com.ialogic.games.cards.event.CardEventPlayerAction;
+import com.ialogic.games.cards.event.CardEventPlayerRegister;
 import com.ialogic.games.cards.event.CardEventScoreBoard;
 import com.ialogic.games.cards.event.CardEventTurnToPlay;
 
@@ -35,7 +36,7 @@ public abstract class CardPlayer {
 	GameMemory memory = new GameMemory ();
 	public class GameMemory {
 		List<String>played = new ArrayList<String>();
-		List<String>names = new ArrayList<String>();
+		String names[] = new String[4];
 		Map<String, String>faceup = new HashMap<String,String>();
 		Map<String, String>points = new HashMap<String,String>();
 		public String currentHand = "";
@@ -170,12 +171,18 @@ public abstract class CardPlayer {
 		if (request instanceof CardEventEndRound) {
 			endRound ();
 		}
+		if (request instanceof CardEventPlayerRegister) {
+			for (CardPlayer p : ((CardEventPlayerRegister)request).getAllPlayers()) {
+				int idx = (p.getPosition() - getPosition() + 4) %4;
+				memory.names[idx] = p.getName();
+			}
+		}
 		else if (request instanceof CardEventFaceUpResponse) {
 			String f = ((CardEventFaceUpResponse)request).getCardPlayed();
 			if (request.getPlayer() == this) {
 				faceupCards (f);
 			}
-			memory.faceup.put (getName(), f == null ? "" : f);
+			memory.faceup.put (request.getPlayer().getName(), f == null ? "" : f);
 		}
 		else if (request instanceof CardEventPlayerAction) {
 			String p = ((CardEventPlayerAction)request).getCardPlayed();
@@ -183,11 +190,13 @@ public abstract class CardPlayer {
 				playCard (p);
 			}
 			memory.played.add (p);
-			memory.points.put (getName (), Card.showCSList(request.getPlayer().getPoints()));
+			memory.points.put (request.getPlayer().getName(), Card.showCSList(request.getPlayer().getPoints()));
 		}
 		else if (request instanceof CardEventScoreBoard) {
 			setScoreBoard ((CardEventScoreBoard) request);
+			String names[] = memory.names;
 			memory = new GameMemory();
+			memory.names = names;
 		}
 	}
 	public JsonValue getJsonObject(boolean masked) {

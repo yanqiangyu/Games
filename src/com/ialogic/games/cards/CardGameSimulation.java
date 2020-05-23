@@ -17,7 +17,10 @@ public class CardGameSimulation implements CardUI {
 		game.setUi(this);
 	}
 	protected HashSet<String> cslToHashSet (String csString) {
-		return new HashSet<String>(Arrays.asList(csString.split(",")));
+		HashSet<String> set = new HashSet<String>(Arrays.asList(csString.split(",")));
+		set.remove("");
+		set.remove("NA");
+		return set;
 	}
 	public void showText(String text) {
 		System.out.println (text);
@@ -50,6 +53,7 @@ public class CardGameSimulation implements CardUI {
 		HashSet<String> fullDeck = cslToHashSet (Card.showCSList(new CardDeck(52).cards));
 		HashSet<String> unknown = new HashSet<String>(fullDeck);
 		for (HashSet<String> f : faceup.values()) {
+			f.removeAll(played);
 			unknown.removeAll(f);
 		}
 		unknown.removeAll(myHand);
@@ -61,22 +65,12 @@ public class CardGameSimulation implements CardUI {
 		}
 		List<List<String>> hands = new ArrayList<List<String>>();
 		hands.add(new ArrayList<String>(myHand));
-		hands.add(new ArrayList<String>());		
-		hands.add(new ArrayList<String>());
-		hands.add(new ArrayList<String>());
-
-		int nf=1;
-		for (HashSet<String> f : faceup.values()) {
-			for (String s : f) {
-				if (!s.isEmpty()) {
-					for (String f1 : s.split (",")) {
-						if (!f1.isEmpty() && !f1.contentEquals("NA")) {
-							hands.get(nf).add (f1);
-						}
-					}
-				}
+		for (int i = 1; i < 4; ++i) {
+			ArrayList<String> hand = new ArrayList<String>();
+			if (faceup.containsKey(memory.names[i])) {
+				hand.addAll (faceup.get(memory.names[i]));
 			}
-			nf++;
+			hands.add(hand);
 		}
 		ArrayList<String>l = new ArrayList<String>(unknown);
 		while (l.size() > 0) {
@@ -95,6 +89,8 @@ public class CardGameSimulation implements CardUI {
 		}
 		if (total != 52) {
 			showText ("ASSERTION FAILED");
+			showText ("Names: " + Arrays.toString(memory.names));
+			showText ("Faceup: " + faceup.size() + faceup.toString());
 			showText ("Played: " + memory.played.size() + memory.played.toString());
 			showText ("MyHand: " + myHand.size() + myHand.toString());
 			showText ("Unknown: " + unknown.size() + unknown.toString());
@@ -102,19 +98,27 @@ public class CardGameSimulation implements CardUI {
 			for (List<String> h : hands) {
 				showText ("Hand:" + h.size() + h.toString());
 			}
-			showText ("ABORT");
+			showText ("Exception ABORT");
 		}
-
+		
 		ArrayList<CardPlayer> players = new ArrayList<CardPlayer>();
 		int start = memory.played.size() - (memory.played.size() % 4);
 		for (int i = 0; i < 4; ++i) {
-			CardPlayer p = new CardPlayerAI("P"+i);
+			CardPlayer p = new CardPlayerAI(memory.names[i]);
 			// p.setAlgo("heuristic");
 			if (position >= (4 - i)) {
 				p.setCardPlayed(new Card(memory.played.get(start + (i + position) %4)));
 			}
 			for (String s : hands.get(i)) {
 				p.getHand().add(new Card(s));
+			}
+			String pts = memory.points.get(p.getName());
+			if (pts != null) {
+				for (String s : pts.split(",")) {
+					if (!s.isEmpty()) {
+						p.getPoints().add(new Card(s));
+					}
+				}
 			}
 			p.getMemory().played.addAll (memory.played);
 			players.add(p);
@@ -258,12 +262,15 @@ public class CardGameSimulation implements CardUI {
 	static public void main (String args[]) {
 		CardGameSimulation sim = new CardGameSimulation ();
 		CardPlayerAI player = new CardPlayerAI("P0");
-		player.memory.currentHand="AH,KS,8C,5C,6D,4D,XH,3D,JD,JC,XS,7S,6S";
-		player.memory.allowed="3D,JD,6D,4D";
+		player.memory.currentHand="KD";
+		player.memory.allowed="KD";
 		player.memory.faceup = new HashMap<String, String>();
+		player.memory.faceup.put("AI_2", "AH,XC");
 		player.memory.played = new ArrayList<String>();
-		player.memory.played.add("5D");
-		player.memory.played.add("2D");
+		String played = "4S,AS,6S,2S,3D,AD,2D,9D,7H,8H,2H,5H,3H,AH,QS,JH,4D,JD,XD,7D,JS,XS,KS,3S,4H,QH,QC,XH,6H,7C,KH,9H,2C,9C,XC,5D,3C,6D,4C,JC,5S,5C,8S,8C,QD,8D,7S,6C";
+		for (String s : played.split(",")) {
+			player.memory.played.add(s);
+		}
 		sim.setAnalysisMode(true);
 		sim.showText("Recommendation: " + player.memory.allowed.split(",")[sim.getRecommendation(player.memory, 100)]);
 		sim.showText("Recommendation: " + player.memory.allowed.split(",")[sim.getRecommendation2 (player.memory, 100)]);

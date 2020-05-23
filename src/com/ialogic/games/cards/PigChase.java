@@ -59,9 +59,14 @@ public class PigChase extends CardGame {
 		else if (e instanceof CardEventPlayerRegister) {
 			synchronized (playerReady) {
 				if (getPlayers().size() < 4) {
+					e.getPlayer().setPosition(getPlayers().size());
 					getPlayers().add(e.getPlayer());
 					ui.showText("Total player:" + getPlayers ().size());
 					if (getPlayers().size () == 4) {
+						((CardEventPlayerRegister)e).setAllPlayers(getPlayers());
+						for (CardPlayer p : getPlayers ()) {
+							p.memorizeEvent(e);
+						}
 						playerReady.notifyAll();
 					}
 				}
