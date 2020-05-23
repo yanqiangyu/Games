@@ -45,6 +45,12 @@ public class CardPlayerAI extends CardPlayer {
 				else if (getAlgo ().contentEquals("random")) {
 					n = (int) (Math.random() * (double) r.getAllowed().size());
 				}
+				else if (getAlgo ().contentEquals("heuristic")) {
+					CardGameSimulation sim = new CardGameSimulation();
+					memory.currentHand = Card.showCSList (getHand());
+					memory.allowed = Card.showCSList(Card.sort(r.getAllowed()));
+					n = sim.getHeuristicRecommendation (memory);
+				}
 				String c = r.getAllowed().get(n).toString().substring(1,3);
 				CardEventPlayerAction e = new CardEventPlayerAction (this);
 				e.setCardPlayed(c);
