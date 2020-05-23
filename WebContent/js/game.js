@@ -58,7 +58,8 @@ function requestAI (num)
 {
 	for (i = 0; i < 4; ++i) {
 		if (myPlayers[i] == "") {
-			serverRegsiterAI ("AI_" + i);
+			myPlayers[i] = "AI_" + i;
+			serverRegsiterAI (myPlayers[i]);
 			--num;
 			if (num <= 0) {
 				break;
