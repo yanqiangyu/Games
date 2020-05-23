@@ -70,7 +70,9 @@ public class CardGameSimulation implements CardUI {
 			for (String s : f) {
 				if (!s.isEmpty()) {
 					for (String f1 : s.split (",")) {
-						hands.get(nf).add (f1);
+						if (!f1.isEmpty() && !f1.contentEquals("NA")) {
+							hands.get(nf).add (f1);
+						}
 					}
 				}
 			}
