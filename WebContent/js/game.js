@@ -34,10 +34,16 @@ function enableAI (display) {
 	var ai = document.getElementById("selectAI");
 	if (display) {
 		setTimeout (function () {
+			var w = document.getElementById("waiting");
 			for (i = 0; i < 4; ++i) {
 				if (myPlayers[i] == "") {
 						ai.style.display = "flex";
 						ai.classList.toggle("fade-in", true);
+						var np = "You are the host"
+						if (i > 1) {
+							np = "We have " + i + " players";
+						}
+						w.innerHTML = np + "<BR>Invite others to visit<BR>" + window.location.href + "<BR> Code " + session.code + " to join this game<BR>";
 					break;
 				}
 			}
@@ -48,14 +54,30 @@ function enableAI (display) {
 	}
 }
 
-function requestAI ()
+function requestAI (num)
 {
 	for (i = 0; i < 4; ++i) {
 		if (myPlayers[i] == "") {
 			serverRegsiterAI ("AI_" + i);
-			break;
+			--num;
+			if (num <= 0) {
+				break;
+			}
 		}
 	}
+}
+
+function referenceURL () 
+{
+	window.open('https://zh.wikipedia.org/wiki/%E6%8B%B1%E7%8C%AA');
+}
+
+function requestURL ()
+{
+	var subjectText = session.player + " invites you to a game. Code is " + session.code;
+	var bodyText = "Visit this link " + window.location.href + " and type in name and code " + session.code + " to join " + session.player + ".";
+	
+	window.location.href = "mailto:?&subject=" + subjectText + "&body=" + bodyText;
 }
 
 function cleanup ()
@@ -67,6 +89,7 @@ function cleanup ()
   	// Wait for animation finishes
   	if (!animationPlaying) {
   		clearInterval (id);
+		enableAI (false);
   	    gameState = "CleanUp";
 			var count = 0;
 			for (i=0; i<52; ++i) {
@@ -420,6 +443,15 @@ function score (players, lines, faceups)
 // Display functions for reconnect event and 
 // event handlers to render the game state
 //============================================================================
+function setPlayerDisplayOnly (players)
+{
+	for (k = 0; k < players.length; ++k) {
+		var player = players[k];
+		var p = (player.position - myPosition + 4) % 4;
+		setPlayer (p, player.name);
+	}
+}
+
 function setPlayerDisplay (players)
 {
 	  var id = setInterval (work, 100);

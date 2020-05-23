@@ -46,30 +46,38 @@
 }
 
 .selectAI {
-  color: white;
+  color: yellow;
   background-image: url('../image/AI.jpg');
   background-repeat: no-repeat;
   background-size: 100% 100%;
   background-color: #004C00;
   box-shadow: 5px 5px 5px black;
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 24px;
-  height: 62%;
-  width: 62%;
-  display:none;
-  align-items:center;
+  font-size: 20px;
+  font-weight: bold;
+  height: 61.8%;
+  width: 61.8%;
   justify-content:center;
-  text-align:center;
+  text-align: center;
+  align-items:center;
   opacity: 0.95;
+  display:none;
   transition: 1s ease;
-  z-Index: 1000;
+  z-Index: 300;
+}
+
+.selectAI_text {
+  background-color: transparent;
+  width:90%;
+  margin: auto; 
 }
 
 .selectAI_button {
-  width:50%; 
-  align:center;
+  background-color: transparent;
+  width: 200px;
+  margin: auto; 
 }
-	
+
 .score {
     color: darkblue;
     background-color: lightgray;
@@ -140,7 +148,7 @@ table, tr {
 	overflow: auto;
 	display: none;
 	opacity: 1;
-	z-Index: 200;
+	z-Index: 500;
 }
 
 h3.ex1 {

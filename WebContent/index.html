@@ -42,14 +42,18 @@
 		  </div>
 	</div>
 	<div class="selectAI" id="selectAI">
-		<div>
-			Waiting for friends 
-			<div>
-				<input type="button" id="selectAIButton" onclick="requestAI()" value="AI Player">
+		<div class="selectAI_text">
+			<div id="waiting">Text
+			</div> 
+			<div class="selectAI_button">
+				<input type="button" onclick="requestAI(1)" value="Add AI Player">
+				<input type="button" onclick="requestAI(3)" value="Start Now">
+				<input type="button" onclick="referenceURL()" value="中文介绍">
 			</div>
-		</div>
+		</div>			
 	</div>		
 </div>
+
 <div class="logo" id="logo" onClick="clickLogo()">
 </div>
 <div class="auto" id="auto" onClick="toggleAutoPlay()">
@@ -109,7 +113,7 @@ Hello!
 		<img height="64px" width="64px" src="image/goat.jpg" style="box-shadow: 5px 5px 5px black;">
 	</H1>
 	<h3 class="ex1">Enter player name and code "new" to start a game, then share the 4 digit code 
-	with your friends so they can join. Have fun!</h3>
+	with your friends so they can join. Scores are kept by teams. Have fun!</h3>
 	<div class="help-card-point-container">
 		<div>
 			<img height="56px" width="40px" src="image/cards/QS.jpg">

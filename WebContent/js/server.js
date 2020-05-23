@@ -270,10 +270,16 @@ function handleResponseText (text)
 		score (res.player_list, res.lines, res.faceup);
 		break;
 	case "CardEventPlayerReconnect":
-		gameState = "Reconnect";
 		prompt (message);
-		cleanup ();
-		setPlayerDisplay (res.player_list);
+		if (res.player_list.length > 3) {
+			gameState = "Reconnect";
+			cleanup ();
+			setPlayerDisplay (res.player_list);
+		}
+		else {
+			setPlayerDisplayOnly (res.player_list);
+			
+		}
 		break;
 	case "CardEventGameIdle":
 		if (autoPlayGame && (gameState == "PlayerTurnResponse" || gameState == "FaceUpResponse")) {
