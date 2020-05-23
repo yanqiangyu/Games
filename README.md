@@ -1,11 +1,11 @@
-This is a HTML5/js/Java Server project for a multiplayer Hearts-like card game called Pig-Chase. (中文：拱猪).
+This is a HTML5/js/Java Server project for a multiplayer Hearts-like card game called Pig-Chase. (中文：拱猪). It also has a quite human like AI engine that can support team play of 1 - 3 players.
 
-To play game click on the following link:
+To play game copy the following link:
 
 		http://www.ialogic.com/
 
 	Enter your name and the code "new" to start a new game and share the 4 digit code on screen with 
-	your friends over video chat or conference call.
+	your friends over video chat or conference call. You can add AI players to the game now.
 	
 	Click on the blue automplay icon to see an interactive demo and check your browser compatibility. 
 	Latest versions of Chrome, Safari and Firefox should work fine on all devices. I personally don't 
@@ -13,7 +13,7 @@ To play game click on the following link:
 	
 	Stay calm and have fun!
 
-For developers, the multiplayer game rule engine has a dummy auto player interface that you can extend for more 
+For developers, the multiplayer game rule engine has a AI auto player interface that you can extend for more 
 intelligent game play. To test this without the time consuming human UI, run this program.
 
 		com.ialogic.games.cards.CardPlayTest
@@ -33,6 +33,10 @@ To run your own game server:
 
 
 Development Log:
+
+05/21/2020      Reoganized the Game Engine and plugged in AI. The game tree evaluation is implemted
+                with random path explorers with decision based on simple min-max heuristic rules. 
+		Further tweaking the algorithm can produce AI players of differnt styles of play.
 
 05/17/2020	Major rewrite of client server communication to use JSON representation. Thanks 
 		to Chris for the push. Reconnection and auto-play are more stable now.
@@ -58,7 +62,7 @@ Development Log:
 
 05/02/2020      Test run with friends and updated READ ME for general public.
 
-05/02/2020      Finally it is ready for multiplayer. Auto play is still glitch.
+05/02/2020      Finally it is ready for multiplayer. Auto play is still glitchy.
 
 04/20/2020	I have the basic client HTML5 and JS framework and a basic java HTTP server proxy through Apache
 
