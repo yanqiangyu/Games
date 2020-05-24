@@ -34,6 +34,10 @@ To run your own game server:
 
 Development Log:
 
+05/24/2020	People start playing the single player game now and gave some really good feedback on 
+		usability. I tweaked the AI so that it will use more heuristics instincts from human 
+		players and more defensive in game play.
+
 05/21/2020      Reoganized the Game Engine and plugged in AI. The game tree evaluation is implemted
                 with random path explorers with decision based on simple min-max heuristic rules. 
 		Further tweaking the algorithm can produce AI players of differnt styles of play.
@@ -64,6 +68,6 @@ Development Log:
 
 05/02/2020      Finally it is ready for multiplayer. Auto play is still glitchy.
 
-04/20/2020	I have the basic client HTML5 and JS framework and a basic java HTTP server proxy through Apache
+04/20/2020	I have the basic client HTML5 and JS framework and a sun java HTTP server proxy through Apache
 
 Steve Yu
