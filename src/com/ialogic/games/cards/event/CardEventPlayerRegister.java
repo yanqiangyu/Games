@@ -25,7 +25,7 @@ public class CardEventPlayerRegister extends CardEvent {
 		JsonObjectBuilder builder = super.getJsonObjectBuilder ();
 		JsonArrayBuilder ab = Json.createArrayBuilder();
 		for (Iterator<CardPlayer> i = allPlayers.iterator(); i.hasNext();) {
-			CardPlayer p = i.next();
+			CardPlayer player = i.next();
 			ab = ab.add(player.getJsonObjectId());
 		}
 		builder.add("player_list", ab);
