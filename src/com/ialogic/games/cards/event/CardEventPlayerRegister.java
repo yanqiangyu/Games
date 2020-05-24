@@ -1,7 +1,7 @@
 package com.ialogic.games.cards.event;
 
+import java.util.ArrayList;
 import java.util.Collection;
-
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
@@ -10,7 +10,7 @@ import javax.json.JsonObjectBuilder;
 import com.ialogic.games.cards.CardPlayer;
 
 public class CardEventPlayerRegister extends CardEvent {
-	Collection<CardPlayer> allPlayers;
+	Collection<CardPlayer>  allPlayers;
 	public CardEventPlayerRegister(String name) {
 		super(name);
 	}
