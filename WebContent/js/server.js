@@ -144,9 +144,7 @@ function handleResponseText (text)
 	var message = res.message;
 	var player = res.player;
 	var position = findPlayerPosition (player);
-	if (res.player) {
-		message = res.player.name + ":" + message;
-	}
+
 	//=============================================================
 	//	BEGIN State Transition:
 	//=============================================================
