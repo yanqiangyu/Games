@@ -1,6 +1,6 @@
 This is a HTML5/js/Java Server project for a multiplayer Hearts-like card game called Pig-Chase. (中文：拱猪). It also has a quite human like AI engine that can support team play of 1 - 3 players.
 
-To play game copy the following link:
+To play game visit the site below where the game server is running:
 
 		http://www.ialogic.com/
 
