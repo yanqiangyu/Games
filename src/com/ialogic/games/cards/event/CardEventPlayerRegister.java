@@ -1,7 +1,8 @@
 package com.ialogic.games.cards.event;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
+
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
@@ -23,7 +24,8 @@ public class CardEventPlayerRegister extends CardEvent {
 	public JsonObject getJsonObject () {
 		JsonObjectBuilder builder = super.getJsonObjectBuilder ();
 		JsonArrayBuilder ab = Json.createArrayBuilder();
-		for (CardPlayer player : allPlayers) {
+		for (Iterator<CardPlayer> i = allPlayers.iterator(); i.hasNext();) {
+			CardPlayer p = i.next();
 			ab = ab.add(player.getJsonObjectId());
 		}
 		builder.add("player_list", ab);

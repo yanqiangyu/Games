@@ -105,7 +105,7 @@ public class CardGameSimulation implements CardUI {
 		int start = memory.played.size() - (memory.played.size() % 4);
 		for (int i = 0; i < 4; ++i) {
 			CardPlayer p = new CardPlayerAI(memory.names[i]);
-			// p.setAlgo("heuristic");
+			p.setAlgo("heuristic");
 			if (position >= (4 - i)) {
 				p.setCardPlayed(new Card(memory.played.get(start + (i + position) %4)));
 			}
@@ -162,24 +162,27 @@ public class CardGameSimulation implements CardUI {
 					(mind + maxd), maxd, mind,
 					(System.currentTimeMillis() - s0)));
 		}
-		return min + max;
+		int round = memory.played.size() / 4;
+		round = round > 6 ? 6 : round;
+		return (round * max + (13 - round) * min) / 13; 
 	}
 	public int getHeuristicRecommendation(GameMemory memory) {
 		String cards[] = memory.allowed.split(",");
 		int n = (int) (Math.random() * (double) cards.length);
-		List<CardPlayer>players = setupScenario(memory);
+		int s = memory.played.size();
+		int nc = s % 4;
 		boolean hasPig = false;
 		boolean hasGoat = false;
-		for (CardPlayer p : players) {
-			Card c = p.getCardPlayed();
-			if (c != null) {
-				if (c.isPig()) {
-					hasPig = true;
+		for (int i = 0; i < nc; ++i) {
+				Card c = new Card(memory.played.get(s-i-1));
+				if (c != null) {
+					if (c.isPig()) {
+						hasPig = true;
+					}
+					else if (c.isGoat()) {
+						hasGoat = true;
+					}
 				}
-				else if (c.isGoat()) {
-					hasGoat = true;
-				}
-			}
 		}
 		if (hasGoat || hasPig) {
 			n = hasPig ? 0 : cards.length-1;
@@ -191,7 +194,7 @@ public class CardGameSimulation implements CardUI {
 		String cards[] = memory.allowed.split(",");
 		int countWins [] = new int[cards.length];
 		
-		for (int k= 0; k < 100; ++k) {
+		for (int k= 0; k < 30; ++k) {
 			int scores[] = new int[cards.length];
 			for (int i = 0; i < cards.length; ++i) {
 				scores[i] = -1000000;
@@ -203,7 +206,7 @@ public class CardGameSimulation implements CardUI {
 				game.runSimulation (sp);
 				int t0 = sp.get(0).getScore() + sp.get(2).getScore();
 				int t1 = sp.get(1).getScore() + sp.get(3).getScore();
-				scores[i] = (t0 - t1);
+				scores[i] = -t1;
 				if (scores[i] > scores[n]) {
 					n = i;
 				}
@@ -235,21 +238,28 @@ public class CardGameSimulation implements CardUI {
 			c.setPosition(p.getPosition());
 			c.setScore(p.getScore());
 			c.getTricks().addAll(p.getTricks());
+			c.memory = p.getMemory();
 			copy.add(c);
 		}
 		return copy;
 	}
 	public int getRecommendation(GameMemory memory, int timeout) {
 		int n = 0;
-		int eval = -1000000;
-		int i = 0;
-		for (String card : memory.allowed.split(",")) {
-			int score = runSimulation(memory, card, 1000, timeout); 
-			if ( score > eval) {
-				n = i;
-				eval = score;
+		String cards[] = memory.allowed.split(",");
+		for (int retry = 0; retry < 3; ++ retry) {
+			int eval = -1000000;
+			int i = 0;
+			for (String card : cards ) {
+				int score = runSimulation(memory, card, 1000, timeout); 
+				if ( score > eval) {
+					n = i;
+					eval = score;
+				}
+				++i;
 			}
-			++i;
+			if ((memory.played.size() % 4) == 0 && !new Card(cards[n]).isSpecial()) {
+				break;
+			}
 		}
 		return n;
 	}
@@ -261,15 +271,17 @@ public class CardGameSimulation implements CardUI {
 	}
 	static public void main (String args[]) {
 		CardGameSimulation sim = new CardGameSimulation ();
-		CardPlayerAI player = new CardPlayerAI("P0");
-		player.memory.currentHand="KD";
-		player.memory.allowed="KD";
+		CardPlayerAI player = new CardPlayerAI("AI_1");
+		player.memory.currentHand="2C,6C,2D,KD,AD,JD,QD,7D,2H,8H,3S,4S,JS";
+		player.memory.allowed="2D,KD,AD,JD,QD,7D";
 		player.memory.faceup = new HashMap<String, String>();
-		player.memory.faceup.put("AI_2", "AH,XC");
+		player.memory.faceup.put("AI_1", "JD");
+		player.memory.names = new String [] {"AI_1", "AI_2", "AI3","AI4"};
 		player.memory.played = new ArrayList<String>();
-		String played = "4S,AS,6S,2S,3D,AD,2D,9D,7H,8H,2H,5H,3H,AH,QS,JH,4D,JD,XD,7D,JS,XS,KS,3S,4H,QH,QC,XH,6H,7C,KH,9H,2C,9C,XC,5D,3C,6D,4C,JC,5S,5C,8S,8C,QD,8D,7S,6C";
+		String played = "6D";
 		for (String s : played.split(",")) {
-			player.memory.played.add(s);
+			if (!played.isEmpty())
+				player.memory.played.add(s);
 		}
 		sim.setAnalysisMode(true);
 		sim.showText("Recommendation: " + player.memory.allowed.split(",")[sim.getRecommendation(player.memory, 100)]);

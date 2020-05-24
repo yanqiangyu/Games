@@ -3,6 +3,7 @@ package com.ialogic.games.cards;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -172,7 +173,8 @@ public abstract class CardPlayer {
 			endRound ();
 		}
 		if (request instanceof CardEventPlayerRegister) {
-			for (CardPlayer p : ((CardEventPlayerRegister)request).getAllPlayers()) {
+			for (Iterator<CardPlayer> i = ((CardEventPlayerRegister)request).getAllPlayers().iterator(); i.hasNext();) {
+				CardPlayer p = i.next();
 				int idx = (p.getPosition() - getPosition() + 4) %4;
 				memory.names[idx] = p.getName();
 			}
