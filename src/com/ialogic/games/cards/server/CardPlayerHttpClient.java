@@ -114,7 +114,7 @@ public class CardPlayerHttpClient extends CardPlayer {
 	}
 	private void addNotification(CardEvent request) {
 		notificationQueue.add(request);
-		// TODO: post request;
+		// TODO: notifyAll();
 	}
 	private synchronized void setPendingInput (CardEvent e) {
 		pendingInput = e;

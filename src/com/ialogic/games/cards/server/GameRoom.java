@@ -1,21 +1,18 @@
 package com.ialogic.games.cards.server;
 
 import java.util.HashMap;
-import java.util.Queue;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
-
 import com.ialogic.games.cards.CardGame;
 import com.ialogic.games.cards.CardPlayer;
 import com.ialogic.games.cards.PigChase;
-import com.ialogic.games.cards.event.CardEvent;
 
 public class GameRoom {
 	static private ConcurrentHashMap<String, GameRoom>rooms = new ConcurrentHashMap<String, GameRoom>();
 	static private ConcurrentHashMap<CardGame, GameRoom>gameIndex = new ConcurrentHashMap<CardGame, GameRoom>();
 	private CardGame game;
 	private String code="";
-	private HashMap<String, CardPlayer> sessions = new HashMap<String, CardPlayer> ();
+	private Map<String, CardPlayer> sessions = new ConcurrentHashMap <String, CardPlayer> ();
 	private int numPlayer;
 	public GameRoom () {
 		game = new PigChase();
@@ -42,7 +39,7 @@ public class GameRoom {
 	public void setCode(String code) {
 		this.code = code;
 	}
-	public HashMap<String, CardPlayer> getSessions() {
+	public Map<String, CardPlayer> getSessions() {
 		return sessions;
 	}
 	public void setSessions(HashMap<String, CardPlayer> sessions) {

@@ -138,6 +138,7 @@ function randomMove ()
 		if (y < 10) y = 20 - y;
 		carddeck[i].x = x;
 		carddeck[i].y = y;
+		raiseCard(i, 5);
 		moveCardEffect (i, carddeck[i].x, carddeck[i].y, loop, 100, 25, true);
 	}
 	function loop () {
@@ -247,6 +248,7 @@ function showPlayers ()
 		view.classList.add('player');
 		view.style.left = l.x + 'vw';
 		view.style.top = l.y + 'vh';
+		view.style.zIndex = 30;
 		view.setAttribute('id', "player"+p);
 		view.setAttribute('onClick', "clickPlayer('" + p + "')");
 	}

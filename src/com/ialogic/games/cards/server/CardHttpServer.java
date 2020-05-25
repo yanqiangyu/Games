@@ -10,6 +10,7 @@ import java.net.URI;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -171,7 +172,7 @@ public class CardHttpServer implements CardUI {
 					status = "REJECT";
 				}
 				if (status.contentEquals("OK") && room != null) {
-					HashMap<String, CardPlayer> sessions = room.getSessions();
+					Map<String, CardPlayer> sessions = room.getSessions();
 					CardPlayerHttpClient c = (CardPlayerHttpClient) sessions.get(player);
 					m = "Wecome back!";
 					if (c == null) {
@@ -208,6 +209,7 @@ public class CardHttpServer implements CardUI {
 				if (e instanceof CardEventPlayerUpdate) {
 					response = ((CardPlayerHttpClient)c).getNotification ();
 					if (response.isEmpty()) {
+						// wait();
 						int n = GameRoom.getRoom(clientCode).getSessions().size();
 						int numPlayer = GameRoom.getRoom(clientCode).getNumPlayer();
 						String m = (n == 1 ?
