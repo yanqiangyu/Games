@@ -206,7 +206,7 @@ public class CardGameSimulation implements CardUI {
 				game.runSimulation (sp);
 				int t0 = sp.get(0).getScore() + sp.get(2).getScore();
 				int t1 = sp.get(1).getScore() + sp.get(3).getScore();
-				scores[i] = -t1;
+				scores[i] = t0-t1;
 				if (scores[i] > scores[n]) {
 					n = i;
 				}
@@ -257,7 +257,7 @@ public class CardGameSimulation implements CardUI {
 				}
 				++i;
 			}
-			if ((memory.played.size() % 4) == 0 && !new Card(cards[n]).isSpecial()) {
+			if ((memory.played.size() & 0x3) != 0 || !new Card(cards[n]).isSpecial()) {
 				break;
 			}
 		}

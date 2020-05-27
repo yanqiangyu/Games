@@ -7,7 +7,7 @@ public class CardEventTurnToPlay extends CardEvent {
 		super(m);
 	}
 	public CardEventTurnToPlay(CardPlayer p) {
-		super("Turn to play");
+		super(String.format("%s turn to play", p.getName()));
 		setPlayer (p);
 	}
 }

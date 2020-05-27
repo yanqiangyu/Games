@@ -71,13 +71,13 @@ function shutdown () {
 
 function disableLogin ()
 {
-	var c=document.getElementById("login");
+	var c=document.getElementById("over");
 	c.style.display="none";
 }
 
 function enableLogin ()
 {
-	var c=document.getElementById("login");
+	var c=document.getElementById("over");
 	c.style.display="block";
 }
 
@@ -86,4 +86,11 @@ function helpCode ()
 	var c=document.getElementById("code");
 	c.value = "";
 	prompt ("Enter 'new' to start a new game");
+}
+
+function checkBrowser () {
+	if (typeof(EventSource) === "undefined" && !("WebSocket" in window)) {
+		prompt ("We are sorry that your browser is not supported.<BR>Please upgrade or install Firefox, Safari or Chrome.");
+		disableLogin ();
+	}
 }

@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script type="text/javascript">
+         function WebSocketTest() {
+            
+            if ("WebSocket" in window) {
+            	prompt ("WebSocket is supported by your Browser!");
+               
+               // Let us open a web socket
+               var ws = new WebSocket("ws://echo.ialogic.com/websocket");
+				
+               ws.onopen = function() {
+                  ws.send("Socket Connected");
+                  prompt  ("Message is sent...");
+	              	setInterval (function ()
+          			{
+    					ws.send ("New Message at " + new Date());      		
+          			}, 5000);
+               };
+				
+               ws.onmessage = function (evt) { 
+                  var received_msg = evt.data;
+                  prompt ("Message is received..." + received_msg);
+               };
+				
+               ws.onclose = function() { 
+                  // websocket is closed.
+                  prompt ("Connection is closed..."); 
+               };
+            } else {
+               // The browser doesn't support WebSocket
+               prompt ("WebSocket NOT supported by your Browser!");
+            }
+         }
+         function prompt (m) {
+        	var message = document.getElementById("message");
+        	message.innerHTML+="<BR>" + m;
+         }
+      </script>
+</head>
+
+<body>
+	<div id="sse">
+		<input type="button" onClick = "WebSocketTest()" value="Run WebSocket">
+	</div>
+	<div id="message"></div>
+</body>
+</html>

@@ -19,14 +19,15 @@ public class CardEventPlayerAction extends CardEvent {
 	public String getCardPlayed() {
 		return cardPlayed;
 	}
-	public void setCardPlayed(String cardPlayed) {
-		this.cardPlayed = cardPlayed;
-	}
-	public void setFieldValues(HashMap<String, String> request) {
-		cardPlayed = request.get("cards");
-		setMessage (String.format("Player '%s' played '%s'", 
+	public void setCardPlayed (String card) {
+		this.cardPlayed = card;
+		setMessage (String.format("%s played [%s]", 
 				getPlayer().getName(),
 				cardPlayed));
+	}
+	public void setFieldValues(HashMap<String, String> request) {
+		String card = request.get("cards");
+		setCardPlayed (card);
 	}
 	public JsonObject getJsonObject () {
 		JsonObjectBuilder builder = super.getJsonObjectBuilder ();

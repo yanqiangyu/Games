@@ -7,8 +7,10 @@ var session = {player: "", code: "",};
 var serverState="Offline";
 var eventQueue=[];
 var idleThread;
-var pollingInterval = 500;
+var pollingInterval = 750;
 var idleCount=0;
+var subscription = null;
+var promptText = "";
 
 function mainLoop ()
 {
@@ -16,10 +18,17 @@ function mainLoop ()
 		handleResponseText (eventQueue.shift());
 	}
 	else {
-		if (gameState != "Login") {
-			serverRequest ("CardEventPlayerUpdate", null);
+		var response = {
+				event: "CardEventGameIdle",
+				message: "Room: " + session.code + " " + promptText,
+				player: {
+					name: session.player
+				}
 		}
-		checkServerIdle ();
+		eventQueue.push (JSON.stringify(response));
+	}
+	if (subscription == null && gameState != "Login" && gameState != "GameOver") {
+		subscription = serverSubscribe ("CardEventPlayerUpdate");
 	}
 }
 
@@ -80,9 +89,7 @@ function checkServerIdle () {
 	++idleCount;
 	if (idleCount > 30) {
 		setServerState ("Offline");
-		if (!autoPlayGame) {
-			restartClient ("Server timeout, restarting client...");
-		}
+		restartClient ("Server timeout, restarting client...");
 	}
 }
 
@@ -98,18 +105,86 @@ function restartClient (message) {
 	}
 }
 
-
-function serverRequest (event, cards, code)
+function serverSubscribe (event)
 {
-	var theUrl = "/cardgame?" +
+	if (testThread != null) {
+		return null;
+	}
+	
+    if (typeof (EventSource) !== "undefined") {
+		var uri = "/cardgame?" +
 		"CardEvent=" + event + 
 		"&player="+ session.player +
-		"&code=" +  session.code + 
-		(cards == null ? "" : ("&cards=" + cards));
-		
-	if (testThread == null) {
+		"&code=" +  session.code;
+
+        // Use Server-Sent-Event (SSE)
+    	prompt ("Subscribe to SSE");
+    	console.log ("SSE : " + uri);
+		var sse = new EventSource(uri);
+		sse.onmessage = function(event) {
+			eventQueue.push (event.data);
+		}; 
+		sse.onerror = function() {
+			console.log("Error:" + JSON.stringify(this));
+			sse.close();
+			subscription = null;
+			setServerState ("Offline");
+		};
+		return sse;
+    }
+    else if ("WebSocket" in window) {
+        // Use WebSocket for Edge
+    	var sub = "CardEvent=" + event + 
+			"&player="+ session.player +
+			"&code=" +  session.code;
+    	var uri = location.href;
+    	if (uri.indexOf ("8001") > 0) {
+    		uri = uri.replace("8001", "8011");
+    		uri = uri.replace("http:", "ws:");
+    	}
+    	else {
+    		uri = "/websocket";
+    	}
+    	prompt ("Subscribe to WebSocket");
+    	console.log ("WS: " + uri + ":" + sub);
+        var ws = new WebSocket(uri);
+        ws.onopen = function() {
+        	ws.send(sub);
+        };
+        ws.onmessage = function (event) { 
+			eventQueue.push (event.data);
+        };
+		ws.onerror = function() {
+			console.log("Error:" + JSON.stringify(this));
+			ws.close ();
+			subscription = null;
+			setServerState ("Offline");
+		};
+		return ws;
+    }
+    else {
+    	// TO DO: Do we really want to fall back to polling? Nah...
+    	//
+    	alert ("Your browser does not support SSE or WebSocket.");
+    }
+	return null;
+}
+
+function serverRequest (event, cards)
+{
+	if (testThread != null) {
+		return;
+	}
+
+	var theUrl = "/cardgame?" +
+	"CardEvent=" + event + 
+	"&player="+ session.player +
+	"&code=" +  session.code + 
+	(cards == null ? "" : ("&cards=" + cards));
+	
+	if (typeof (EventSource) === "undefined") {
 	    var xhttp = new XMLHttpRequest();
-	    xhttp.onreadystatechange = function() {
+		xhttp.onreadystatechange = function() {
 	        if (this.readyState == 4 && this.status == 200) {
 	        	eventQueue.push (xhttp.responseText);
 	        }
@@ -120,6 +195,18 @@ function serverRequest (event, cards, code)
 	    };
 	    xhttp.open("GET", theUrl, true); 
 	    xhttp.send(null);
+	}
+	else {
+		var source = new EventSource(theUrl);
+		source.onmessage = function(event) {
+			eventQueue.push (event.data);
+			this.close();
+		}; 
+		source.onerror = function() {
+			console.log("Error:" + JSON.stringify(this));
+			checkServerIdle();
+			this.close();
+		}; 
 	}
 }
 
@@ -187,6 +274,7 @@ function handleResponseText (text)
 		break;
 	case "FaceUpResponse":
 		if (event == "CardEventGameIdle" ||
+			event == "CardEventLoginAck" ||
 			event == "CardEventFaceUpResponse" ||
 			event == "CardEventPlayerAutoAction") {
 			pass = true;
@@ -249,12 +337,14 @@ function handleResponseText (text)
 		dealCards (res.player.hand);
 		break;
 	case "CardEventFaceUp":
+		promptText = res.rule.reason;
 		faceupReady (res.rule.reason, res.rule.allowed);
 		break;
 	case "CardEventFaceUpResponse":
 		showFaceup (position, res.card_played);
 		break;
 	case "CardEventTurnToPlay":
+		promptText = res.rule.reason;
 		playerReady (position, res.rule);
 		break;
 	case "CardEventPlayerAction":
@@ -292,6 +382,9 @@ function handleResponseText (text)
 		prompt ("Game Over. Thank you for playing.");
 		cleanup ();
 		clearInterval(idleThread);
+		if (subscription != null) {
+			subscription.close();
+		}
 		setServerState ("Offline");
 		break;
 	default:
@@ -311,5 +404,6 @@ function sendAutoPlayAction () {
 }
 
 function getResponseFromJson (text) {
+	text = text.replace ("data: {", "{");
 	return JSON.parse (text);
 }

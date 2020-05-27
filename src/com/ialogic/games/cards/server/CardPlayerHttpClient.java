@@ -1,6 +1,8 @@
 package com.ialogic.games.cards.server;
 
 import java.util.List;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -21,6 +23,8 @@ import com.ialogic.games.cards.event.CardEventPlayerAction;
 import com.ialogic.games.cards.event.CardEventPlayerReconnect;
 import com.ialogic.games.cards.event.CardEventPlayerRegister;
 import com.ialogic.games.cards.event.CardEventTurnToPlay;
+import com.sun.net.httpserver.Headers;
+import com.sun.net.httpserver.HttpExchange;
 
 public class CardPlayerHttpClient extends CardPlayer {
 	String code;
@@ -131,6 +135,59 @@ public class CardPlayerHttpClient extends CardPlayer {
 		}
 		return response;
 	}
+	public void openSubscription(HttpExchange exchange) {
+		try {
+		  Headers headers = exchange.getResponseHeaders();
+		  headers.set ("Content-Type", "text/event-stream");
+		  headers.set ("Cache-Control", "no-cache");
+		  headers.set ("Expires", "-1");
+		  exchange.sendResponseHeaders(200, 0);
+		  final OutputStream os = exchange.getResponseBody();
+		  final String name =  "SSE: " + getName() + "[" + getCode() + "]";
+		  os.write (("retry: 1000\n").getBytes());
+		  System.out.println (name + "subscribed");
+		  new Thread () {
+			  public void run () {
+				  setName (name);
+				  while (!interrupted()) {
+					try {
+						String response = notificationQueue.take ().getJsonString (); 
+						os.write (("data: "+ response + "\n\n").getBytes());
+						os.flush();
+						System.out.println (getName() + response);
+					} catch (InterruptedException | IOException en) {
+						System.out.println ("Exception:" + en);
+					}
+				  }
+			  }
+		  }.start();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	public void openSubscription(WebSocketServer ws, String id) {
+		  final String name =  "WS: " + getName() + "[" + getCode() + "-" + id + "]";
+		  System.out.println (name + "subscribed");
+		  new Thread () {
+			  public void run () {
+				  setName (name);
+				  while (!interrupted()) {
+					try {
+						if (!ws.isConnected (id)) {
+							System.out.println (name + "Disconnected");
+							break;
+						}
+						String response = notificationQueue.take ().getJsonString ();
+						ws.send(id, response);
+						System.out.println (getName() + response);
+					} catch (InterruptedException | IOException en) {
+						System.out.println ("Exception:" + en);
+					}
+				  }
+			  }
+		  }.start();
+	}
+
 	@Override
 	public JsonValue getJsonObject(boolean masked) {
 		JsonValue obj =  super.getJsonObject(masked);
@@ -144,5 +201,4 @@ public class CardPlayerHttpClient extends CardPlayer {
 		}
 		return obj;
 	}
-	
 }
