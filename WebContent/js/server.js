@@ -137,13 +137,12 @@ function serverSubscribe (event)
     	var sub = "CardEvent=" + event + 
 			"&player="+ session.player +
 			"&code=" +  session.code;
-    	var uri = location.href;
+    	var uri = location.href.split("?")[0].toLowerCase().replace("http:", "ws:");
     	if (uri.indexOf ("8001") > 0) {
     		uri = uri.replace("8001", "8011");
-    		uri = uri.replace("http:", "ws:");
     	}
     	else {
-    		uri = "ws://www.ialogic.com/websocket";
+    		uri = uri + "websocket";
     	}
     	prompt ("Subscribe to WebSocket");
     	console.log ("WS: " + uri + ":" + sub);

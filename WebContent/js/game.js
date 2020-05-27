@@ -43,7 +43,8 @@ function enableAI (display) {
 						if (i > 1) {
 							np = "We have " + i + " players";
 						}
-						w.innerHTML = np + "<BR>Invite others to visit<BR>" + window.location.href + "<BR> Code " + session.code + " to join this game<BR>";
+						var uri = location.href.split("?")[0];
+						w.innerHTML = np + "<BR>Invite others to visit<BR>" + uri + "<BR> Code " + session.code + " to join this game<BR>";
 					break;
 				}
 			}
