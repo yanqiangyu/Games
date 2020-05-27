@@ -27,7 +27,10 @@ function mainLoop ()
 		}
 		eventQueue.push (JSON.stringify(response));
 	}
-	if (subscription == null && gameState != "Login" && gameState != "GameOver") {
+	if (subscription == null && 
+			gameState != "Login" && 
+			gameState != "GameOver" &&
+			gameState != "Error") {
 		subscription = serverSubscribe ("CardEventPlayerUpdate");
 	}
 }
@@ -99,7 +102,7 @@ function restartClient (message) {
 	}
 	gameState = "Error";
 	clearInterval (idleThread);
-	setTimeout (reload, 3000);
+	setTimeout (reload, 2000);
 	function reload () {
 		location.reload();
 	}
@@ -305,17 +308,17 @@ function handleResponseText (text)
 	switch (event) {
 	case "CardEventLoginAck":
 		var status = res.status;
-		if (session.player == res.player.name) {
-			if (status == "OK") {
+		if (status == "OK") {
+			if (res.player && session.player == res.player.name) {
 				myPosition = player.position;
 				session.code = res.new_code;
 				startGame ();
 			}
-			else {
-				restartClient (message);
-			}
+			enableAI (true);
 		}
-		enableAI (true);
+		else {
+			restartClient (message);
+		}
 		break;
 	case "CardEventPlayerRegister":
 		if (res.player_list) {

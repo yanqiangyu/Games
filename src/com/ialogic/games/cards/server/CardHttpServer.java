@@ -232,13 +232,14 @@ public class CardHttpServer implements CardUI, ServerEventListener {
 					}
 					((CardEventPlayerRegister)e).setAllPlayers (sessions.values());
 					e.setPlayer(c);
+					e.setMessage(m + " - " + player);
 					c.handleEvent(this, e);
 					if (room.getGame().isGameOver()) {
 						c.handleEvent(this, new CardEventGameOver());				
 					}
 				}
 				String code = (room == null ? "" : room.getCode());
-				CardEventLoginAck ack = new CardEventLoginAck (e.getPlayer(), code, m, status);
+				CardEventLoginAck ack = new CardEventLoginAck (e.getPlayer(), code, m + " - " + player, status);
 				response = ack.getJsonString();
 				log ("SERVER:" + response);
 			}
@@ -247,7 +248,6 @@ public class CardHttpServer implements CardUI, ServerEventListener {
 				e.setPlayer(c);
 				if (e instanceof CardEventPlayerAction) {
 					e.setFieldValues (request);
-					log ("*******************************************%s", e.getJsonString());
 					((CardPlayerHttpClient)c).handleEvent(this, e);
 					response = new CardEventGameIdle ("OK").getJsonString();
 				}

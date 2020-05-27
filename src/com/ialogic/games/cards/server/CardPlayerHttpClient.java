@@ -157,6 +157,7 @@ public class CardPlayerHttpClient extends CardPlayer {
 						System.out.println (getName() + response);
 					} catch (InterruptedException | IOException en) {
 						System.out.println ("Exception:" + en);
+						break;
 					}
 				  }
 			  }
