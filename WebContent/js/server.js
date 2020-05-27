@@ -143,7 +143,7 @@ function serverSubscribe (event)
     		uri = uri.replace("http:", "ws:");
     	}
     	else {
-    		uri = "/websocket";
+    		uri = "ws:/websocket";
     	}
     	prompt ("Subscribe to WebSocket");
     	console.log ("WS: " + uri + ":" + sub);
