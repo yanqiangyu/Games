@@ -17,7 +17,7 @@ function mainLoop ()
 	if (eventQueue.length > 0 ) {
 		handleResponseText (eventQueue.shift());
 	}
-	else if (!isTesting ()) {
+	else if (!isTesting () && gameState != "Login") {
 		var response = {
 				event: "CardEventGameIdle",
 				message: "Room: " + session.code + " " + promptText,
