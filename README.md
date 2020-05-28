@@ -34,6 +34,10 @@ To run your own game server:
 
 Development Log:
 
+05/27/2020	Added Server-Side-Event (SSE) and WebSocket support for real time event handling.
+		No more HTTP polling. Thanks to Chris for the initial suggestion and research.
+		MS Edge only supports WebSocket and it is nice to get it to work.
+
 05/24/2020	People start playing the single player game now and gave some really good feedback on 
 		usability. I tweaked the AI so that it will use more heuristics instincts from human 
 		players and more defensive in game play.
