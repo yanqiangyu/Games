@@ -46,11 +46,11 @@
 }
 
 .selectAI {
-  color: yellow;
+  color: white;
   background-image: url('../image/AI.jpg');
   background-repeat: no-repeat;
   background-size: 100% 100%;
-  background-color: #004C00;
+  background-color: #000000;
   box-shadow: 5px 5px 5px black;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 20px;
@@ -262,6 +262,7 @@ h3.ex1 {
 	font-size: 14px;
 	position: absolute;
 	text-align: center;
+	mix-blend-mode: exclusion;
 }
 
 .overlay {

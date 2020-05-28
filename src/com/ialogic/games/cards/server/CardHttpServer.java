@@ -217,25 +217,33 @@ public class CardHttpServer implements CardUI, ServerEventListener {
 					if (c == null) {
 						c = new CardPlayerHttpClient (player, room.getCode());
 						synchronized (sessions) {
-							c.setPosition (sessions.size());
-							sessions.put(player, c);
+							if (sessions.size() < room.getNumPlayer()) {
+								c.setPosition (sessions.size());
+								sessions.put(player, c);
+								if (player.startsWith("AI_")) {
+									c.setAlgo("sim");
+								}
+								m = "Welcome!";
+								e.setMessage(m);
+							}
+							else {
+								status = "REJECT";
+								m = "Sorry, game room is full";
+							}
 						}
-						if (player.startsWith("AI_")) {
-							c.setAlgo("sim");
-						}
-						m = "Welcome!";
-						e.setMessage(m);
 					}
 					else {
 						m = "Welcome back!";
 						e = new CardEventPlayerReconnect (m);
 					}
-					((CardEventPlayerRegister)e).setAllPlayers (sessions.values());
-					e.setPlayer(c);
-					e.setMessage(m + " - " + player);
-					c.handleEvent(this, e);
-					if (room.getGame().isGameOver()) {
-						c.handleEvent(this, new CardEventGameOver());				
+					if (status.contentEquals("OK")) {
+						((CardEventPlayerRegister)e).setAllPlayers (sessions.values());
+						e.setPlayer(c);
+						e.setMessage(m + " - " + player);
+						c.handleEvent(this, e);
+						if (room.getGame().isGameOver()) {
+							c.handleEvent(this, new CardEventGameOver());				
+						}
 					}
 				}
 				String code = (room == null ? "" : room.getCode());

@@ -36,15 +36,17 @@ function enableAI (display) {
 	if (display) {
 		setTimeout (function () {
 			var n = 0;
+			var names = "";
 			for (i = 0; i < 4; ++i) {
 				if (myPlayers[i] != "") {
 					++n;
+					names += " " + myPlayers[i];
 				}
 			}
 			if (n < 4) {
-				var np = "You are the host"
+				var np = "Starting a new game"
 				if (n > 1) {
-					np = "We have " + n + " players";
+					np = "We have " + n + " players:<BR>" + names;
 				}
 				var uri = location.href.split("?")[0];
 				w.innerHTML = np + "<BR>Invite others to visit<BR>" + uri + "<BR> Code " + session.code + " to join this game<BR>";
@@ -61,6 +63,14 @@ function enableAI (display) {
 function requestAI (num)
 {
 	var n = 1;
+	var c = 0;
+	
+	for (i = 0; i < myPlayers.length; ++i) {
+		if (myPlayers[i] == "") {
+			c++;
+		}
+	}
+	num = num > c ? c : num;
 	while (num > 0) {
 		var name = "AI_" + n;
 		for (i = 0; i < myPlayers.length; ++i) {
