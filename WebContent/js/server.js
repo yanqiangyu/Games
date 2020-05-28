@@ -346,7 +346,9 @@ function handleResponseText (text)
 		showFaceup (position, res.card_played);
 		break;
 	case "CardEventTurnToPlay":
-		promptText = res.rule.reason;
+		if (res.rule) {
+			promptText = res.rule.reason;
+		}
 		playerReady (position, res.rule);
 		break;
 	case "CardEventPlayerAction":
