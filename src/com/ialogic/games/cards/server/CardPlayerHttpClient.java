@@ -30,6 +30,7 @@ public class CardPlayerHttpClient extends CardPlayer {
 	String code;
 	LinkedBlockingQueue<CardEvent> notificationQueue = new LinkedBlockingQueue<CardEvent>();
 	private CardEvent pendingInput = null;
+	private Thread subscriptionThread;
 	
 	public CardPlayerHttpClient (String name, String code) {
 		setName (name);
@@ -43,6 +44,8 @@ public class CardPlayerHttpClient extends CardPlayer {
 		if (request.getPlayer() == this) {
 			if (request instanceof CardEventPlayerReconnect) {
 				notificationQueue.clear();
+				notificationQueue = new LinkedBlockingQueue<CardEvent> ();
+				closeSubscription ();
 				if (getScoreBoard() != null) {
 					addNotification (getScoreBoard());
 				}
@@ -118,7 +121,6 @@ public class CardPlayerHttpClient extends CardPlayer {
 	}
 	private void addNotification(CardEvent request) {
 		notificationQueue.add(request);
-		// TODO: notifyAll();
 	}
 	private synchronized void setPendingInput (CardEvent e) {
 		pendingInput = e;
@@ -146,7 +148,7 @@ public class CardPlayerHttpClient extends CardPlayer {
 		  final String name =  "SSE: " + getName() + "[" + getCode() + "]";
 		  os.write (("retry: 1000\n").getBytes());
 		  System.out.println (name + "subscribed");
-		  new Thread () {
+		  Thread sub = new Thread () {
 			  public void run () {
 				  setName (name);
 				  while (!interrupted()) {
@@ -160,8 +162,11 @@ public class CardPlayerHttpClient extends CardPlayer {
 						break;
 					}
 				  }
+				  System.out.println (name + " stopped.");
 			  }
-		  }.start();
+		  };
+		  sub.start();
+		  setSubscription (sub);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -169,13 +174,13 @@ public class CardPlayerHttpClient extends CardPlayer {
 	public void openSubscription(WebSocketServer ws, String id) {
 		  final String name =  "WS: " + getName() + "[" + getCode() + "-" + id + "]";
 		  System.out.println (name + "subscribed");
-		  new Thread () {
+		  Thread sub = new Thread () {
 			  public void run () {
 				  setName (name);
 				  while (!interrupted()) {
 					try {
 						if (!ws.isConnected (id)) {
-							System.out.println (name + "Disconnected");
+							System.out.println (name + " Disconnected");
 							break;
 						}
 						String response = notificationQueue.take ().getJsonString ();
@@ -185,10 +190,21 @@ public class CardPlayerHttpClient extends CardPlayer {
 						System.out.println ("Exception:" + en);
 					}
 				  }
+				  System.out.println (name + " stopped.");
 			  }
-		  }.start();
+		  };
+		  sub.start();
+		  setSubscription (sub);
 	}
-
+	private synchronized void closeSubscription () {
+		if (subscriptionThread != null && subscriptionThread.isAlive()) {
+			subscriptionThread.interrupt();;
+		}
+		subscriptionThread = null;
+	}
+	private synchronized void setSubscription (Thread sub) {
+		subscriptionThread = sub;
+	}
 	@Override
 	public JsonValue getJsonObject(boolean masked) {
 		JsonValue obj =  super.getJsonObject(masked);

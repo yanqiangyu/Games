@@ -17,7 +17,7 @@ function mainLoop ()
 	if (eventQueue.length > 0 ) {
 		handleResponseText (eventQueue.shift());
 	}
-	else {
+	else if (!isTesting ()) {
 		var response = {
 				event: "CardEventGameIdle",
 				message: "Room: " + session.code + " " + promptText,
@@ -72,7 +72,7 @@ function login (player, code) {
 	return "Player/Code Required";
 }
 
-function serverRegsiterAI (aiPlayer) {
+function serverRegisterAI (aiPlayer) {
 	enableAI(false);
 	var saved_player = session.player;
 	session.player = aiPlayer;
@@ -110,7 +110,7 @@ function restartClient (message) {
 
 function serverSubscribe (event)
 {
-	if (testThread != null) {
+	if (isTesting ()) {
 		return null;
 	}
 	
@@ -174,7 +174,7 @@ function serverSubscribe (event)
 
 function serverRequest (event, cards)
 {
-	if (testThread != null) {
+	if (isTesting ()) {
 		return;
 	}
 
@@ -314,10 +314,11 @@ function handleResponseText (text)
 				session.code = res.new_code;
 				startGame ();
 			}
-			enableAI (true);
 		}
 		else {
-			restartClient (message);
+			if (res.player && session.player == res.player.name) {
+				restartClient (message);
+			}
 		}
 		break;
 	case "CardEventPlayerRegister":
@@ -326,6 +327,9 @@ function handleResponseText (text)
 			for (i = 0; i < player_list.length; ++i) {
 				var p = (player_list[i].position - myPosition + 4) % 4;
 				setPlayer (p, player_list[i].name);
+			}
+			if (player_list.length < 4) {
+				enableAI (true);
 			}
 		}
 		prompt (message);
@@ -373,7 +377,6 @@ function handleResponseText (text)
 		}
 		else {
 			setPlayerDisplayOnly (res.player_list);
-			
 		}
 		break;
 	case "CardEventGameIdle":

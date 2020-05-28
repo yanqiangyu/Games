@@ -32,21 +32,24 @@ function startGame()
 
 function enableAI (display) {
 	var ai = document.getElementById("selectAI");
+	var w = document.getElementById("waiting");
 	if (display) {
 		setTimeout (function () {
-			var w = document.getElementById("waiting");
+			var n = 0;
 			for (i = 0; i < 4; ++i) {
-				if (myPlayers[i] == "") {
-						ai.style.display = "flex";
-						ai.classList.toggle("fade-in", true);
-						var np = "You are the host"
-						if (i > 1) {
-							np = "We have " + i + " players";
-						}
-						var uri = location.href.split("?")[0];
-						w.innerHTML = np + "<BR>Invite others to visit<BR>" + uri + "<BR> Code " + session.code + " to join this game<BR>";
-					break;
+				if (myPlayers[i] != "") {
+					++n;
 				}
+			}
+			if (n < 4) {
+				var np = "You are the host"
+				if (n > 1) {
+					np = "We have " + n + " players";
+				}
+				var uri = location.href.split("?")[0];
+				w.innerHTML = np + "<BR>Invite others to visit<BR>" + uri + "<BR> Code " + session.code + " to join this game<BR>";
+				ai.style.display = "flex";
+				ai.classList.toggle("fade-in", true);
 			}
 		}, 2000);
 	}
@@ -57,15 +60,20 @@ function enableAI (display) {
 
 function requestAI (num)
 {
-	for (i = 0; i < 4; ++i) {
-		if (myPlayers[i] == "") {
-			myPlayers[i] = "AI_" + i;
-			serverRegsiterAI (myPlayers[i]);
-			--num;
-			if (num <= 0) {
+	var n = 1;
+	while (num > 0) {
+		var name = "AI_" + n;
+		for (i = 0; i < myPlayers.length; ++i) {
+			if (myPlayers[i] == name) {
+				name = "";
 				break;
 			}
 		}
+		if (name != "") {
+			serverRegisterAI (name);
+			--num;
+		}
+		++n;
 	}
 }
 

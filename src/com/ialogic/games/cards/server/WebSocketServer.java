@@ -163,13 +163,13 @@ public class WebSocketServer {
 		Session s = getSession (id);
 		if (s != null && s.client != null) {
 			try {
-				sessions.remove(id);
 				s.client.close();
 				s.out.close ();
 				s.in.close();
 			} catch (Exception e) {
 			}
 		}
+		sessions.remove(id);
 		log("Client %s stopped", id);
 	}
 	public static byte[] encode(String mess) throws IOException {

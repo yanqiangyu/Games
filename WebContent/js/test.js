@@ -65,12 +65,18 @@ var testScoreBoard =
     ],
     "faceup": "JD"
 }
+
+
 function testStart () {
 	for (i = 0; i < testScoreBoard.player_list.length; ++i ) {
 		testUsers[i] = testScoreBoard.player_list[i].name;
 	}
 	testThread = setInterval(testLoop, testThreadInterval);
 	return "Waiting for test cases...";
+}
+
+function isTesting () {
+	return testThread != null;
 }
 
 function testLoop () 
