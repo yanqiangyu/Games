@@ -203,7 +203,6 @@ function serverRequest (event, cards)
 	}
     xhttp.open("GET", theUrl, true);
     xhttp.timeout = 5000;
-    xhttp.setRequestHeader ("Connection", "keep-alive");
     xhttp.send();
 }
 
