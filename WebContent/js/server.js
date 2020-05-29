@@ -140,9 +140,11 @@ function serverSubscribe (event)
     	var sub = "CardEvent=" + event + 
 			"&player="+ session.player +
 			"&code=" +  session.code;
-    	var uri = location.href.split("?")[0].toLowerCase().replace("http:", "ws:");
+    	var uri = location.href.split("?")[0].toLowerCase();
+    	uri = uri.replace("http:", "ws:");
+    	uri = uri.replace("https:", "wss:");
     	if (uri.indexOf ("8001") > 0) {
-    		uri = uri.replace("8001", "8011");
+    		uri = uri.replace(":8001", ":8011");
     	}
     	else {
     		uri = uri + "websocket";

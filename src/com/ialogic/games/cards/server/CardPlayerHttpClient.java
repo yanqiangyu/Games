@@ -143,7 +143,6 @@ public class CardPlayerHttpClient extends CardPlayer {
 		  headers.set ("Content-Type", "text/event-stream");
 		  headers.set ("Cache-Control", "no-cache");
 		  headers.set ("Connection", "keep-alive");
-		  headers.set ("Expires", "-1");
 		  exchange.sendResponseHeaders(200, 0);
 		  final OutputStream os = exchange.getResponseBody();
 		  final String name =  "SSE: " + getName() + "[" + getCode() + "]";
