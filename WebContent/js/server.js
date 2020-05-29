@@ -49,11 +49,14 @@ function login (player, code) {
 		var timeout = setInterval(checkLogin, 1000);
 		var count = 0;
 		function checkLogin () {
-			if (serverState == "LoginWait") {
+			if (serverState == "Connected") {
+				clearInterval (timeout);
+			}
+			else if (serverState == "LoginWait") {
 				prompt ("Please wait..");
 				setServerState ("Connecting");
 			}
-			else if (serverState == "Connecting" && count > 10) {
+			else if (count > 15) {
 				prompt ("Timeout,  try again...");
 				clearInterval (timeout);
 				clearInterval (idleThread);
