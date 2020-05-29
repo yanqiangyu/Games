@@ -142,7 +142,7 @@ function serverSubscribe (event)
 			"&code=" +  session.code;
     	var uri = location.href.split("?")[0].toLowerCase();
     	uri = uri.replace("http:", "ws:");
-    	uri = uri.replace("https:", "ws:");
+    	uri = uri.replace("https:", "wss:");
     	if (uri.indexOf ("8001") > 0) {
     		uri = uri.replace(":8001", ":8011");
     	}
