@@ -97,11 +97,14 @@ function requestURL ()
 	var subjectText = session.player + " invites you to a game. Code is " + session.code;
 	var bodyText = "Visit this link " + window.location.href + " and type in name and code " + session.code + " to join " + session.player + ".";
 	if (navigator.share) {
-			alert("supported");
 		    navigator.share({
 		      title: 'Use the Code to join your friend',
+		      text: bodyText, 
 		      url: 'https://www.ialogic.com'
 		    });
+	}
+	else {
+		alert(bodyText);
 	}
 }
 
