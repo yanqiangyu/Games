@@ -200,6 +200,7 @@ function serverRequest (event, cards)
     };
 	xhttp.ontimeout = function() {
 		console.log ("Timeout error");
+		setTimeout (serverRequest (event, cards), 100);
 	}
     xhttp.open("GET", theUrl, true);
     xhttp.timeout = 5000;
