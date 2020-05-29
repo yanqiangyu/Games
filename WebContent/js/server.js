@@ -240,6 +240,9 @@ function handleResponseText (text)
 	if (event == "CardEventServerReject") {
 		restartClient (message);
 	}
+	if (event == "CardEventLoginAck" && res.player && res.player.name != session.player ) {
+		return;
+	}
 	var pass = false;
 	switch (gameState) {
 	case "Idle":
@@ -276,7 +279,6 @@ function handleResponseText (text)
 		break;
 	case "FaceUpResponse":
 		if (event == "CardEventGameIdle" ||
-			event == "CardEventLoginAck" ||
 			event == "CardEventFaceUpResponse" ||
 			event == "CardEventPlayerAutoAction") {
 			pass = true;
@@ -309,16 +311,12 @@ function handleResponseText (text)
 	case "CardEventLoginAck":
 		var status = res.status;
 		if (status == "OK") {
-			if (res.player && session.player == res.player.name) {
-				myPosition = player.position;
-				session.code = res.new_code;
-				startGame ();
-			}
+			myPosition = player.position;
+			session.code = res.new_code;
+			startGame ();
 		}
 		else {
-			if (res.player && session.player == res.player.name) {
-				restartClient (message);
-			}
+			restartClient (message);
 		}
 		break;
 	case "CardEventPlayerRegister":

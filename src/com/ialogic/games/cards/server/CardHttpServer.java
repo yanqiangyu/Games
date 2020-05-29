@@ -98,9 +98,12 @@ public class CardHttpServer implements CardUI, ServerEventListener {
 				  Headers headers = exchange.getResponseHeaders();
 				  headers.set ("Content-Type", "text/event-stream");
 				  headers.set ("Cache-Control", "no-cache");
+				  headers.set ("Connection", "keep-alive");
 				  headers.set ("Expires", "-1");
-				  exchange.sendResponseHeaders(200, response.length());
+				  exchange.sendResponseHeaders(200, 0);
 				  OutputStream os = exchange.getResponseBody();
+				  os.write (("retry: 1000\n").getBytes());
+				  os.flush();
 				  os.write(response.getBytes());
 				  os.close();
 	    	  }				 
