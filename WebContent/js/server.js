@@ -199,7 +199,7 @@ function serverRequest (event, cards)
         }
     };
     xhttp.open("GET", theUrl, true); 
-    xhttp.send(null);
+    xhttp.send();
 }
 
 function findPlayerPosition (player)
