@@ -238,7 +238,8 @@ function handleResponseText (text)
 	if (event == "CardEventLoginAck" && res.player && res.player.name != session.player ) {
 		return;
 	}
-	var pass = false;
+	var pass = (event == "CardEventGameIdle");
+	
 	switch (gameState) {
 	case "Idle":
 		pass = true;
@@ -273,15 +274,13 @@ function handleResponseText (text)
 		pass = true;
 		break;
 	case "FaceUpResponse":
-		if (event == "CardEventGameIdle" ||
-			event == "CardEventFaceUpResponse" ||
+		if (event == "CardEventFaceUpResponse" ||
 			event == "CardEventPlayerAutoAction") {
 			pass = true;
 		}
 		break;
 	case "PlayerTurnResponse":
-		if (event == "CardEventGameIdle" ||
-			event == "CardEventPlayerAutoAction") {
+		if (event == "CardEventPlayerAutoAction") {
 			pass = true;
 		}
 		break;
