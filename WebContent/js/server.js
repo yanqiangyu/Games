@@ -167,8 +167,7 @@ function serverSubscribe (event)
 		return ws;
     }
     else {
-    	// TO DO: Do we really want to fall back to polling? Nah...
-    	//
+    	// TO DO: Do we really want to fall back to polling? NO.
     	alert ("Your browser does not support SSE or WebSocket.");
     }
 	return null;
@@ -186,32 +185,18 @@ function serverRequest (event, cards)
 	"&code=" +  session.code + 
 	(cards == null ? "" : ("&cards=" + cards));
 	
-	if (typeof (EventSource) === "undefined") {
-	    var xhttp = new XMLHttpRequest();
-		xhttp.onreadystatechange = function() {
-	        if (this.readyState == 4 && this.status == 200) {
-	        	eventQueue.push (xhttp.responseText);
-	        }
-	        else if (this.status != 200 && this.status != 0) {
-	           	promptServer ("Server Error! Status=" + this.status);
-	           	location.reload();
-	        }
-	    };
-	    xhttp.open("GET", theUrl, true); 
-	    xhttp.send(null);
-	}
-	else {
-		var source = new EventSource(theUrl);
-		source.onmessage = function(event) {
-			eventQueue.push (event.data);
-			this.close();
-		}; 
-		source.onerror = function() {
-			console.log("Error:" + JSON.stringify(this));
-			checkServerIdle();
-			this.close();
-		}; 
-	}
+    var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+        	eventQueue.push (xhttp.responseText);
+        }
+        else if (this.status != 200 && this.status != 0) {
+           	promptServer ("Server Error! Status=" + this.status);
+           	location.reload();
+        }
+    };
+    xhttp.open("GET", theUrl, true); 
+    xhttp.send(null);
 }
 
 function findPlayerPosition (player)

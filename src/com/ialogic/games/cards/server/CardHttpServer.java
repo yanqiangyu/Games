@@ -94,15 +94,9 @@ public class CardHttpServer implements CardUI, ServerEventListener {
 	    		  && query != null && !query.isEmpty()) {
 	    	  response = getServer().createResponse (query, exchange);
 	    	  if (!response.isEmpty()) {
-		    	  response = "data: " + response + "\n\n";
-				  Headers headers = exchange.getResponseHeaders();
-				  headers.set ("Content-Type", "text/event-stream");
-				  headers.set ("Cache-Control", "no-cache");
-				  headers.set ("Connection", "keep-alive");
 				  exchange.sendResponseHeaders(200, response.length());
 				  OutputStream os = exchange.getResponseBody();
 				  os.write(response.getBytes());
-				  os.flush();
 				  os.close();
 	    	  }				 
 	      }
