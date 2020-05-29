@@ -198,7 +198,8 @@ function serverRequest (event, cards)
            	location.reload();
         }
     };
-    xhttp.open("GET", theUrl, true); 
+    xhttp.open("GET", theUrl, true);
+    xhttp.timeout = 5000;
     xhttp.send();
 }
 
