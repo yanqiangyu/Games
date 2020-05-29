@@ -198,8 +198,12 @@ function serverRequest (event, cards)
            	location.reload();
         }
     };
+	xhttp.ontimeout = function() {
+		console.log ("Timeout error");
+	}
     xhttp.open("GET", theUrl, true);
     xhttp.timeout = 5000;
+    xhttp.setRequestHeader ("Connection", "keep-alive");
     xhttp.send();
 }
 
