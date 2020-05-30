@@ -34,6 +34,11 @@ To run your own game server:
 
 Development Log:
 
+05/29/2020	Encrypted the site with "Let's Encrypt" free certificates and we can now use Mobile
+		Navigator share. It is a lot slower but more secure and "safe" looking to strangers.
+		I had to tweak virtual host and a few timeout for Chrome and Edge so Apache 2.4 can
+		reverse proxy both WebScket and SSE events. Headaches and good learning experience.
+
 05/27/2020	Added Server-Side-Event (SSE) and WebSocket support for real time event handling.
 		No more HTTP polling. Thanks to Chris for the initial suggestion and research.
 		MS Edge only supports WebSocket and it is nice to get it to work.
