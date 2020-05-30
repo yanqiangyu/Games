@@ -1,8 +1,10 @@
 This is a HTML5/js/Java Server project for a multiplayer Hearts-like card game called Pig-Chase. (中文：拱猪). It also has a quite human like AI engine that can support team play of 1 - 3 players.
 
-To play game visit the site below where the game server is running:
+## To play game visit the site below where the game server is running:	
 
-		[www.ialogic.com](https://www.ialogic.com)
+	https://www.ialogic.com
+
+
 
 	Enter your name and the code "new" to start a new game and share the 4 digit code on screen with 
 	your friends over video chat or conference call. You can add AI players to the game now.
@@ -13,7 +15,7 @@ To play game visit the site below where the game server is running:
 	
 	Stay calm and have fun!
 
-For developers, the multiplayer game rule engine has a AI auto player interface that you can extend for more 
+## For developers, the multiplayer game rule engine has a AI auto player interface that you can extend for more 
 intelligent game play. To test this without the time consuming human UI, run this program.
 
 		com.ialogic.games.cards.CardPlayTest
@@ -21,7 +23,7 @@ intelligent game play. To test this without the time consuming human UI, run thi
 	Input 4 player names and the test program will take them through a team game up to 100 rounds 
 	or when either team's score is over +/-1000 in a second.
 
-To run your own game server:
+## To run your own game server:
 
 	1. Start java server listening on your server port 8001, make sure ./WebContext is in the working directory
 	
@@ -32,7 +34,7 @@ To run your own game server:
 	3. Open your firewall to allow your friends to join or host it on a cloud server
 
 
-Development Log:
+## Development Log:
 
 05/29/2020	Encrypted the site with "Let's Encrypt" free certificates and we can now use Mobile
 		Navigator share. It is a lot slower but more secure and "safe" looking to strangers.
