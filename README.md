@@ -2,7 +2,7 @@ This is a HTML5/js/Java Server project for a multiplayer Hearts-like card game c
 
 To play game visit the site below where the game server is running:
 
-		http://www.ialogic.com/
+		[www.ialogic.com](https://www.ialogic.com)
 
 	Enter your name and the code "new" to start a new game and share the 4 digit code on screen with 
 	your friends over video chat or conference call. You can add AI players to the game now.
