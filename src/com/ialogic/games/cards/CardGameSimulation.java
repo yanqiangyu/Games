@@ -12,6 +12,9 @@ import com.ialogic.games.cards.event.CardEvent;
 
 public class CardGameSimulation implements CardUI {
 	CardGame game = new PigChase();
+	Card goat = new Card ("JD");
+	Card pig = new Card ("QS");
+
 	private boolean analysisMode = false;
 	public CardGameSimulation() {
 		game.setUi(this);
@@ -162,6 +165,9 @@ public class CardGameSimulation implements CardUI {
 					(mind + maxd), maxd, mind,
 					(System.currentTimeMillis() - s0)));
 		}
+		if (card.contentEquals("JD") || card.contentEquals("QS")) {
+			max -= Math.sqrt((m2/(n-1)));
+		}
 		int round = memory.played.size() / 4;
 		round = round > 6 ? 6 : round;
 		return (round * max + (13 - round) * min) / 13; 
@@ -173,6 +179,8 @@ public class CardGameSimulation implements CardUI {
 		int nc = s % 4;
 		boolean hasPig = false;
 		boolean hasGoat = false;
+		int hasGoatTrap = 0;
+		int hasPigTrap = 0;
 		for (int i = 0; i < nc; ++i) {
 				Card c = new Card(memory.played.get(s-i-1));
 				if (c != null) {
@@ -182,10 +190,38 @@ public class CardGameSimulation implements CardUI {
 					else if (c.isGoat()) {
 						hasGoat = true;
 					}
+					else if (c.compareTo (goat) > 0) {
+						hasGoatTrap = i;
+					}
+					else if (c.compareTo (pig) > 0) {
+						hasPigTrap = i;
+					}
 				}
+		}
+		if ((hasGoatTrap > 0 && hasGoatTrap != 1 && cards[n] == "JD") ||
+			(hasPigTrap == 1 && cards[n] == "QS")) {
+			// Avoid sending goat to your opponents 
+			// Avoid sending pig to your partner
+			// if possible
+			n = (n+1) % cards.length;
 		}
 		if (hasGoat || hasPig) {
 			n = hasPig ? 0 : cards.length-1;
+		}
+		return n;
+	}
+	public int getRecommendation(GameMemory memory, int timeout) {
+		int n = 0;
+		String cards[] = memory.allowed.split(",");
+		int eval = -1000000;
+		int i = 0;
+		for (String card : cards ) {
+			int score = runSimulation(memory, card, 1000, timeout); 
+			if ( score > eval) {
+				n = i;
+				eval = score;
+			}
+			++i;
 		}
 		return n;
 	}
@@ -242,26 +278,6 @@ public class CardGameSimulation implements CardUI {
 			copy.add(c);
 		}
 		return copy;
-	}
-	public int getRecommendation(GameMemory memory, int timeout) {
-		int n = 0;
-		String cards[] = memory.allowed.split(",");
-		for (int retry = 0; retry < 3; ++ retry) {
-			int eval = -1000000;
-			int i = 0;
-			for (String card : cards ) {
-				int score = runSimulation(memory, card, 1000, timeout); 
-				if ( score > eval) {
-					n = i;
-					eval = score;
-				}
-				++i;
-			}
-			if ((memory.played.size() & 0x3) != 0 || !new Card(cards[n]).isSpecial()) {
-				break;
-			}
-		}
-		return n;
 	}
 	public boolean isAnalysisMode() {
 		return analysisMode;

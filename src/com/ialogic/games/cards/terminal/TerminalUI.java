@@ -43,6 +43,9 @@ public class TerminalUI implements CardUI {
 							if (in.startsWith("AI_")) {
 								((CardPlayerAI)p).setAlgo("sim");
 							}
+							else {
+								((CardPlayerAI)p).setAlgo("heuristic");
+							}
 								
 							inputEvent.setPlayer(p);
 							((CardEventPlayerRegister) inputEvent).setAllPlayers(game.getPlayers());
