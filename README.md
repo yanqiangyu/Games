@@ -35,49 +35,47 @@ The multiplayer game rule engine has a AI auto player interface that you can ext
 
 ### Development Log:
 
-05/29/2020	Encrypted the site with "Let's Encrypt" free certificates and we can now use Mobile
+**05/29/2020**	Encrypted the site with "Let's Encrypt" free certificates and we can now use Mobile
 		Navigator share. It is a lot slower but more secure and "safe" looking to strangers.
 		I had to tweak virtual host and a few timeout for Chrome and Edge so Apache 2.4 can
 		reverse proxy both WebScket and SSE events. Headaches and good learning experience.
 
-05/27/2020	Added Server-Side-Event (SSE) and WebSocket support for real time event handling.
+**05/27/2020**	Added Server-Side-Event (SSE) and WebSocket support for real time event handling.
 		No more HTTP polling. Thanks to Chris for the initial suggestion and research.
 		MS Edge only supports WebSocket and it is nice to get it to work.
 
-05/24/2020	People start playing the single player game now and gave some really good feedback on 
+**05/24/2020**	People start playing the single player game now and gave some really good feedback on 
 		usability. I tweaked the AI so that it will use more heuristics instincts from human 
 		players and more defensive in game play.
 
-05/21/2020      Reoganized the Game Engine and plugged in AI. The game tree evaluation is implemted
+**05/21/2020**      Reoganized the Game Engine and plugged in AI. The game tree evaluation is implemted
                 with random path explorers with decision based on simple min-max heuristic rules. 
 		Further tweaking the algorithm can produce AI players of differnt styles of play.
 
-05/17/2020	Major rewrite of client server communication to use JSON representation. Thanks 
+**05/17/2020**	Major rewrite of client server communication to use JSON representation. Thanks 
 		to Chris for the push. Reconnection and auto-play are more stable now.
 
-05/13/2020	Finished multi-room support and rack the new Dell PowerEdge server.
+**05/13/2020**	Finished multi-room support and rack the new Dell PowerEdge server.
 
-05/11/2020	Reorganized client side code and finished standalone server so you don't need Apache. 
+**05/11/2020**	Reorganized client side code and finished standalone server so you don't need Apache. 
 		Thanks Chris for the idea. Credit to SUN Microsystem's pure java HTTP server.
 		(Note, I started programming on a Sun Workstation back in 1988, AutoCAD and Fortran 77)
 
-05/09/2020	Cleaned up layout calculations and improved points display. Thanks to everyone who played
+**05/09/2020**	Cleaned up layout calculations and improved points display. Thanks to everyone who played
 		the game and provided feedback.
 
-05/08/2020	Reorganized the code and added a help screen. Multi-room next.
+**05/08/2020**	Reorganized the code and added a help screen. Multi-room next.
 
-05/07/2020      Allow state recovery for disconnected players. Clean up client side code.
+**05/07/2020**      Allow state recovery for disconnected players. Clean up client side code.
 
-05/05/2020	Got a new Dell PowerEdge server to host the game server and fixed bug for Firefox game play.
+**05/05/2020**	Got a new Dell PowerEdge server to host the game server and fixed bug for Firefox game play.
 
-05/04/2020	Closed most of the issues and add build and run scripts
+**05/04/2020**	Closed most of the issues and add build and run scripts
 
-05/03/2020	Start new game with code "new" is supported.
+**05/03/2020**	Start new game with code "new" is supported.
 
-05/02/2020      Test run with friends and updated READ ME for general public.
+**05/02/2020**      Test run with friends and updated READ ME for general public.
 
-05/02/2020      Finally it is ready for multiplayer. Auto play is still glitchy.
+**05/02/2020**      Finally it is ready for multiplayer. Auto play is still glitchy.
 
-04/20/2020	I have the basic client HTML5 and JS framework and a sun java HTTP server proxy through Apache
-
-Steve Yu
+**04/20/2020**	I have the basic client HTML5 and JS framework and a sun java HTTP server proxy through Apache
