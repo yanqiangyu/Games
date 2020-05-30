@@ -15,15 +15,16 @@ This is a HTML5/js/Java Server project for a multiplayer Hearts-like card game c
 	
 	Stay calm and have fun!
 
-## For developers, the multiplayer game rule engine has a AI auto player interface that you can extend for more 
-intelligent game play. To test this without the time consuming human UI, run this program.
+# For developers, the multiplayer game rule engine has a AI auto player interface that you can extend for more intelligent game play. 
+
+	To test this without the time consuming human UI, run this program.
 
 		com.ialogic.games.cards.CardPlayTest
 
 	Input 4 player names and the test program will take them through a team game up to 100 rounds 
 	or when either team's score is over +/-1000 in a second.
 
-## To run your own game server:
+# To run your own game server:
 
 	1. Start java server listening on your server port 8001, make sure ./WebContext is in the working directory
 	
