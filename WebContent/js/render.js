@@ -197,18 +197,23 @@ function showDeck ()
 	var table=document.getElementById("splash");
 	var viewwidth=parseInt(table.style.width);
 	var viewheight=parseInt(table.style.height);
-	var ch=viewheight / 8;
-	var cw=ch*0.7;
-	center.x = (viewwidth-cw) / 2 - 1;
-	center.y = (viewheight-ch) / 2;
+	var limit = screen.width < screen.height ? screen.width : screen.height;
+	limit = limit > 360 ? 360 : limit;
+	var cwp = Math.floor(limit / 6);
+	var chp = Math.floor(cwp * 7 / 5);
+	var cw = cwp * 100 / screen.width;
+	var ch = chp * 100 / screen.height;
+	
+	center.x = (viewwidth - cw) / 2;
+	center.y = (viewheight - ch) / 2;
 	
 	for (i=0; i<52; ++i) {
 		var scene=document.createElement('div');
 		scene.setAttribute('id', 'scene'+i);
 		scene.classList.add('card_scene', 'card_scene--card');
 		table.appendChild(scene);
-		scene.style.width="60px";
-		scene.style.height="84px";
+		scene.style.width=cwp + "px";
+		scene.style.height=chp + "px";
 		scene.style.display='block';
 		
 		var c=document.createElement('div');
@@ -277,10 +282,11 @@ function flashPlayer (p, on)
 function getPlayerLocation (p) {
 	// Center card position for each player;
 	var l = {x: 0, y: 0,};
-	  var dx = (p == 0 || p == 2) ? 0  : ((p == 1) ? 15 : -15);
-	var dy = (p == 1 || p == 3) ? 0  : ((p == 0) ? 15 : -15);
 	
-	l.x = center.x + dx - 1;
+	var dx = (p == 0 || p == 2) ? 0  : ((p == 1) ? 17 : -16);
+	var dy = (p == 1 || p == 3) ? 0  : ((p == 0) ? 16 : -16);
+	
+	l.x = center.x + dx;
 	l.y = center.y + dy;
 	
 	return l;
