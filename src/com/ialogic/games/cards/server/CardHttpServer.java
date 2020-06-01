@@ -79,7 +79,7 @@ public class CardHttpServer implements CardUI, ServerEventListener {
 				}
 			}
 		}
-		if (!validated) {
+		if (!validated && !message.isEmpty()) {
 			log ("SERVER: WS %s message %s invalid request", id, message);
 			// wsServer.close (id);
 		}

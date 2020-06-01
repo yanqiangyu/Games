@@ -148,7 +148,7 @@ public class CardPlayerHttpClient extends CardPlayer {
 		  final String name =  "SSE: " + getName() + "[" + getCode() + "]";
 		  os.write (("retry: 1000\n").getBytes());
 		  os.flush();
-		  System.out.println (name + "subscribed");
+		  System.out.println (name + " subscribed");
 		  Thread sub = new Thread () {
 			  public void run () {
 				  setName (name);
@@ -174,7 +174,7 @@ public class CardPlayerHttpClient extends CardPlayer {
 	}
 	public void openSubscription(WebSocketServer ws, String id) {
 		  final String name =  "WS: " + getName() + "[" + getCode() + "-" + id + "]";
-		  System.out.println (name + "subscribed");
+		  System.out.println (name + " subscribed");
 		  Thread sub = new Thread () {
 			  public void run () {
 				  setName (name);

@@ -3,24 +3,22 @@ package com.ialogic.games.cards;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import javax.json.Json;
-import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 
 import com.ialogic.games.cards.Card.Suits;
-import com.ialogic.games.cards.CardPlayer.GameMemory;
 import com.ialogic.games.cards.event.CardEvent;
 import com.ialogic.games.cards.event.CardEventEndRound;
 import com.ialogic.games.cards.event.CardEventFaceUpResponse;
 import com.ialogic.games.cards.event.CardEventPlayerAction;
 import com.ialogic.games.cards.event.CardEventPlayerRegister;
 import com.ialogic.games.cards.event.CardEventScoreBoard;
-import com.ialogic.games.cards.event.CardEventTurnToPlay;
 
 public abstract class CardPlayer {
 	String name;
@@ -40,6 +38,12 @@ public abstract class CardPlayer {
 		String names[] = new String[4];
 		Map<String, String>faceup = new HashMap<String,String>();
 		Map<String, String>points = new HashMap<String,String>();
+		List<HashSet<String>> noSuit = new ArrayList<HashSet<String>>();
+		{
+			for (int i = 0; i < 4; ++i) {
+				noSuit.add(new HashSet<String>());
+			}
+		}
 		public String currentHand = "";
 		public String allowed = "";
 		public String toString () {
@@ -190,6 +194,13 @@ public abstract class CardPlayer {
 			String p = ((CardEventPlayerAction)request).getCardPlayed();
 			if (request.getPlayer() == this) {
 				playCard (p);
+			}
+			if ((memory.played.size() & 0x3) != 0) {
+				int d = memory.played.size();
+				int starter = d - (d & 0x3);
+				if (!memory.played.get(starter).substring(1,2).contentEquals(p.substring(1,2))) {
+						memory.noSuit.get((4 + request.getPlayer().getPosition() - getPosition()) & 0x3).add(memory.played.get(starter).substring(1,2));
+				}
 			}
 			memory.played.add (p);
 			memory.points.put (request.getPlayer().getName(), Card.showCSList(request.getPlayer().getPoints()));

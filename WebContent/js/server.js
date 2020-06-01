@@ -88,14 +88,18 @@ function setServerState (s) {
 	if (serverState == "Connected") {
 		idleCount = 0;
 	}
+	else if (serverState == "Connecting") {
+		++idleCount;
+	}
 	promptServer (serverState);
 }
 
 function checkServerIdle () {
-	++idleCount;
-	if (idleCount > 30) {
+	if (idleCount > 15) {
 		setServerState ("Offline");
-		restartClient ("Server timeout, restarting client...");
+		prompt ("Server timeout, please restart.");
+		promptText = "";
+		clearInterval (idleThread);
 	}
 }
 
@@ -134,7 +138,7 @@ function serverSubscribe (event)
 			console.log("Error:" + JSON.stringify(this));
 			sse.close();
 			subscription = null;
-			setServerState ("Offline");
+			setServerState ("Connecting");
 		};
 		return sse;
     }
@@ -165,7 +169,7 @@ function serverSubscribe (event)
 			console.log("Error:" + JSON.stringify(this));
 			ws.close ();
 			subscription = null;
-			setServerState ("Offline");
+			setServerState ("Connecting");
 		};
 		return ws;
     }
@@ -299,7 +303,6 @@ function handleResponseText (text)
 	//=============================================================
 	//	END State Transition:
 	//=============================================================
-	setServerState ("Connected");
 	prompt (message );
 	switch (event) {
 	case "CardEventLoginAck":
@@ -386,6 +389,12 @@ function handleResponseText (text)
 		break;
 	default:
 		prompt (message);
+	}
+	if (event == "CardEventGameIdle") {
+		checkServerIdle ();
+	}
+	else {
+		setServerState ("Connected");
 	}
 }
 

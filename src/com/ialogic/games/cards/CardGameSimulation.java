@@ -49,9 +49,12 @@ public class CardGameSimulation implements CardUI {
 	public List<CardPlayer> setupScenario (CardPlayerAI.GameMemory memory) {
 		HashSet<String>played = new HashSet<String>(memory.played);
 		Map<String, HashSet<String>>faceup = new HashMap<String, HashSet<String>>();
+		
 		for (Entry<String, String> e : memory.faceup.entrySet()) {
 			faceup.put (e.getKey(), cslToHashSet(e.getValue()));
 		}
+		
+		// Unknown cards are all cards not played or shown on the table
 		HashSet<String> myHand = cslToHashSet(memory.currentHand);
 		HashSet<String> fullDeck = cslToHashSet (Card.showCSList(new CardDeck(52).cards));
 		HashSet<String> unknown = new HashSet<String>(fullDeck);
@@ -61,13 +64,20 @@ public class CardGameSimulation implements CardUI {
 		}
 		unknown.removeAll(myHand);
 		unknown.removeAll(played);
-		int position = played.size() % 4;
+		
+		
+		// Count the number of cards left for each player
+		int position = played.size() & 0x3;
 		int c[] = new int[4];
 		for (int i = 0; i < 4; ++i) {
 			c[i] = position < (4 - i) ? myHand.size() : myHand.size() - 1; 
 		}
+		
+		// Add my own hand
 		List<List<String>> hands = new ArrayList<List<String>>();
 		hands.add(new ArrayList<String>(myHand));
+
+		// Assign known cards 
 		for (int i = 1; i < 4; ++i) {
 			ArrayList<String> hand = new ArrayList<String>();
 			if (faceup.containsKey(memory.names[i])) {
@@ -75,17 +85,41 @@ public class CardGameSimulation implements CardUI {
 			}
 			hands.add(hand);
 		}
+		
+		// Create random distribution with consideration no suit hints from card played
 		ArrayList<String>l = new ArrayList<String>(unknown);
-		while (l.size() > 0) {
-			int n = (int) (Math.random() * l.size());
-			String card = l.remove(n);
-			for (int i = 1; i < 4; ++i) {
-				if (hands.get(i).size() < c[i]) {
-					hands.get(i).add(card);
+		String suits[] = new String [] {"C","D","H","S"};
+		int d = l.size();
+		while (d > 0) {
+			for (String suit : suits) {
+				for (int i = 1; i < 4; ++i) {
+					if (hands.get(i).size() < c [i]) {
+						int n = (int) (Math.random() * d);
+						String card = l.get(n);
+						int j = 0;
+						while (!card.substring(1,2).contentEquals(suit) 
+								&& memory.noSuit.get(i).contains(card.substring(1,2)) 
+								&& j < d) {
+							++j;
+							card = l.get((n+j) % d);
+						}
+						if (j < d) {
+							l.remove((n+j) % d);
+							hands.get(i).add(card);
+							d = l.size();
+							if (d <=0 ) {
+								break;
+							}
+						}
+					}
+				}
+				if (d <= 0 ) {
 					break;
 				}
 			}
 		}
+		
+		// Validation in case we made a mistake in the steps above
 		int total =  memory.played.size();
 		for (List<String> h : hands) {
 			total += h.size();
@@ -98,12 +132,14 @@ public class CardGameSimulation implements CardUI {
 			showText ("MyHand: " + myHand.size() + myHand.toString());
 			showText ("Unknown: " + unknown.size() + unknown.toString());
 			showText ("Dist: " + Arrays.toString(c));
+			showText ("NoSuit: " + memory.noSuit.toString());
 			for (List<String> h : hands) {
 				showText ("Hand:" + h.size() + h.toString());
 			}
 			showText ("Exception ABORT");
 		}
 		
+		// Create players with a random scenario to run simulation
 		ArrayList<CardPlayer> players = new ArrayList<CardPlayer>();
 		int start = memory.played.size() - (memory.played.size() % 4);
 		for (int i = 0; i < 4; ++i) {
@@ -152,25 +188,27 @@ public class CardGameSimulation implements CardUI {
 			mean += d / c;
 			int d2 = t - mean;
 			m2 += (double) d * d2;
-			if (System.currentTimeMillis() - s0 > timeout && i > 10) {
+			if (System.currentTimeMillis() - s0 > timeout && i > 30) {
 				n = i;
 			}
-		}
-		if (isAnalysisMode()) {
-			double std = Math.sqrt((m2/(n-1)));
-			int maxd = (int) (mean + (2 * std));
-			int mind = (int) (mean - (2 * std));
-			showText(String.format("Score:%6d Stats:%6d (%6d %6d %6d %6f) (%d, %d, %d) time:%6d", 
-					(min + max), n, max, mean, min, std,
-					(mind + maxd), maxd, mind,
-					(System.currentTimeMillis() - s0)));
 		}
 		if (card.contentEquals("JD") || card.contentEquals("QS")) {
 			max -= Math.sqrt((m2/(n-1)));
 		}
 		int round = memory.played.size() / 4;
 		round = round > 6 ? 6 : round;
-		return (round * max + (13 - round) * min) / 13; 
+		int score =  (round * max + (13 - round) * min) / 13;
+		
+		if (isAnalysisMode()) {
+			double std = Math.sqrt((m2/(n-1)));
+			int maxd = (int) (mean + (2 * std));
+			int mind = (int) (mean - (2 * std));
+			showText(String.format("Score:%6d Stats:%6d (%6d %6d %6d %6f) (%d, %d, %d) time:%6d", 
+					score, n, max, mean, min, std,
+					(mind + maxd), maxd, mind,
+					(System.currentTimeMillis() - s0)));
+		}
+		return score;
 	}
 	public int getHeuristicRecommendation(GameMemory memory) {
 		String cards[] = memory.allowed.split(",");
@@ -179,8 +217,8 @@ public class CardGameSimulation implements CardUI {
 		int nc = s % 4;
 		boolean hasPig = false;
 		boolean hasGoat = false;
-		int hasGoatTrap = 0;
-		int hasPigTrap = 0;
+		int hasGoatTrap = -1;
+		int hasPigTrap = -1;
 		for (int i = 0; i < nc; ++i) {
 				Card c = new Card(memory.played.get(s-i-1));
 				if (c != null) {
@@ -198,7 +236,7 @@ public class CardGameSimulation implements CardUI {
 					}
 				}
 		}
-		if ((hasGoatTrap > 0 && hasGoatTrap != 1 && cards[n] == "JD") ||
+		if ((hasGoatTrap >= 0 && hasGoatTrap != 1 && cards[n] == "JD") ||
 			(hasPigTrap == 1 && cards[n] == "QS")) {
 			// Avoid sending goat to your opponents 
 			// Avoid sending pig to your partner
@@ -288,8 +326,8 @@ public class CardGameSimulation implements CardUI {
 	static public void main (String args[]) {
 		CardGameSimulation sim = new CardGameSimulation ();
 		CardPlayerAI player = new CardPlayerAI("AI_1");
-		player.memory.currentHand="2C,6C,2D,KD,AD,JD,QD,7D,2H,8H,3S,4S,JS";
-		player.memory.allowed="2D,KD,AD,JD,QD,7D";
+		player.memory.currentHand="2C,6C,2D,3D,AD,JD,3H,4H,2H,8H,3S,4S,JS";
+		player.memory.allowed="2D,3D,AD,JD";
 		player.memory.faceup = new HashMap<String, String>();
 		player.memory.faceup.put("AI_1", "JD");
 		player.memory.names = new String [] {"AI_1", "AI_2", "AI3","AI4"};
@@ -300,7 +338,8 @@ public class CardGameSimulation implements CardUI {
 				player.memory.played.add(s);
 		}
 		sim.setAnalysisMode(true);
-		sim.showText("Recommendation: " + player.memory.allowed.split(",")[sim.getRecommendation(player.memory, 100)]);
-		sim.showText("Recommendation: " + player.memory.allowed.split(",")[sim.getRecommendation2 (player.memory, 100)]);
+		sim.showText("Recommendation 1: " + player.memory.allowed.split(",")[sim.getHeuristicRecommendation(player.memory)]);
+		sim.showText("Recommendation 2: " + player.memory.allowed.split(",")[sim.getRecommendation2 (player.memory, 500)]);
+		sim.showText("Recommendation 3: " + player.memory.allowed.split(",")[sim.getRecommendation(player.memory, 500)]);
 	}
 }
