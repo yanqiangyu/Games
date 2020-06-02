@@ -284,8 +284,13 @@ function handleResponseText (text)
 		}
 		break;
 	case "PlayerTurnResponse":
-		if (event == "CardEventPlayerAutoAction") {
+		if (event == "CardEventPlayerAutoAction" ||
+			event == "CardEventTurnToPlay") {
 			pass = true;
+			if (event == "CardEventTurnToPlay") {
+				 // Invalid hand before
+				gameState = "PlayerReady";
+			}
 		}
 		break;
 	case "EndRound":

@@ -323,16 +323,19 @@ public class CardGameSimulation implements CardUI {
 	public void setAnalysisMode(boolean analysisMode) {
 		this.analysisMode = analysisMode;
 	}
+	static String debugPlayed = "7C,4C,QC,3C,5S,KS,AH,6S,AD,7D,JD,XD,JC,KC,6C,5C,5H,QH,JH,3H,9S,AS,QS,6D,8H,7S,2H,7H,4D,3D,9D,KH,3D,AC,9H,XC,KD,2C,4H,2D,QD,6H,4S,XH,8D,2S,3S";
+	static String debugHand = "9C,8C";
 	static public void main (String args[]) {
 		CardGameSimulation sim = new CardGameSimulation ();
 		CardPlayerAI player = new CardPlayerAI("AI_1");
-		player.memory.currentHand="2C,6C,2D,3D,AD,JD,3H,4H,2H,8H,3S,4S,JS";
-		player.memory.allowed="2D,3D,AD,JD";
+		//player.memory.currentHand="2C,6C,2D,3D,AD,JD,3H,4H,2H,8H,3S,4S,JS";
+		player.memory.currentHand=debugHand;
+		player.memory.allowed="9";
 		player.memory.faceup = new HashMap<String, String>();
-		player.memory.faceup.put("AI_1", "JD");
+		// player.memory.faceup.put("AI_1", "JD");
 		player.memory.names = new String [] {"AI_1", "AI_2", "AI3","AI4"};
 		player.memory.played = new ArrayList<String>();
-		String played = "6D";
+		String played = debugPlayed;
 		for (String s : played.split(",")) {
 			if (!played.isEmpty())
 				player.memory.played.add(s);

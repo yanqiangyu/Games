@@ -40,7 +40,7 @@ public class CardPlayerHttpClient extends CardPlayer {
 		return code;
 	}
 	public void handleEvent(CardUI ui, CardEvent request) {
-		memorizeEvent(request);
+		boolean valid = memorizeEvent(request);
 		if (request.getPlayer() == this) {
 			if (request instanceof CardEventPlayerReconnect) {
 				notificationQueue.clear();
@@ -59,8 +59,14 @@ public class CardPlayerHttpClient extends CardPlayer {
 				ui.playerEvent(request);
 			}
 			else if (request instanceof CardEventPlayerAction) {
-				setPendingInput (null);
-				ui.playerEvent(request);
+				if (valid) {
+					setPendingInput (null);
+					ui.playerEvent(request);
+				}
+				else {
+					ui.showText ("Client Invalid Event:" +  request.getJsonString());
+					addNotification (getPendingInput ());
+				}
 			}
 			else if (request instanceof CardEventEndRound) {
 				ui.playerEvent(request);
@@ -120,7 +126,9 @@ public class CardPlayerHttpClient extends CardPlayer {
 		}
 	}
 	private void addNotification(CardEvent request) {
-		notificationQueue.add(request);
+		if (request != null) {
+			notificationQueue.add(request);
+		}
 	}
 	private synchronized void setPendingInput (CardEvent e) {
 		pendingInput = e;

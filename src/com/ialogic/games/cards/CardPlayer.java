@@ -126,7 +126,7 @@ public abstract class CardPlayer {
 	public void setAlgo (String a) {
 		this.algo = a;
 	}
-	void playCard(String cs) {
+	boolean playCard(String cs) {
 		Card played = null;
 		for (Card c : getHand ()) {
 			if (c.toString().contains(cs)) {
@@ -138,7 +138,9 @@ public abstract class CardPlayer {
 			getHand ().remove(played);
 			getFaceup().remove(played);
 			setCardPlayed (played);
+			return true;
 		}
+		return false;
 	}
 	void faceupCards(String cs) {
 		if (!cs.isEmpty()) {
@@ -172,7 +174,8 @@ public abstract class CardPlayer {
 		}
 		return count;
 	}
-	public void memorizeEvent (CardEvent request) {
+	public boolean memorizeEvent (CardEvent request) {
+		boolean valid = true;
 		if (request instanceof CardEventEndRound) {
 			endRound ();
 		}
@@ -193,17 +196,19 @@ public abstract class CardPlayer {
 		else if (request instanceof CardEventPlayerAction) {
 			String p = ((CardEventPlayerAction)request).getCardPlayed();
 			if (request.getPlayer() == this) {
-				playCard (p);
+				valid = playCard (p);
 			}
-			if ((memory.played.size() & 0x3) != 0) {
-				int d = memory.played.size();
-				int starter = d - (d & 0x3);
-				if (!memory.played.get(starter).substring(1,2).contentEquals(p.substring(1,2))) {
-						memory.noSuit.get((4 + request.getPlayer().getPosition() - getPosition()) & 0x3).add(memory.played.get(starter).substring(1,2));
+			if (valid) {
+				if ((memory.played.size() & 0x3) != 0) {
+					int d = memory.played.size();
+					int starter = d - (d & 0x3);
+					if (!memory.played.get(starter).substring(1,2).contentEquals(p.substring(1,2))) {
+							memory.noSuit.get((4 + request.getPlayer().getPosition() - getPosition()) & 0x3).add(memory.played.get(starter).substring(1,2));
+					}
 				}
+				memory.played.add (p);
+				memory.points.put (request.getPlayer().getName(), Card.showCSList(request.getPlayer().getPoints()));
 			}
-			memory.played.add (p);
-			memory.points.put (request.getPlayer().getName(), Card.showCSList(request.getPlayer().getPoints()));
 		}
 		else if (request instanceof CardEventScoreBoard) {
 			setScoreBoard ((CardEventScoreBoard) request);
@@ -211,6 +216,7 @@ public abstract class CardPlayer {
 			memory = new GameMemory();
 			memory.names = names;
 		}
+		return valid;
 	}
 	public JsonValue getJsonObject(boolean masked) {
 		String hand = Card.showCSList(getHand());
