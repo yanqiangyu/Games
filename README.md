@@ -35,6 +35,10 @@ The multiplayer game rule engine has a AI auto player interface that you can ext
 
 ### Development Log:
 
+**06/01/2020**  Upgraded to http2 and SSL is much faster. Chrome timeout issue is solved. AI is enhanced
+                to consider observation of discarded cards to better predict possible distribution
+		of unknown positions.
+
 **05/29/2020**	Encrypted the site with "Let's Encrypt" free certificates and we can now use Mobile
 		Navigator share. It is a lot slower but more secure and "safe" looking to strangers.
 		I had to tweak virtual host and a few timeout for Chrome and Edge so Apache 2.4 can
