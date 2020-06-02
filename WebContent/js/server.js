@@ -207,7 +207,7 @@ function serverRequest (event, cards)
 		setTimeout (serverRequest (event, cards), 100);
 	}
     xhttp.open("GET", theUrl, true);
-    xhttp.timeout = 5000;
+    xhttp.timeout = 1000;
     xhttp.send();
 }
 
