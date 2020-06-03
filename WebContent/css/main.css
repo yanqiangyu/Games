@@ -1,8 +1,14 @@
 .container {
 	background-image: url('../image/splash.jpg');
 	background-repeat: no-repeat;
-	background-size: 100% 100%;
+	background-position: center center;
 	position: absolute;
+}
+
+.table_top {
+	background-image: url('../image/table.jpg');
+	background-size: 100% 100%;
+	opacity : 1;
 }
 
 .prompt {
@@ -49,9 +55,8 @@
   color: white;
   background-image: url('../image/AI.jpg');
   background-repeat: no-repeat;
-  background-size: 100% 100%;
-  background-color: #000000;
-  box-shadow: 5px 5px 5px black;
+  background-position: center center;
+  background-color: transparent;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 20px;
   font-weight: bold;

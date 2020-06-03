@@ -23,8 +23,7 @@ function startGame()
 		splash.requestFullScreen();
 	var x=document.getElementById("over");
 	x.parentNode.removeChild(x);
-	splash.style.backgroundImage="url('image/table.jpg')";
-	splash.style.opacity="1";
+	splash.classList.add ("table_top");
 	showDeck ();
 	showPlayers ();
 	randomMove ();
