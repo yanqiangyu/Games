@@ -26,10 +26,12 @@ public class CardDeck {
 		return cards.size();
 	}
 	public void shuffle() {
-		ArrayList<Card>deck = cards;
-		cards = new ArrayList<Card>();
-		while (deck.size() > 0) {
-			cards.add (deck.remove((int) (Math.random() * deck.size())));
+		int n = cards.size();
+		for (int i = n - 1; i > 0; --i) {
+			int r = (int) (Math.random () * i);
+			Card c = cards.get(i);
+			cards.set(i, cards.get(r));
+			cards.set(r, c);
 		}
 	}
 	public void deal(List<CardPlayer> players) {
