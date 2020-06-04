@@ -9,8 +9,8 @@ public class CardDeck {
 	public CardDeck(int n) {
 		cards = new ArrayList<Card>();
 		played = new ArrayList<Card>(0);
-		for (Card.Suits s : Card.Suits.values()) {
-			for (Card.Ranks r : Card.Ranks.values()) {
+		for (Card.Ranks r : Card.Ranks.values()) {
+			for (Card.Suits s : Card.Suits.values()) {
 				Card c = new Card(s,r);
 				cards.add(c);
 			}
@@ -26,15 +26,10 @@ public class CardDeck {
 		return cards.size();
 	}
 	public void shuffle() {
-		int n = cards.size();
-		int h = n / 2;
-		for (int s = 0; s < 5; ++s) {
-			for (int i = 0; i < h; ++i) {
-				int d = h + (int) (Math.random() * (double) h);
-				Card c = cards.get (i);
-				cards.set(i, cards.get(d));
-				cards.set(d,c);
-			}
+		ArrayList<Card>deck = cards;
+		cards = new ArrayList<Card>();
+		while (deck.size() > 0) {
+			cards.add (deck.remove((int) (Math.random() * deck.size())));
 		}
 	}
 	public void deal(List<CardPlayer> players) {
