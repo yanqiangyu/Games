@@ -28,7 +28,7 @@ public class CardDeck {
 	public void shuffle() {
 		int n = cards.size();
 		int h = n / 2;
-		for (int s = 0; s < 3; ++s) {
+		for (int s = 0; s < 5; ++s) {
 			for (int i = 0; i < h; ++i) {
 				int d = h + (int) (Math.random() * (double) h);
 				Card c = cards.get (i);
