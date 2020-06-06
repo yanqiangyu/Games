@@ -97,9 +97,7 @@ function setServerState (s) {
 function checkServerIdle () {
 	if (idleCount > 15) {
 		setServerState ("Offline");
-		prompt ("Server timeout, please restart.");
-		promptText = "";
-		clearInterval (idleThread);
+		restartClient("Server Timeout");
 	}
 }
 
@@ -109,7 +107,7 @@ function restartClient (message) {
 	}
 	gameState = "Error";
 	clearInterval (idleThread);
-	setTimeout (reload, 2000);
+	setTimeout (reload, 1000);
 	function reload () {
 		location.reload();
 	}
@@ -204,7 +202,9 @@ function serverRequest (event, cards)
     };
 	xhttp.ontimeout = function() {
 		console.log ("Timeout error");
-		setTimeout (serverRequest (event, cards), 100);
+		if (gameState != "Login") {
+			setTimeout (serverRequest (event, cards), 100);
+		}
 	}
     xhttp.open("GET", theUrl, true);
     xhttp.timeout = 5000;
@@ -385,12 +385,12 @@ function handleResponseText (text)
 	case "CardEventGameOver":
 		gameState = "GameOver";
 		prompt ("Game Over. Thank you for playing.");
-		cleanup ();
 		clearInterval(idleThread);
 		if (subscription != null) {
 			subscription.close();
 		}
 		setServerState ("Offline");
+		cleanup ();
 		break;
 	default:
 		prompt (message);
@@ -398,7 +398,7 @@ function handleResponseText (text)
 	if (event == "CardEventGameIdle") {
 		checkServerIdle ();
 	}
-	else {
+	else if (event != "CardEventGameOver") {
 		setServerState ("Connected");
 	}
 }

@@ -8,6 +8,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -35,6 +36,7 @@ import com.sun.net.httpserver.HttpServer;
 
 public class CardHttpServer implements CardUI, ServerEventListener {
 	static CardHttpServer instance = null;
+	static Charset UTF8 = Charset.forName("UTF-8");
 	WebSocketServer wsServer = null;
     HttpServer server;
 	public CardHttpServer (final int port){
@@ -60,7 +62,7 @@ public class CardHttpServer implements CardUI, ServerEventListener {
 		try {
 			getServer().createResponse (exchange);
 		} catch (IOException e) {
-			getServer().log ("Exeption" + e);
+			getServer().log ("HTTP Reuqest: Exeption: " + e);
 		}
 	}
 	public void handleWebSocket (String id, String message) {
@@ -95,12 +97,13 @@ public class CardHttpServer implements CardUI, ServerEventListener {
 	    	  response = getServer().createResponse (query, exchange);
 	    	  if (!response.isEmpty()) {
 	    		  Headers headers = exchange.getResponseHeaders();
-	    		  headers.set ("Content-Type", "text/html");
+	    		  byte[] bytes = response.getBytes(UTF8);
+	    		  headers.set ("Content-Type", "application/json");
 	    		  headers.set ("Cache-Control", "no-cache");
 	    		  headers.set ("Connection", "keep-alive");
-				  exchange.sendResponseHeaders(200, response.length());
+				  exchange.sendResponseHeaders(200, bytes.length);
 				  OutputStream os = exchange.getResponseBody();
-				  os.write(response.getBytes());
+				  os.write(bytes);
 				  os.close();
 	    	  }				 
 	      }
