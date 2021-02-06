@@ -204,6 +204,8 @@ public class PigChase extends CardGame {
 			}
 			CardPlayer winner = getPlayers().get (starter);
 			Card highCard = winner.getCardPlayed();
+			// Only the starter suit counted as suits played
+			suitsPlayed.add(highCard.getSuit());
 			for (int i = 1; i < 4; ++i) {
 				CardPlayer p = getPlayers().get ((starter + i) % 4);
 				if (highCard.compareTo (p.getCardPlayed()) < 0) {
@@ -211,9 +213,6 @@ public class PigChase extends CardGame {
 					newStarter = (starter + i) % 4;
 					highCard = p.getCardPlayed();
 				}
-			}
-			for (Card c: played) {
-				suitsPlayed.add(c.getSuit());
 			}
 			winner.collectTrick (played);
 			List<Card> points = getCardWithPoints (played);
