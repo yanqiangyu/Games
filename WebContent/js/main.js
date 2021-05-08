@@ -81,16 +81,21 @@ function enableLogin ()
 	c.style.display="block";
 }
 
-function helpCode ()
-{
+function helpCode () {
 	var c=document.getElementById("code");
 	c.value = "";
 	prompt ("Enter 'new' to start a new game");
 }
 
 function checkBrowser () {
+	updateCopyright();
 	if (typeof(EventSource) === "undefined" && !("WebSocket" in window)) {
 		prompt ("We are sorry that your browser is not supported.<BR>Please upgrade or install Firefox, Safari or Chrome.");
 		disableLogin ();
 	}
+}
+
+function updateCopyright () {
+	var f=document.getElementById("footnote");
+	f.innerHTML="© 2020 ~ " + new Date().getFullYear () + " IALogic";
 }

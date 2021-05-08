@@ -424,7 +424,7 @@ public class PigChase extends CardGame {
 		if (allHearts.size() == hearts.size()) {
 			points += 400 * scaleHearts;
 			shootTheMoon = "<H>";
-			if (!hasPig.isEmpty() && !hasGoat.isEmpty()) {
+			if (!hasPig.isEmpty() && !hasGoat.isEmpty() && !hasMultiplier.isEmpty()) {
 				score = "SHOOT THE MOON";
 				points += 2 * (0-pig) * scalePig;
 				// Reverse the Pig Score when this happens
