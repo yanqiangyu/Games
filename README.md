@@ -35,6 +35,8 @@ The multiplayer game rule engine has a AI auto player interface that you can ext
 
 ### Development Log:
 
+**02/05/2021**  Fixed the bug caused a suit to be considered "broken" when a card is discarded.
+		
 **06/01/2020**  Upgraded to http2 and SSL is much faster. Chrome timeout issue is solved. AI is enhanced
                 to consider observation of discarded cards to better predict possible distribution
 		of unknown positions.
